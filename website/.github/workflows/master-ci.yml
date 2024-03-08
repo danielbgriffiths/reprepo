@@ -1,0 +1,21 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+  call-validation:
+    uses: ./.github/workflows/validation-ci.yml
+
+  call-deployment:
+    needs: call-validation
+    uses: ./.github/workflows/deployment-ci.yml

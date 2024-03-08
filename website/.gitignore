@@ -1,0 +1,29 @@
+
+dist
+./app/dist
+
+# Environment
+.env
+.env*.local
+./app/.env
+./app/.env*.local
+
+# dependencies
+node_modules
+./app/node_modules
+./app/.nuxt
+./app/.output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+*.launch
+.settings/
+
+# Temp
+gitignore
+
+# System Files
+.DS_Store
+Thumbs.db

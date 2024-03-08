@@ -1,0 +1,3 @@
+# https://pnpm.io/pnpm-workspace.yml
+packages:
+  - app

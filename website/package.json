@@ -1,0 +1,23 @@
+{
+  "name": "reprepo",
+  "version": "1.0.0",
+  "description": "RepRepo Website",
+  "scripts": {
+    "docker:build": "docker build -t reprepo .",
+    "docker:run": "docker run -p 80:80 reprepo",
+    "app:install": "pnpm -C ./app install",
+    "app:build": "pnpm -C ./app run format && pnpm -C ./app run lint && pnpm -C ./app run test && pnpm -C ./app run cleanup && pnpm -C ./app run build",
+    "app:serve": "node ./app/.output/server/index.mjs",
+    "app:dev": "pnpm -C ./app run dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielbgriffiths/reprepo.git"
+  },
+  "author": "Daniel Griffiths",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danielbgriffiths/reprepo/issues"
+  },
+  "homepage": "https://github.com/danielbgriffiths/reprepo#readme"
+}
