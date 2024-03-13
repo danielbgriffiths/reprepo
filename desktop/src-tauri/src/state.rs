@@ -1,6 +1,10 @@
+//
+// External Usages
+//
+
+use std::sync::Mutex;
 use diesel::PgConnection;
-use tauri::{AppHandle, State, Manager};
 
 pub struct AppState {
-    pub db: std::sync::Mutex<Option<PgConnection>>,
+    pub db_connection: Mutex<Option<PgConnection>>,
 }

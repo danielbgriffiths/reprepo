@@ -2,8 +2,9 @@
 // External Usages
 //
 
+use std::ops::DerefMut;
 use diesel::prelude::*;
-use tauri::{AppHandle, Manager, State};
+use tauri::{State};
 
 //
 // Local Usages
@@ -15,17 +16,17 @@ use crate::schema::users::dsl::users;
 use crate::state::{AppState};
 
 #[tauri::command]
-pub fn get_user(app_handle: AppHandle, name: &str) -> String {
-    let app_state = app_handle.state::<AppState>();
-    let db = &mut app_state.db.into_inner().unwrap();
+pub fn get_user(state: State<AppState>, name: &str) -> String {
+    let mut guarded_db_connection = state.db_connection.lock().unwrap();
+    let db_connection = guarded_db_connection.deref_mut();
 
-    match db {
-        Some(x) => {
+    match db_connection {
+        Some(_db_connection) => {
             let results = users
                 .filter(age.eq(31))
                 .limit(5)
                 .select(User::as_select())
-                .load(x)
+                .load(_db_connection)
                 .expect("Error loading users");
 
             format!("Hi {}! We fetched, {} users.", name, results.len())
@@ -35,6 +36,6 @@ pub fn get_user(app_handle: AppHandle, name: &str) -> String {
 }
 
 #[tauri::command]
-pub fn create_user(app_handle: AppHandle, name: &str) -> String {
+pub fn create_user(name: &str) -> String {
     format!("Hi {}!", name)
 }

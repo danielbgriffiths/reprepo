@@ -11,12 +11,13 @@ pub mod schema;
 pub mod layout;
 pub mod commands;
 pub mod state;
+pub mod services;
 
 //
 // External Usages
 //
 
-use tauri::{State, AppHandle, Manager};
+use std::sync::Mutex;
 
 //
 // Local Usages
@@ -26,20 +27,16 @@ use crate::layout::menu::create_menu;
 use crate::commands::user::get_user;
 use crate::commands::user::create_user;
 use crate::database::connection::establish_connection;
-use crate::state::{AppState, ServiceAccess};
+use crate::state::{AppState};
 
 fn main() {
     let menu = create_menu();
 
+    let db_connection = Mutex::new(Some(establish_connection()));
+
     tauri::Builder::default()
         .menu(menu)
-        .setup(|app| {
-            let handle: AppHandle = app.app_handle();
-            let app_state: State<AppState> = handle.state();
-            let connection = establish_connection();
-            *app_state.db.lock().unwrap() = Some(connection);
-            Ok(())
-        })
+        .manage(AppState { db_connection })
         .invoke_handler(tauri::generate_handler![get_user, create_user])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
