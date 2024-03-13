@@ -11,7 +11,6 @@ use tauri::{State};
 //
 
 use crate::models::user::User;
-use crate::schema::users::age;
 use crate::schema::users::dsl::users;
 use crate::state::{AppState};
 
@@ -23,15 +22,14 @@ pub fn get_user(state: State<AppState>, name: &str) -> String {
     match db_connection {
         Some(_db_connection) => {
             let results = users
-                .filter(age.eq(31))
-                .limit(5)
+                .find(1)
                 .select(User::as_select())
-                .load(_db_connection)
+                .first(_db_connection)
                 .expect("Error loading users");
 
             format!("Hi {}! We fetched, {} users.", name, results.len())
         },
-        None    => format!("Hi {}!", name),
+        None => format!("Hi {}!", name),
     }
 }
 
