@@ -5,20 +5,47 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@formatjs/cli':
+    specifier: ^6.2.7
+    version: 6.2.7
+  '@fortawesome/fontawesome-svg-core':
+    specifier: ^6.5.1
+    version: 6.5.1
+  '@fortawesome/free-brands-svg-icons':
+    specifier: ^6.5.1
+    version: 6.5.1
+  '@fortawesome/pro-light-svg-icons':
+    specifier: ^6.5.1
+    version: 6.5.1
+  '@fortawesome/sharp-light-svg-icons':
+    specifier: ^6.5.1
+    version: 6.5.1
   '@solidjs/router':
     specifier: ^0.13.0
     version: 0.13.0(solid-js@1.8.15)
   '@tauri-apps/api':
     specifier: ^1
     version: 1.5.3
+  solid-fa:
+    specifier: ^0.2.0
+    version: 0.2.0(solid-js@1.8.15)
   solid-js:
     specifier: ^1.7.8
     version: 1.8.15
+  solid-styled-components:
+    specifier: ^0.28.5
+    version: 0.28.5(solid-js@1.8.15)
+  tauri-plugin-stronghold-api:
+    specifier: github:tauri-apps/tauri-plugin-stronghold#v1
+    version: github.com/tauri-apps/tauri-plugin-stronghold/dffe91c9e2b6c57bb2067ffdbccf75860476dc2b
 
 devDependencies:
   '@tauri-apps/cli':
     specifier: ^1
     version: 1.5.10
+  '@types/node':
+    specifier: ^20.11.27
+    version: 20.11.27
   sass:
     specifier: ^1.71.1
     version: 1.71.1
@@ -27,7 +54,7 @@ devDependencies:
     version: 5.4.2
   vite:
     specifier: ^5.0.0
-    version: 5.1.5(sass@1.71.1)
+    version: 5.1.5(@types/node@20.11.27)(sass@1.71.1)
   vite-plugin-solid:
     specifier: ^2.8.0
     version: 2.10.1(solid-js@1.8.15)(vite@5.1.5)
@@ -462,6 +489,55 @@ packages:
     dev: true
     optional: true
 
+  /@formatjs/cli@6.2.7:
+    resolution: {integrity: sha512-F8sPvXsrjOXKAXpbZo3HObq3TZWNa91cimRukmy/54GRo83V0q2ybj9YXtBfcGlnFhzRFXq8ukkTtHgYeRMJaQ==}
+    engines: {node: '>= 16'}
+    hasBin: true
+    peerDependencies:
+      vue: ^3.3.4
+    peerDependenciesMeta:
+      vue:
+        optional: true
+    dev: false
+
+  /@fortawesome/fontawesome-common-types@6.5.1:
+    resolution: {integrity: sha512-GkWzv+L6d2bI5f/Vk6ikJ9xtl7dfXtoRu3YGE6nq0p/FFqA1ebMOAWg3XgRyb0I6LYyYkiAo+3/KrwuBp8xG7A==, tarball: https://npm.fontawesome.com/@fortawesome/fontawesome-common-types/-/6.5.1/fontawesome-common-types-6.5.1.tgz}
+    engines: {node: '>=6'}
+    requiresBuild: true
+    dev: false
+
+  /@fortawesome/fontawesome-svg-core@6.5.1:
+    resolution: {integrity: sha512-MfRCYlQPXoLlpem+egxjfkEuP9UQswTrlCOsknus/NcMoblTH2g0jPrapbcIb04KGA7E2GZxbAccGZfWoYgsrQ==, tarball: https://npm.fontawesome.com/@fortawesome/fontawesome-svg-core/-/6.5.1/fontawesome-svg-core-6.5.1.tgz}
+    engines: {node: '>=6'}
+    requiresBuild: true
+    dependencies:
+      '@fortawesome/fontawesome-common-types': 6.5.1
+    dev: false
+
+  /@fortawesome/free-brands-svg-icons@6.5.1:
+    resolution: {integrity: sha512-093l7DAkx0aEtBq66Sf19MgoZewv1zeY9/4C7vSKPO4qMwEsW/2VYTUTpBtLwfb9T2R73tXaRDPmE4UqLCYHfg==, tarball: https://npm.fontawesome.com/@fortawesome/free-brands-svg-icons/-/6.5.1/free-brands-svg-icons-6.5.1.tgz}
+    engines: {node: '>=6'}
+    requiresBuild: true
+    dependencies:
+      '@fortawesome/fontawesome-common-types': 6.5.1
+    dev: false
+
+  /@fortawesome/pro-light-svg-icons@6.5.1:
+    resolution: {integrity: sha512-qcBN5RESCPhbWRvHL5N5ovxvYzj2KbpKoSWPJ1TRce1jSsQgBx6hN4SCzzzYJkoiIO43L1/n+NjEQHb0YYtg6g==, tarball: https://npm.fontawesome.com/@fortawesome/pro-light-svg-icons/-/6.5.1/pro-light-svg-icons-6.5.1.tgz}
+    engines: {node: '>=6'}
+    requiresBuild: true
+    dependencies:
+      '@fortawesome/fontawesome-common-types': 6.5.1
+    dev: false
+
+  /@fortawesome/sharp-light-svg-icons@6.5.1:
+    resolution: {integrity: sha512-wM7IATZkEzfYrujcY+DTC0KA8/JtXwwp+N+PHMIT8O7G1xaVVYSFMJ2Srp5UAFO53m1xLGa794rmAgwzmpomKQ==, tarball: https://npm.fontawesome.com/@fortawesome/sharp-light-svg-icons/-/6.5.1/sharp-light-svg-icons-6.5.1.tgz}
+    engines: {node: '>=6'}
+    requiresBuild: true
+    dependencies:
+      '@fortawesome/fontawesome-common-types': 6.5.1
+    dev: false
+
   /@jridgewell/gen-mapping@0.3.5:
     resolution: {integrity: sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==}
     engines: {node: '>=6.0.0'}
@@ -749,6 +825,12 @@ packages:
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
     dev: true
 
+  /@types/node@20.11.27:
+    resolution: {integrity: sha512-qyUZfMnCg1KEz57r7pzFtSGt49f6RPkPBis3Vo4PbS7roQEDn22hiHzl/Lo1q4i4hDEgBJmBF/NTNg2XR0HbFg==}
+    dependencies:
+      undici-types: 5.26.5
+    dev: true
+
   /ansi-styles@3.2.1:
     resolution: {integrity: sha512-VT0ZI6kZRdTh8YyJw3SMbYm/u+NqfsAxEpWO0Pf9sq8/e94WxxOpPKx9FR1FlyCtOVDNOQ+8ntlqFxiRc+r5qA==}
     engines: {node: '>=4'}
@@ -943,6 +1025,14 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
+  /goober@2.1.14(csstype@3.1.3):
+    resolution: {integrity: sha512-4UpC0NdGyAFqLNPnhCT2iHpza2q+RAY3GV85a/mRPdzyPQMsj0KmMMuetdIkzWRbJ+Hgau1EZztq8ImmiMGhsg==}
+    peerDependencies:
+      csstype: ^3.0.10
+    dependencies:
+      csstype: 3.1.3
+    dev: false
+
   /has-flag@3.0.0:
     resolution: {integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==}
     engines: {node: '>=4'}
@@ -1108,6 +1198,14 @@ packages:
     resolution: {integrity: sha512-qQs/N+KfJu83rmszFQaTxcoJoPn6KNUruX4KmnmyD0oZkUoiNvJ1rpdYKDf4YHM05k+HOgCxa3yvf15QbVijGg==}
     engines: {node: '>=10'}
 
+  /solid-fa@0.2.0(solid-js@1.8.15):
+    resolution: {integrity: sha512-Mi8aOKZ+GJ2VgchwlV3SVrQPwpcDh1kuXdMCbQ0AlxBI9W36FaxTMOUrZenU6Ua/p04EcRfHLT4AfOx7xJSF3Q==}
+    peerDependencies:
+      solid-js: ^1.0.0
+    dependencies:
+      solid-js: 1.8.15
+    dev: false
+
   /solid-js@1.8.15:
     resolution: {integrity: sha512-d0QP/efr3UVcwGgWVPveQQ0IHOH6iU7yUhc2piy8arNG8wxKmvUy1kFxyF8owpmfCWGB87usDKMaVnsNYZm+Vw==}
     dependencies:
@@ -1125,6 +1223,16 @@ packages:
       '@babel/types': 7.24.0
       solid-js: 1.8.15
     dev: true
+
+  /solid-styled-components@0.28.5(solid-js@1.8.15):
+    resolution: {integrity: sha512-vwTcdp76wZNnESIzB6rRZ3U55NgcSAQXCiiRIiEFhxTFqT0bEh/warNT1qaRZu4OkAzrBkViOngF35ktI8sc4A==}
+    peerDependencies:
+      solid-js: ^1.4.4
+    dependencies:
+      csstype: 3.1.3
+      goober: 2.1.14(csstype@3.1.3)
+      solid-js: 1.8.15
+    dev: false
 
   /source-map-js@1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
@@ -1154,6 +1262,10 @@ packages:
     resolution: {integrity: sha512-+2/g0Fds1ERlP6JsakQQDXjZdZMM+rqpamFZJEKh4kwTIn3iDkgKtby0CeNd5ATNZ4Ry1ax15TMx0W2V+miizQ==}
     engines: {node: '>=14.17'}
     hasBin: true
+    dev: true
+
+  /undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
     dev: true
 
   /update-browserslist-db@1.0.13(browserslist@4.23.0):
@@ -1187,13 +1299,13 @@ packages:
       merge-anything: 5.1.7
       solid-js: 1.8.15
       solid-refresh: 0.6.3(solid-js@1.8.15)
-      vite: 5.1.5(sass@1.71.1)
+      vite: 5.1.5(@types/node@20.11.27)(sass@1.71.1)
       vitefu: 0.2.5(vite@5.1.5)
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /vite@5.1.5(sass@1.71.1):
+  /vite@5.1.5(@types/node@20.11.27)(sass@1.71.1):
     resolution: {integrity: sha512-BdN1xh0Of/oQafhU+FvopafUp6WaYenLU/NFoL5WyJL++GxkNfieKzBhM24H3HVsPQrlAqB7iJYTHabzaRed5Q==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -1221,6 +1333,7 @@ packages:
       terser:
         optional: true
     dependencies:
+      '@types/node': 20.11.27
       esbuild: 0.19.12
       postcss: 8.4.35
       rollup: 4.12.1
@@ -1237,9 +1350,17 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 5.1.5(sass@1.71.1)
+      vite: 5.1.5(@types/node@20.11.27)(sass@1.71.1)
     dev: true
 
   /yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
     dev: true
+
+  github.com/tauri-apps/tauri-plugin-stronghold/dffe91c9e2b6c57bb2067ffdbccf75860476dc2b:
+    resolution: {tarball: https://codeload.github.com/tauri-apps/tauri-plugin-stronghold/tar.gz/dffe91c9e2b6c57bb2067ffdbccf75860476dc2b}
+    name: tauri-plugin-stronghold-api
+    version: 0.0.0
+    dependencies:
+      '@tauri-apps/api': 1.5.3
+    dev: false

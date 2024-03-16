@@ -4,15 +4,13 @@
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 import { lazy } from "solid-js";
+import { ThemeProvider } from "solid-styled-components";
 
 // Local Imports
 import Views from "./views";
-import Login from "./views/login";
-import Register from "./views/register";
 import Dashboard from "./views/private-layout/dashboard";
 import Catch from "./views/private-layout/catch";
-
-import "./styles.scss";
+import { theme } from "./services/styled";
 
 const ELEMENT_ID = "root";
 
@@ -27,15 +25,15 @@ const PrivateLayout = lazy(() => import("./views/private-layout"));
  */
 render(
   () => (
-    <Router root={Views}>
-      <Route path="/" component={Splash} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/auth" component={PrivateLayout}>
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="*404" component={Catch} />
-      </Route>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <Router root={Views}>
+        <Route path="/" component={Splash} />
+        <Route path="/auth" component={PrivateLayout}>
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="*404" component={Catch} />
+        </Route>
+      </Router>
+    </ThemeProvider>
   ),
   document.getElementById(ELEMENT_ID)!,
 );

@@ -15,5 +15,5 @@ export default function Views(props: ViewsProps) {
 
   const c = children(() => props.children);
 
-  return <main id="rr-main">{c()}</main>;
+  return <main>{c()}</main>;
 }

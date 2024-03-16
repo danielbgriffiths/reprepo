@@ -19,6 +19,11 @@ diesel = { version = "2.1.0", features = ["postgres", "uuid", "chrono", "numeric
 dotenvy = "0.15"
 chrono = "0.4.35"
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
+tauri-plugin-stronghold = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+rust-argon2 = "2.1.0"
+oauth2 = { version = "5.0.0-alpha.2", features = ["reqwest"] }
+url = "2.5.0"
+reqwest = { version = "0.11.26", features = ["blocking"] }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

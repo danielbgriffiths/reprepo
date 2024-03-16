@@ -12,12 +12,21 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@formatjs/cli": "^6.2.7",
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
+    "@fortawesome/free-brands-svg-icons": "^6.5.1",
+    "@fortawesome/pro-light-svg-icons": "^6.5.1",
+    "@fortawesome/sharp-light-svg-icons": "^6.5.1",
     "@solidjs/router": "^0.13.0",
     "@tauri-apps/api": "^1",
-    "solid-js": "^1.7.8"
+    "solid-fa": "^0.2.0",
+    "solid-js": "^1.7.8",
+    "solid-styled-components": "^0.28.5",
+    "tauri-plugin-stronghold-api": "github:tauri-apps/tauri-plugin-stronghold#v1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1",
+    "@types/node": "^20.11.27",
     "sass": "^1.71.1",
     "typescript": "^5.0.2",
     "vite": "^5.0.0",
