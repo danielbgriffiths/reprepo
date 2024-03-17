@@ -24,3 +24,14 @@ pub struct CreateUser<'a> {
     pub password: &'a String,
     pub age: &'a i32,
 }
+
+pub struct OAuthUser {
+    pub email: String,
+    pub family_name: String,
+    pub given_name: String,
+    pub locale: String,
+    pub name: String,
+    pub picture: String,
+    pub id: String,
+    pub verified_email: bool
+}

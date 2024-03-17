@@ -1,5 +1,4 @@
 // External Usages
-use std::ops::DerefMut;
 use diesel::prelude::*;
 use tauri::{State};
 
@@ -11,8 +10,7 @@ use crate::state::{AppState};
 
 #[tauri::command]
 pub fn get_user(state: State<AppState>, name: &str) -> String {
-    let mut guarded_db_connection = state.db_connection.lock().unwrap();
-    let db_connection = guarded_db_connection.deref_mut();
+    let db_connection = &mut state.db_connection;
 
     match db_connection {
         Some(_db_connection) => {

@@ -19,20 +19,17 @@ use crate::commands::user::{get_user, create_user};
 use crate::commands::utilities::get_env;
 use crate::commands::auth::create_google_oauth;
 use crate::database::connection::establish_connection;
-use crate::services::google_oauth::create_google_oauth_client;
 use crate::services::stronghold::create_stronghold_plugin;
 use crate::state::{AppState};
 
 fn main() {
     let menu = create_menu();
 
-    let db_connection = Mutex::new(Some(establish_connection()));
-
-    let google_oauth_client = create_google_oauth_client();
+    let db_connection = establish_connection();
 
     let stronghold_plugin = create_stronghold_plugin();
 
-    let app_state = AppState { db_connection, google_oauth_client };
+    let app_state = AppState { db_connection };
 
     tauri::Builder::default()
         .plugin(stronghold_plugin.build())
