@@ -14,7 +14,7 @@ pub mod services;
 use crate::layout::menu::create_menu;
 use crate::commands::user::{get_user_summaries, get_authenticated_user_summary};
 use crate::commands::utilities::get_env;
-use crate::commands::auth::{create_google_oauth, remove_google_oauth};
+use crate::commands::auth::{create_google_oauth, logout};
 use crate::database::connection::get_connection_pool;
 use crate::services::stronghold::create_stronghold_plugin;
 use crate::state::{AppState};
@@ -37,7 +37,7 @@ fn main() {
                 get_user_summaries,
                 get_authenticated_user_summary,
                 create_google_oauth,
-                remove_google_oauth,
+                logout,
                 get_env
             ]
         )

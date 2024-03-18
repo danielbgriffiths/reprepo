@@ -1,7 +1,7 @@
 // External Usages
 use oauth2;
 use reqwest;
-use oauth2::{AuthUrl, ClientId, ClientSecret, RedirectUrl, RevocationUrl, TokenUrl};
+use oauth2::{AuthUrl, ClientId, ClientSecret, RedirectUrl, RevocationUrl, StandardRevocableToken, TokenUrl};
 use oauth2::{TokenResponse};
 use oauth2::{AuthorizationCode, CsrfToken, PkceCodeChallenge, Scope};
 use url::Url;
@@ -16,9 +16,9 @@ use jsonwebtoken::{encode, Header, EncodingKey};
 
 // Local Usages
 use crate::state::AppState;
-use crate::models::user::{CreateOAuthUser, GoogleOAuthUserTokenBody, OauthProvider, AuthedSignatureClaims, User};
+use crate::models::user::{CreateOAuthUser, GoogleOAuthUserTokenBody, OauthProvider, AuthedSignatureClaims, User, UserAuthenticationFields, LogoutCommandResponse, CommandError};
 use crate::schema::users::dsl::users;
-use crate::schema::users::{id};
+use crate::schema::users::{access_token, id, password, provider, refresh_token};
 
 #[tauri::command]
 pub fn create_google_oauth(app_state: State<AppState>) -> Option<String> {
@@ -222,60 +222,123 @@ pub fn create_google_oauth(app_state: State<AppState>) -> Option<String> {
     }
 }
 
+fn logout_google_oauth(auth_fields: UserAuthenticationFields, app_state: State<AppState>) -> LogoutCommandResponse {
+    let db_connection = &mut app_state.pool.get().unwrap();
+
+    let standard_revocable_token_option = match auth_fields.refresh_token {
+        Some(authed_refresh_token) => Some(StandardRevocableToken::from(authed_refresh_token)),
+        None => match auth_fields.access_token {
+            Some(authed_access_token) => Some(StandardRevocableToken::from(authed_access_token)),
+            None => None
+        }
+    };
+
+    match standard_revocable_token_option {
+        Some(standard_revocable_token) => {
+            let google_client_id = ClientId::new(
+                env::var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
+            );
+            let google_client_secret = ClientSecret::new(
+                env::var("GOOGLE_CLIENT_SECRET")
+                    .expect("Missing the GOOGLE_CLIENT_SECRET environment variable."),
+            );
+            let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
+                .expect("Invalid authorization endpoint URL");
+            let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())
+                .expect("Invalid token endpoint URL");
+
+            let google_oauth_client = BasicClient::new(
+                google_client_id,
+                Some(google_client_secret),
+                auth_url,
+                Some(token_url)
+            )
+                .set_redirect_uri(
+                    RedirectUrl::new("http://localhost:8080".to_string()).expect("Invalid redirect URL"),
+                )
+                .set_revocation_uri(
+                    RevocationUrl::new("https://oauth2.googleapis.com/revoke".to_string())
+                        .expect("Invalid revocation endpoint URL"),
+                );
+
+            let revoke_response_result = google_oauth_client
+                .revoke_token(standard_revocable_token)
+                .unwrap()
+                .request(&oauth2::reqwest::http_client);
+
+            match revoke_response_result {
+                Ok(_revoke_response) => {
+                    let user_update_result = diesel::update(users)
+                        .set(access_token.eq(None))
+                        .set(refresh_token.eq(None))
+                        .execute(db_connection);
+
+                    match user_update_result {
+                        Ok(_user_update) => LogoutCommandResponse {
+                            error: None,
+                            data: true
+                        },
+                        Err(_e) => LogoutCommandResponse {
+                            error: Some(CommandError {
+                                message: "Unable to update user data".to_string(),
+                                error_type: Some("database_error".to_string())
+                            }),
+                            data: false
+                        }
+                    }
+                },
+                Err(_e) => LogoutCommandResponse {
+                    error: Some(CommandError {
+                        message: "Unable revoke oauth token".to_string(),
+                        error_type: Some("external_error".to_string())
+                    }),
+                    data: false
+                }
+            }
+        },
+        _ => LogoutCommandResponse {
+            error: Some(CommandError {
+                message: "Unable to get revocable token".to_string(),
+                error_type: Some("process_error".to_string())
+            }),
+            data: false
+        },
+    }
+}
+
 #[tauri::command]
-pub fn remove_google_oauth(user_id: i32, app_state: State<AppState>) {
+pub fn logout(user_id: i32, app_state: State<AppState>) -> LogoutCommandResponse {
 
     let db_connection = &mut app_state.pool.get().unwrap();
 
-    let _user = users
+    let auth_fields = users
         .find(user_id)
-        .select(User::as_select())
-        .first(db_connection)
-        .expect("Error loading users");
+        .select((password.nullable(), access_token.nullable(), refresh_token.nullable(), provider))
+        .first::<UserAuthenticationFields>(db_connection)
+        .expect("Error loading user auth information.");
 
-
-    // let new_refresh_token: Option<&RefreshToken> = match user.refresh_token {
-    //     Some(token) => &RefreshToken::new(token),
-    //     None => match user.access_token {
-    //         Some(token) => &RefreshToken::new(token),
-    //         None => None
-    //     }
-    // };
-    //
-    // match new_refresh_token {
-    //     Some(token) => {
-    //         let google_client_id = ClientId::new(
-    //             env::var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
-    //         );
-    //         let google_client_secret = ClientSecret::new(
-    //             env::var("GOOGLE_CLIENT_SECRET")
-    //                 .expect("Missing the GOOGLE_CLIENT_SECRET environment variable."),
-    //         );
-    //         let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
-    //             .expect("Invalid authorization endpoint URL");
-    //         let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())
-    //             .expect("Invalid token endpoint URL");
-    //
-    //         let google_oauth_client = BasicClient::new(
-    //             google_client_id,
-    //             Some(google_client_secret),
-    //             auth_url,
-    //             Some(token_url)
-    //         )
-    //             .set_redirect_uri(
-    //                 RedirectUrl::new("http://localhost:8080".to_string()).expect("Invalid redirect URL"),
-    //             )
-    //             .set_revocation_uri(
-    //                 RevocationUrl::new("https://oauth2.googleapis.com/revoke".to_string())
-    //                     .expect("Invalid revocation endpoint URL"),
-    //             );
-    //
-    //         google_oauth_client
-    //             .revoke_token(token.into())
-    //             .unwrap()
-    //             .request(&oauth2::reqwest::http_client)
-    //             .expect("Failed to revoke token");
-    //     },
-    //     _ => Option::None,
-    // };
+    match auth_fields.provider {
+        OauthProvider::Email => LogoutCommandResponse {
+            error: Some(CommandError {
+                message: "Email auth is not configured".to_string(),
+                error_type: Some("option_unavailable".to_string())
+            }),
+            data: false
+        },
+        OauthProvider::Google => logout_google_oauth(auth_fields, app_state),
+        OauthProvider::Pinterest => LogoutCommandResponse {
+            error: Some(CommandError {
+                message: "Pinterest OAuth is not configured".to_string(),
+                error_type: Some("option_unavailable".to_string())
+            }),
+            data: false
+        },
+        OauthProvider::Instagram => LogoutCommandResponse {
+            error: Some(CommandError {
+                message: "Instagram OAuth is not configured".to_string(),
+                error_type: Some("option_unavailable".to_string())
+            }),
+            data: false
+        }
+    }
 }

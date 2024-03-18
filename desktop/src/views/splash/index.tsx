@@ -12,6 +12,7 @@ import { Commands } from "@services/commands";
 import { AuthenticationProvider } from "@services/auth/index.types.ts";
 import { UserSummary } from "@/models";
 import { useAuthenticate } from "./hooks/authenticate.hook.ts";
+import { useAuth } from "@services/auth";
 
 /**
  * The splash view component
@@ -21,7 +22,13 @@ export default function Splash() {
   // Hooks
   //
 
-  const [createGoogleOAuth, accessGoogleOAuth] = useAuthenticate();
+  const auth = useAuth();
+  const [
+    isAuthStateInitializing,
+    authFlowError,
+    createGoogleOAuth,
+    accessGoogleOAuth,
+  ] = useAuthenticate();
 
   //
   // State
@@ -70,24 +77,30 @@ export default function Splash() {
         Welcome To Reprepo
       </GlobalStyled.PublicPageTitle>
       <Styled.Content>
-        <div>
-          <GlobalStyled.LinkButton onClick={onClickGoogleOAuth}>
-            <Icon icon={faGoogle} />
-          </GlobalStyled.LinkButton>
-          {userSummaries()
-            .filter(
-              (userSummary) =>
-                userSummary.provider === AuthenticationProvider.Google,
-            )
-            .map((userSummary) => (
-              <GlobalStyled.LinkButton
-                onClick={() => onClickUserSummary(userSummary.id)}
-              >
-                <img alt="user avatar" src={userSummary.avatar} />
-                {userSummary.first_name} {userSummary.last_name}
-              </GlobalStyled.LinkButton>
-            ))}
-        </div>
+        {!isAuthStateInitializing() && !auth.activeUser() && (
+          <div>
+            <GlobalStyled.LinkButton onClick={onClickGoogleOAuth}>
+              <Icon icon={faGoogle} />
+            </GlobalStyled.LinkButton>
+            {userSummaries()
+              .filter(
+                (userSummary) =>
+                  userSummary.provider === AuthenticationProvider.Google,
+              )
+              .map((userSummary) => (
+                <GlobalStyled.LinkButton
+                  onClick={() => onClickUserSummary(userSummary.id)}
+                >
+                  <img alt="user avatar" src={userSummary.avatar} />
+                  {userSummary.first_name} {userSummary.last_name}
+                </GlobalStyled.LinkButton>
+              ))}
+          </div>
+        )}
+        {isAuthStateInitializing() && !auth.activeUser() && (
+          <div>Initializing...</div>
+        )}
+        {authFlowError() && <p>{authFlowError()}</p>}
       </Styled.Content>
     </PublicLayout>
   );

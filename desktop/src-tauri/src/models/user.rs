@@ -85,3 +85,23 @@ pub struct AuthedSignatureClaims {
     pub email: String,
     pub exp: i64,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserAuthenticationFields {
+    pub password: Option<String>,
+    pub access_token: Option<String>,
+    pub refresh_token: Option<String>,
+    pub provider: OauthProvider,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CommandError {
+    pub message: String,
+    pub error_type: Option<String>
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LogoutCommandResponse {
+    pub data: bool,
+    pub error: Option<CommandError>
+}

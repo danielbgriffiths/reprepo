@@ -1,7 +1,7 @@
 // Third Party Imports
 import { invoke } from "@tauri-apps/api";
 import { useNavigate } from "@solidjs/router";
-import { createEffect, createReaction } from "solid-js";
+import { Accessor, createEffect, createReaction, createSignal } from "solid-js";
 
 // Local Imports
 import { Commands } from "@services/commands";
@@ -11,6 +11,8 @@ import { useAuth } from "@services/auth";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 
 export type UseAuthenticateBindings = [
+  Accessor<boolean>,
+  Accessor<string | undefined>,
   () => Promise<void>,
   (userSummaryId: number) => Promise<void>,
 ];
@@ -28,18 +30,33 @@ export function useAuthenticate(): UseAuthenticateBindings {
   // State
   //
 
+  const [isAuthStateInitializing, setIsAuthStateInitializing] =
+    createSignal<boolean>(true);
+  const [authFlowError, setAuthFlowError] = createSignal<string | undefined>();
+
   const reactWithStrongholdRead = createReaction(async () => {
     try {
       const authedSignature = await stronghold.read(
         StrongholdKeys.AuthedSignature,
       );
 
-      if (!authedSignature) return;
+      if (!authedSignature) {
+        setIsAuthStateInitializing(false);
+        return;
+      }
 
       const authenticatedUserSummary = await invoke<UserSummary>(
         Commands.GetAuthenticatedUserSummary,
         { authedSignature },
       );
+
+      if (!authenticatedUserSummary) {
+        setAuthFlowError(
+          "Unable to fetch user associated with auth signature, automatically logging out",
+        );
+        await removeAuthedSignature();
+        return;
+      }
 
       auth.setActiveUser(authenticatedUserSummary);
     } catch (e) {
@@ -55,6 +72,7 @@ export function useAuthenticate(): UseAuthenticateBindings {
 
   createEffect(() => {
     if (!auth.activeUser()) return;
+    setIsAuthStateInitializing(false);
     navigate("/auth/dashboard", { replace: true });
   });
 
@@ -66,12 +84,25 @@ export function useAuthenticate(): UseAuthenticateBindings {
     try {
       const authedSignature = await invoke<string>(Commands.CreateGoogleOAuth);
 
+      if (authedSignature) {
+        setAuthFlowError(
+          "Unable to fetch authed signature, possibly duplicate account or server error.",
+        );
+        return;
+      }
+
       await storeAuthedSignature(authedSignature);
 
       const authenticatedUserSummary = await invoke<UserSummary>(
         Commands.GetAuthenticatedUserSummary,
         { authedSignature },
       );
+
+      if (!authenticatedUserSummary) {
+        await removeAuthedSignature();
+        setAuthFlowError("Unable to fetch user associated with auth signature");
+        return;
+      }
 
       auth.setActiveUser(authenticatedUserSummary);
     } catch (e) {
@@ -85,12 +116,25 @@ export function useAuthenticate(): UseAuthenticateBindings {
         id: userSummaryId,
       });
 
+      if (authedSignature) {
+        setAuthFlowError(
+          "Unable to fetch authed signature, possibly server error",
+        );
+        return;
+      }
+
       await storeAuthedSignature(authedSignature);
 
       const authenticatedUserSummary = await invoke<UserSummary>(
         Commands.GetAuthenticatedUserSummary,
         { authedSignature },
       );
+
+      if (!authenticatedUserSummary) {
+        await removeAuthedSignature();
+        setAuthFlowError("Unable to fetch user associated with auth signature");
+        return;
+      }
 
       auth.setActiveUser(authenticatedUserSummary);
     } catch (e) {
@@ -111,5 +155,19 @@ export function useAuthenticate(): UseAuthenticateBindings {
     }
   }
 
-  return [createGoogleOAuth, accessGoogleOAuth];
+  async function removeAuthedSignature(): Promise<void> {
+    try {
+      await stronghold.remove(StrongholdKeys.AuthedSignature);
+      await stronghold.save();
+    } catch (e) {
+      console.error("removeAuthedSignature: ", e);
+    }
+  }
+
+  return [
+    isAuthStateInitializing,
+    authFlowError,
+    createGoogleOAuth,
+    accessGoogleOAuth,
+  ];
 }
