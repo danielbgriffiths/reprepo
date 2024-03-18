@@ -16,6 +16,10 @@ pub mod sql_types {
     #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "media_type"))]
     pub struct MediaType;
+
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "oauth_provider"))]
+    pub struct OauthProvider;
 }
 
 diesel::table! {
@@ -135,6 +139,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::OauthProvider;
+
     users (id) {
         id -> Int4,
         #[max_length = 100]
@@ -144,8 +151,17 @@ diesel::table! {
         #[max_length = 255]
         email -> Varchar,
         #[max_length = 255]
-        password -> Varchar,
+        password -> Nullable<Varchar>,
         age -> Nullable<Int4>,
+        provider -> OauthProvider,
+        #[max_length = 2000]
+        access_token -> Nullable<Varchar>,
+        #[max_length = 2000]
+        refresh_token -> Nullable<Varchar>,
+        #[max_length = 255]
+        avatar -> Nullable<Varchar>,
+        #[max_length = 15]
+        locale -> Varchar,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
         deleted_at -> Nullable<Timestamp>,

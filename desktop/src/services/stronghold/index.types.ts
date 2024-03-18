@@ -1,6 +1,5 @@
 // Third Party Imports
-import { JSX, JSXElement } from "solid-js";
-import Accessor = JSX.Accessor;
+import { Accessor, JSXElement } from "solid-js";
 
 export interface StrongholdBindings {
   insert: (key: string, value: string) => Promise<void>;

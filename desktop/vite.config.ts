@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
+import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -16,6 +17,19 @@ export default defineConfig(async () => ({
     watch: {
       // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
+    },
+  },
+
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@assets": path.resolve(__dirname, "./src/assets"),
+      "@components": path.resolve(__dirname, "./src/components"),
+      "@shared-components": path.resolve(__dirname, "./src/components/shared"),
+      "@partial-components": path.resolve(__dirname, "./src/components/shared"),
+      "@services": path.resolve(__dirname, "./src/services"),
+      "@models": path.resolve(__dirname, "./src/models"),
+      "@views": path.resolve(__dirname, "./src/views"),
     },
   },
 }));

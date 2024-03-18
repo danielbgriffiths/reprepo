@@ -1,26 +1,27 @@
 // External Usages
 use oauth2;
 use reqwest;
-use oauth2::{AccessToken, AuthUrl, ClientId, ClientSecret, HttpRequest, RedirectUrl, RevocationUrl, TokenUrl};
-use oauth2::{StandardRevocableToken, TokenResponse};
+use oauth2::{AuthUrl, ClientId, ClientSecret, RedirectUrl, RevocationUrl, TokenUrl};
+use oauth2::{TokenResponse};
 use oauth2::{AuthorizationCode, CsrfToken, PkceCodeChallenge, Scope};
 use url::Url;
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
-use oauth2::basic::{BasicClient, BasicTokenResponse};
+use oauth2::basic::{BasicClient};
 use std::env;
-use diesel::{Insertable, RunQueryDsl};
+use diesel::{RunQueryDsl};
 use tauri::State;
 use diesel::prelude::*;
+use jsonwebtoken::{encode, Header, EncodingKey};
 
 // Local Usages
 use crate::state::AppState;
-use crate::models::user::{OAuthUser};
+use crate::models::user::{CreateOAuthUser, GoogleOAuthUserTokenBody, OauthProvider, AuthedSignatureClaims, User};
 use crate::schema::users::dsl::users;
-use crate::schema::users::{email, first_name, last_name};
+use crate::schema::users::{id};
 
 #[tauri::command]
-pub fn create_google_oauth(app_state: State<AppState>) -> BasicTokenResponse {
+pub fn create_google_oauth(app_state: State<AppState>) -> Option<String> {
     let google_client_id = ClientId::new(
         env::var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
     );
@@ -131,82 +132,150 @@ pub fn create_google_oauth(app_state: State<AppState>) -> BasicTokenResponse {
 
     let unwrapped_token = token_response.unwrap();
 
-    let token: &AccessToken = unwrapped_token.access_token();
+    let oauth_access_token = unwrapped_token.access_token();
+    let oauth_refresh_token = unwrapped_token.refresh_token();
+
+    println!("Bearer {}", oauth_access_token.secret());
+
+    let reqwest_client = reqwest::blocking::Client::new();
+    let wrapped_response = reqwest_client
+        .get("https://www.googleapis.com/oauth2/v1/userinfo")
+        .header(reqwest::header::AUTHORIZATION,  format!("Bearer {}", oauth_access_token.secret()))
+        .header(reqwest::header::CONTENT_TYPE,  "application/json".to_string())
+        .header(reqwest::header::ACCEPT,  "application/json".to_string())
+        .send();
 
     println!(
-        "Google returned the following token SERVET:\n{:?}\n",
-        token
+        "Wrapped Response:\n{:?}\n",
+        wrapped_response
     );
 
-    let response: OAuthUser = reqwest::get("https://www.googleapis.com/oauth2/v1/userinfo".to_string())
-        .header(reqwest::header::AUTHORIZATION, format!("Bearer {:?}", token))
-        .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .header(reqwest::header::ACCEPT, "application/json")
-        .send()
-        .unwrap();
+    let wrapped_json = wrapped_response
+        .unwrap()
+        .json::<GoogleOAuthUserTokenBody>();
 
-    let user = users.insert_into(users)
-        .values(
-            first_name.eq(response.given_name),
-            last_name.eq(response.family_name),
-            email.eq(response.email),
-            avatar.eq(response.picture),
-            access_token.eq(token),
-            refresh_token.eq(unwrapped_token.refresh_token()),
-            locale.eq(response.locale),
-            provider.eq("google".to_string()),
-        )
-        .execute(&mut app_state.db_connection)
-        .expect("Error inserting user");
+    match wrapped_json {
+        Ok(response) => {
+            println!(
+                "User information in token response:\n{:?}\n",
+                response.id
+            );
 
-    return unwrapped_token
+            let db_connection = &mut app_state.pool.get().unwrap();
+
+            let new_user = CreateOAuthUser {
+                first_name: &response.given_name,
+                last_name: &response.family_name,
+                email: &response.email,
+                avatar: &response.picture,
+                access_token: &oauth_access_token.secret(),
+                refresh_token: &oauth_refresh_token.unwrap().secret(),
+                locale: &response.locale,
+                provider: &OauthProvider::Google,
+            };
+
+            let user_id = diesel::insert_into(users)
+                .values(&new_user)
+                .returning(id)
+                .get_result::<i32>(db_connection)
+                .unwrap();
+
+            println!(
+                "USer inserted:\n{:?}\n",
+                user_id
+            );
+
+            let user = users
+                .find(user_id)
+                .select(User::as_select())
+                .first(db_connection)
+                .expect("Error loading users");
+
+            println!(
+                "user returned:\n{:?}\n",
+                user.first_name
+            );
+
+            let claims = AuthedSignatureClaims {
+                id: user.id,
+                email: user.email,
+                exp: 1735689600, // TODO: 01-01-2025
+            };
+
+            let authed_signature_secret = env::var("AUTHED_SIGNATURE_SECRET")
+                .expect("Missing the AUTHED_SIGNATURE_SECRET environment variable.");
+
+            Some(encode(
+                &Header::default(),
+                &claims,
+                &EncodingKey::from_secret(authed_signature_secret.as_ref())
+            ).unwrap())
+        },
+        Err(e) => {
+            println!(
+                "e:\n{:?}\n",
+                e
+            );
+
+            None
+        }
+    }
 }
 
 #[tauri::command]
-pub fn remove_google_oauth(token_response: BasicTokenResponse, app_state: AppState) {
-    let google_client_id = ClientId::new(
-        env::var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
-    );
-    let google_client_secret = ClientSecret::new(
-        env::var("GOOGLE_CLIENT_SECRET")
-            .expect("Missing the GOOGLE_CLIENT_SECRET environment variable."),
-    );
-    let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
-        .expect("Invalid authorization endpoint URL");
-    let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())
-        .expect("Invalid token endpoint URL");
+pub fn remove_google_oauth(user_id: i32, app_state: State<AppState>) {
 
-    let google_oauth_client = BasicClient::new(google_client_id, Some(google_client_secret), auth_url, Some(token_url))
-        .set_redirect_uri(
-            RedirectUrl::new("http://localhost:8080".to_string()).expect("Invalid redirect URL"),
-        )
-        .set_revocation_uri(
-            RevocationUrl::new("https://oauth2.googleapis.com/revoke".to_string())
-                .expect("Invalid revocation endpoint URL"),
-        );
+    let db_connection = &mut app_state.pool.get().unwrap();
 
-    let token_to_revoke: StandardRevocableToken = match token_response.refresh_token() {
-        Some(token) => token.into(),
-        None => token_response.access_token().into(),
-    };
+    let _user = users
+        .find(user_id)
+        .select(User::as_select())
+        .first(db_connection)
+        .expect("Error loading users");
 
-    google_oauth_client
-        .revoke_token(token_to_revoke)
-        .unwrap()
-        .request(&oauth2::reqwest::http_client)
-        .expect("Failed to revoke token");
+
+    // let new_refresh_token: Option<&RefreshToken> = match user.refresh_token {
+    //     Some(token) => &RefreshToken::new(token),
+    //     None => match user.access_token {
+    //         Some(token) => &RefreshToken::new(token),
+    //         None => None
+    //     }
+    // };
+    //
+    // match new_refresh_token {
+    //     Some(token) => {
+    //         let google_client_id = ClientId::new(
+    //             env::var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
+    //         );
+    //         let google_client_secret = ClientSecret::new(
+    //             env::var("GOOGLE_CLIENT_SECRET")
+    //                 .expect("Missing the GOOGLE_CLIENT_SECRET environment variable."),
+    //         );
+    //         let auth_url = AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())
+    //             .expect("Invalid authorization endpoint URL");
+    //         let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())
+    //             .expect("Invalid token endpoint URL");
+    //
+    //         let google_oauth_client = BasicClient::new(
+    //             google_client_id,
+    //             Some(google_client_secret),
+    //             auth_url,
+    //             Some(token_url)
+    //         )
+    //             .set_redirect_uri(
+    //                 RedirectUrl::new("http://localhost:8080".to_string()).expect("Invalid redirect URL"),
+    //             )
+    //             .set_revocation_uri(
+    //                 RevocationUrl::new("https://oauth2.googleapis.com/revoke".to_string())
+    //                     .expect("Invalid revocation endpoint URL"),
+    //             );
+    //
+    //         google_oauth_client
+    //             .revoke_token(token.into())
+    //             .unwrap()
+    //             .request(&oauth2::reqwest::http_client)
+    //             .expect("Failed to revoke token");
+    //     },
+    //     _ => Option::None,
+    // };
 }
-
-
-// fetch("https://www.googleapis.com/oauth2/v1/userinfo", {
-//   headers: {
-//     Authorization: `Bearer ${tokenResponse.access_token}`,
-//   },
-// })
-//   .then((response) => response.json())
-//   .then((data) => {
-//     console.log("data: ", data);
-//   })
-//   .catch((error) => {
-//     console.error("Error: ", error);
-//   });

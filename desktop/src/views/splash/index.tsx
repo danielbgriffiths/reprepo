@@ -2,22 +2,16 @@
 import Icon from "solid-fa";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { invoke } from "@tauri-apps/api";
-import { useNavigate } from "@solidjs/router";
-import { createEffect, createReaction, createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 
 // Local Imports
-import { PublicLayout } from "../../components/partials/public-layout";
-import * as GlobalStyled from "../../services/styled";
+import { PublicLayout } from "@components/partials/public-layout";
+import * as GlobalStyled from "@services/styled";
 import * as Styled from "./index.styled";
-import { Commands } from "../../services/commands";
-import { useStronghold } from "../../services/stronghold";
-import { StrongholdKeys } from "../../services/stronghold/index.config.ts";
-import { useAuth } from "../../services/auth";
-import {
-  AuthenticationProvider,
-  GoogleOAuthResponse,
-} from "../../services/auth/index.types.ts";
-import { UserSummary } from "../../models";
+import { Commands } from "@services/commands";
+import { AuthenticationProvider } from "@services/auth/index.types.ts";
+import { UserSummary } from "@/models";
+import { useAuthenticate } from "./hooks/authenticate.hook.ts";
 
 /**
  * The splash view component
@@ -27,9 +21,7 @@ export default function Splash() {
   // Hooks
   //
 
-  const stronghold = useStronghold();
-  const auth = useAuth();
-  const navigate = useNavigate();
+  const [createGoogleOAuth, accessGoogleOAuth] = useAuthenticate();
 
   //
   // State
@@ -37,38 +29,19 @@ export default function Splash() {
 
   const [userSummaries, setUserSummaries] = createSignal<UserSummary[]>([]);
 
-  const reactWithStrongholdRead = createReaction(async () => {
-    const id = await stronghold.read(StrongholdKeys.AuthId);
-    const email = await stronghold.read(StrongholdKeys.AuthEmail);
-    const first_name = await stronghold.read(StrongholdKeys.AuthFirstName);
-    const last_name = await stronghold.read(StrongholdKeys.AuthLastName);
-    const avatar = await stronghold.read(StrongholdKeys.AuthAvatar);
-    const provider = await stronghold.read(StrongholdKeys.AuthProvider);
-
-    if (!id || !email || !first_name || !last_name || !provider) {
-      setUserSummaries(await invoke(Commands.GetUserSummaries));
-      return;
-    }
-
-    auth.setActiveUser({
-      id: parseInt(id),
-      email,
-      first_name,
-      last_name,
-      avatar,
-      provider: provider as AuthenticationProvider,
-    });
-  });
-
   //
   // Lifecycle
   //
 
-  reactWithStrongholdRead(() => stronghold.isInitialized());
-
-  createEffect(() => {
-    if (!auth.activeUser()) return;
-    navigate("/auth/dashboard", { replace: true });
+  onMount(async () => {
+    try {
+      const fetchedUserSummaries = await invoke<UserSummary[]>(
+        Commands.GetUserSummaries,
+      );
+      setUserSummaries(fetchedUserSummaries);
+    } catch (e) {
+      console.error("onMount: ", e);
+    }
   });
 
   //
@@ -76,44 +49,19 @@ export default function Splash() {
   //
 
   async function onClickGoogleOAuth(): Promise<void> {
-    const oAuthResponse = await invoke<GoogleOAuthResponse>(
-      Commands.CreateGoogleOAuth,
-    );
-
-    await storeUserSummary(oAuthResponse.user_summary);
-
-    auth.setActiveUser(oAuthResponse.user_summary);
+    try {
+      await createGoogleOAuth();
+    } catch (e) {
+      console.error("onClickGoogleOAuth: ", e);
+    }
   }
 
   async function onClickUserSummary(userSummaryId: number): Promise<void> {
-    const oAuthResponse = await invoke<GoogleOAuthResponse>(
-      Commands.AccessGoogleOAuth,
-      { id: userSummaryId },
-    );
-
-    await storeUserSummary(oAuthResponse.user_summary);
-
-    auth.setActiveUser(oAuthResponse.user_summary);
-  }
-
-  //
-  // Functions
-  //
-
-  async function storeUserSummary({
-    id,
-    email,
-    first_name,
-    last_name,
-    avatar,
-    provider,
-  }: UserSummary): Promise<void> {
-    await stronghold.insert(StrongholdKeys.AuthId, id.toString());
-    await stronghold.insert(StrongholdKeys.AuthEmail, email);
-    await stronghold.insert(StrongholdKeys.AuthFirstName, first_name);
-    await stronghold.insert(StrongholdKeys.AuthLastName, last_name);
-    await stronghold.insert(StrongholdKeys.AuthAvatar, avatar!);
-    await stronghold.insert(StrongholdKeys.AuthProvider, provider);
+    try {
+      await accessGoogleOAuth(userSummaryId);
+    } catch (e) {
+      console.error("onClickUserSummary: ", e);
+    }
   }
 
   return (

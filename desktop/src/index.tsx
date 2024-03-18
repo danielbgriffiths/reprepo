@@ -7,20 +7,20 @@ import { lazy } from "solid-js";
 import { ThemeProvider } from "solid-styled-components";
 
 // Local Imports
-import Views from "./views";
-import Dashboard from "./views/private-layout/dashboard";
-import Catch from "./views/private-layout/catch";
-import { theme } from "./services/styled";
-import { StrongholdProvider } from "./services/stronghold";
-import { AuthProvider } from "./services/auth";
+import Views from "@views/index";
+import Dashboard from "@views/private-layout/dashboard";
+import Catch from "@views/private-layout/catch";
+import { theme } from "@services/styled";
+import { StrongholdProvider } from "@services/stronghold";
+import { AuthProvider } from "@services/auth";
 
 const ELEMENT_ID = "root";
 
 /**
  * Lazy import the base routes of certain use-cases
  */
-const Splash = lazy(() => import("./views/splash"));
-const PrivateLayout = lazy(() => import("./views/private-layout"));
+const Splash = lazy(() => import("@views/splash"));
+const PrivateLayout = lazy(() => import("@views/private-layout"));
 
 /**
  * Render application

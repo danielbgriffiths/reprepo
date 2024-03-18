@@ -1,6 +1,8 @@
 // External Usages
 use diesel::PgConnection;
+use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::Pool;
 
 pub struct AppState {
-    pub db_connection: PgConnection,
+    pub pool: Pool<ConnectionManager<PgConnection>>,
 }

@@ -2,6 +2,7 @@
 import { createEffect, createSignal, onMount } from "solid-js";
 import { Client, Stronghold } from "tauri-plugin-stronghold-api";
 import { appDataDir } from "@tauri-apps/api/path";
+import { invoke } from "@tauri-apps/api";
 
 // Local Imports
 import { StrongholdProviderProps } from "../index.types.ts";
@@ -11,8 +12,7 @@ import {
   NO_STORE_ERROR,
 } from "../index.config.ts";
 import { StrongholdContext } from "./create-context.tsx";
-import { invoke } from "@tauri-apps/api";
-import { Commands } from "../../commands";
+import { Commands } from "@services/commands";
 
 export function StrongholdProvider(props: StrongholdProviderProps) {
   //
@@ -76,13 +76,10 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
   }
 
   async function read(key: string): Promise<string | undefined> {
-    console.log("read: key: ", key, client());
     if (!client()) throw new Error(NOT_INITIALIZED_ERROR);
     const store = client()?.getStore();
-    console.log("read: store: ", store);
     if (!store) throw new Error(NO_STORE_ERROR);
     const data = await store.get(key);
-    console.log("read: data: ", data);
     if (!data) return;
     return new TextDecoder().decode(new Uint8Array(data));
   }

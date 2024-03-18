@@ -1,5 +1,5 @@
 // Local Imports
-import { AuthenticationProvider } from "../services/auth/index.types.ts";
+import { AuthenticationProvider } from "@services/auth/index.types.ts";
 
 export interface UserSummary {
   id: number;
@@ -8,4 +8,5 @@ export interface UserSummary {
   last_name: string;
   avatar?: string;
   provider: AuthenticationProvider;
+  locale: string;
 }

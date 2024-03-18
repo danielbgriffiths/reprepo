@@ -19,7 +19,17 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@shared-components/*": ["./src/components/shared/*"],
+      "@partial-components/*":  ["./src/components/partials/*"],
+      "@services/*":  ["./src/services/*"],
+      "@models/*":  ["./src/models/*"],
+      "@views/*":  ["./src/views/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

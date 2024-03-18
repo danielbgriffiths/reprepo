@@ -1,7 +1,6 @@
-import { JSX, JSXElement } from "solid-js";
-import Accessor = JSX.Accessor;
+import { Accessor, JSXElement } from "solid-js";
 
-import { UserSummary } from "../../models";
+import { UserSummary } from "@/models";
 
 export interface AuthBindings {
   activeUser: Accessor<UserSummary | undefined>;
@@ -12,12 +11,9 @@ export interface AuthProviderProps {
   children: JSXElement;
 }
 
-export interface GoogleOAuthResponse {
-  user_summary: UserSummary;
-  error_message?: string;
-}
-
 export enum AuthenticationProvider {
-  Google = "google",
-  Email = "email",
+  Google = "Google",
+  Instagram = "Instagram",
+  Pinterest = "Pinterest",
+  Email = "Email",
 }

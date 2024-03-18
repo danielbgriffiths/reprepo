@@ -4,7 +4,7 @@ import { createSignal } from "solid-js";
 // Local Imports
 import { AuthContext } from "./create-context.tsx";
 import { AuthProviderProps } from "../index.types.ts";
-import { UserSummary } from "../../../models";
+import { UserSummary } from "@/models";
 
 export function AuthProvider(props: AuthProviderProps) {
   //
