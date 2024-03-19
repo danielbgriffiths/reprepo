@@ -1,7 +1,9 @@
+// External Usages
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use diesel::{Queryable, Selectable};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[derive(diesel_derive_enum::DbEnum)]
 #[ExistingTypePath = "crate::schema::sql_types::OauthProvider"]
 pub enum OauthProvider {
@@ -11,7 +13,7 @@ pub enum OauthProvider {
     Pinterest,
 }
 
-#[derive(Queryable, Selectable, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
@@ -31,7 +33,7 @@ pub struct User {
     pub deleted_at: Option<chrono::NaiveDateTime>,
 }
 
-#[derive(Insertable)]
+#[derive(Debug, Insertable)]
 #[diesel(table_name = crate::schema::users)]
 pub struct CreateEmailUser<'a> {
     pub first_name: &'a String,
@@ -43,7 +45,7 @@ pub struct CreateEmailUser<'a> {
     pub locale: &'a String,
 }
 
-#[derive(Insertable)]
+#[derive(Debug, Insertable)]
 #[diesel(table_name = crate::schema::users)]
 pub struct CreateOAuthUser<'a> {
     pub first_name: &'a String,
@@ -56,19 +58,8 @@ pub struct CreateOAuthUser<'a> {
     pub provider: &'a OauthProvider,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GoogleOAuthUserTokenBody {
-    pub email: String,
-    pub family_name: String,
-    pub given_name: String,
-    pub locale: String,
-    pub name: String,
-    pub picture: String,
-    pub id: String,
-    pub verified_email: bool
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Selectable, Serialize, Deserialize, PartialEq, Queryable)]
+#[diesel(table_name = crate::schema::users)]
 pub struct UserSummary {
     pub id: i32,
     pub email: String,
@@ -79,29 +70,9 @@ pub struct UserSummary {
     pub locale: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AuthedSignatureClaims {
+#[derive(Debug, Selectable, Serialize, Deserialize, PartialEq, Queryable)]
+#[diesel(table_name = crate::schema::users)]
+pub struct UserCore {
     pub id: i32,
     pub email: String,
-    pub exp: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UserAuthenticationFields {
-    pub password: Option<String>,
-    pub access_token: Option<String>,
-    pub refresh_token: Option<String>,
-    pub provider: OauthProvider,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CommandError {
-    pub message: String,
-    pub error_type: Option<String>
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct LogoutCommandResponse {
-    pub data: bool,
-    pub error: Option<CommandError>
 }

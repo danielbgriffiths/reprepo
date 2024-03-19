@@ -7,3 +7,5 @@ mod media_record;
 mod media_checkpoint;
 mod musician_repertoire;
 mod musician_repertoire_record;
+pub mod commands;
+pub mod auth;
