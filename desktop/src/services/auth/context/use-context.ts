@@ -2,8 +2,8 @@
 import { useContext } from "solid-js";
 
 // Local Imports
-import { AuthContext } from "./create-context.tsx";
-import { AuthBindings } from "../index.types.ts";
+import { AuthContext } from "./create-context";
+import { AuthBindings } from "../index.types";
 
 export function useAuth(): AuthBindings {
   return useContext(AuthContext);

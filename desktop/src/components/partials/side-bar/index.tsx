@@ -1,18 +1,19 @@
 // Third Party Imports
-import { children, createSignal } from "solid-js";
-import { RouteSectionProps, useNavigate } from "@solidjs/router";
+import { createSignal } from "solid-js";
 
 // Local Imports
-import { LinkButton } from "@services/styled";
-import { useAuth } from "@services/auth";
+import * as Styled from "./index.styled";
+import { cmd } from "@services/commands/index.utils.ts";
 import { Commands } from "@services/commands";
+import { StrongholdKeys } from "@services/stronghold/index.config.ts";
+import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
-import { StrongholdKeys } from "@services/stronghold/index.config";
-import { cmd } from "@services/commands/index.utils";
+import { useNavigate } from "@solidjs/router";
+import { LinkButton } from "@services/styled";
 
-interface PrivateLayoutProps extends RouteSectionProps {}
+export interface SideBarProps {}
 
-export default function PrivateLayout(props: PrivateLayoutProps) {
+export function SideBar(_props: SideBarProps) {
   //
   // Hooks
   //
@@ -24,8 +25,6 @@ export default function PrivateLayout(props: PrivateLayoutProps) {
   //
   // State
   //
-
-  const c = children(() => props.children);
   const [logoutError, setLogoutError] = createSignal<string | undefined>();
 
   //
@@ -49,11 +48,9 @@ export default function PrivateLayout(props: PrivateLayoutProps) {
   }
 
   return (
-    <div>
+    <Styled.Wrapper>
+      {logoutError() && logoutError()}
       <LinkButton onClick={onClickLogout}>Logout</LinkButton>
-      <h1>Private Layout</h1>
-      <div>{logoutError() && <p>{logoutError()}</p>}</div>
-      {c()}
-    </div>
+    </Styled.Wrapper>
   );
 }

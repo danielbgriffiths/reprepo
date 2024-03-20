@@ -12,6 +12,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@ark-ui/solid": "^2.2.0",
     "@formatjs/cli": "^6.2.7",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-brands-svg-icons": "^6.5.1",

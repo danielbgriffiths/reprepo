@@ -6,9 +6,8 @@ This template should help get you started developing with Tauri, Solid and Types
 
 - [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
-### Next Steps for auth
-- Confirm methodology for logging out
-- Better define refresh tokens internally (and how it could relate to refresh tokens for provider)
-- Confirm logout flow
-- Refactor rust code
-- Style client code
+### Next Steps
+- Deeper dive into component library options/theming
+- Construct side-bar (requires consideration of future page states and user information state)
+- Construct notifications toast
+- Construct layout of dashboard

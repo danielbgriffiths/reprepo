@@ -2,6 +2,11 @@
 import { children } from "solid-js";
 import { RouteSectionProps } from "@solidjs/router";
 
+// Local Imports
+import { SideBar } from "@components/partials/side-bar";
+import { ToastBar } from "@components/shared/toast-bar";
+import * as Styled from "./index.styled";
+
 export interface ViewsProps extends RouteSectionProps {}
 
 /**
@@ -15,5 +20,11 @@ export default function Views(props: ViewsProps) {
 
   const c = children(() => props.children);
 
-  return <main>{c()}</main>;
+  return (
+    <Styled.ApplicationWrapper>
+      <SideBar />
+      {c()}
+      <ToastBar />
+    </Styled.ApplicationWrapper>
+  );
 }

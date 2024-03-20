@@ -8,11 +8,10 @@ import { ThemeProvider } from "solid-styled-components";
 
 // Local Imports
 import Views from "@views/index";
-import Dashboard from "@views/private-layout/dashboard";
-import Catch from "@views/private-layout/catch";
 import { theme } from "@services/styled";
 import { StrongholdProvider } from "@services/stronghold";
 import { AuthProvider } from "@services/auth";
+import { NotificationsProvider } from "@services/notifications";
 
 const ELEMENT_ID = "root";
 
@@ -20,26 +19,27 @@ const ELEMENT_ID = "root";
  * Lazy import the base routes of certain use-cases
  */
 const Splash = lazy(() => import("@views/splash"));
-const PrivateLayout = lazy(() => import("@views/private-layout"));
+const Dashboard = lazy(() => import("@views/dashboard"));
+const Catch = lazy(() => import("@views/catch"));
 
 /**
  * Render application
  */
 render(
   () => (
-    <AuthProvider>
-      <StrongholdProvider>
-        <ThemeProvider theme={theme}>
-          <Router root={Views}>
-            <Route path="/" component={Splash} />
-            <Route path="/auth" component={PrivateLayout}>
+    <NotificationsProvider>
+      <AuthProvider>
+        <StrongholdProvider>
+          <ThemeProvider theme={theme}>
+            <Router root={Views}>
+              <Route path="/" component={Splash} />
               <Route path="/dashboard" component={Dashboard} />
               <Route path="*404" component={Catch} />
-            </Route>
-          </Router>
-        </ThemeProvider>
-      </StrongholdProvider>
-    </AuthProvider>
+            </Router>
+          </ThemeProvider>
+        </StrongholdProvider>
+      </AuthProvider>
+    </NotificationsProvider>
   ),
   document.getElementById(ELEMENT_ID)!,
 );

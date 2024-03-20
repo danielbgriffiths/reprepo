@@ -4,7 +4,6 @@ import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { createSignal, onMount } from "solid-js";
 
 // Local Imports
-import { PublicLayout } from "@components/partials/public-layout";
 import * as GlobalStyled from "@services/styled";
 import * as Styled from "./index.styled";
 import { Commands } from "@services/commands";
@@ -57,7 +56,7 @@ export default function Splash() {
   }
 
   return (
-    <PublicLayout>
+    <div>
       <GlobalStyled.PublicPageTitle>
         Welcome To Reprepo
       </GlobalStyled.PublicPageTitle>
@@ -87,6 +86,6 @@ export default function Splash() {
         )}
         {authFlowError() && <p>{authFlowError()}</p>}
       </Styled.Content>
-    </PublicLayout>
+    </div>
   );
 }
