@@ -98,7 +98,7 @@ fn create_oauth_redirect_listener() -> (AuthorizationCode, CsrfToken) {
 }
 
 #[tauri::command]
-pub fn create_google_oauth(app_state: State<AppState>) -> CommandResponse::<String> {
+pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<i32>) -> CommandResponse::<String> {
     let google_oauth_client = get_google_oauth_client();
 
     let (pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -117,7 +117,19 @@ pub fn create_google_oauth(app_state: State<AppState>) -> CommandResponse::<Stri
         .url();
 
     // TODO: Can we do this programmatically, yes, how?
-    println!("Open this URL in your browser:\n{}\n", authorize_url);
+    // println!("Open this URL in your browser:\n{}\n", authorize_url);
+
+    use webbrowser;
+
+    if !webbrowser::open(&authorize_url.to_string()).is_ok() {
+        return CommandResponse::<String> {
+            data: None,
+            error: Some(CommandError {
+                message: "Unable to open web browser".to_string(),
+                error_type: Some(CommandErrorType::Process),
+            })
+        }
+    }
 
     let (code, _csrf_state) = create_oauth_redirect_listener();
 
@@ -143,16 +155,35 @@ pub fn create_google_oauth(app_state: State<AppState>) -> CommandResponse::<Stri
 
             match user_info_token_body_result {
                 Ok(user_info_token_body) => {
-                    match create_user(&app_state, &CreateOAuthUser {
-                        first_name: &user_info_token_body.given_name,
-                        last_name: &user_info_token_body.family_name,
-                        email: &user_info_token_body.email,
-                        avatar: &user_info_token_body.picture,
-                        access_token: &basic_token_response.access_token().secret(),
-                        refresh_token: &basic_token_response.refresh_token().unwrap().secret(),
-                        locale: &user_info_token_body.locale,
-                        provider: &OauthProvider::Google,
-                    }) {
+
+                    if existing_user_id.is_some() {
+                        let existing_user_core = select_user_core(&app_state, &existing_user_id.unwrap()).unwrap();
+                        if existing_user_core.email != user_info_token_body.email {
+                            return CommandResponse::<String> {
+                                data: None,
+                                error: Some(CommandError {
+                                    message: format!("Existing user core does not match token. Existing: {}, Token: {}", existing_user_core.email, user_info_token_body.email),
+                                    error_type: Some(CommandErrorType::Process)
+                                })
+                            }
+                        }
+                    }
+
+                    let user_id = match existing_user_id {
+                        Some(user_id) => Ok(user_id),
+                        None => create_user(&app_state, &CreateOAuthUser {
+                            first_name: &user_info_token_body.given_name,
+                            last_name: &user_info_token_body.family_name,
+                            email: &user_info_token_body.email,
+                            avatar: &user_info_token_body.picture,
+                            access_token: &basic_token_response.access_token().secret(),
+                            refresh_token: &basic_token_response.refresh_token().unwrap().secret(),
+                            locale: &user_info_token_body.locale,
+                            provider: &OauthProvider::Google,
+                        })
+                    };
+
+                    match user_id {
                         Ok(user_id) => {
                             match select_user_core(&app_state, &user_id) {
                                 Ok(user) => {
@@ -223,6 +254,13 @@ pub fn create_google_oauth(app_state: State<AppState>) -> CommandResponse::<Stri
 }
 
 fn logout_google_oauth(app_state: State<AppState>, user_id: i32, auth_fields: UserAuthenticationFields) -> CommandResponse::<bool> {
+    if !auth_fields.access_token.is_some() && !auth_fields.refresh_token.is_some() {
+        return CommandResponse::<bool> {
+            data: Some(true),
+            error: None
+        }
+    }
+
     let standard_revocable_token_option = match auth_fields.refresh_token {
         Some(authed_refresh_token) => Some(StandardRevocableToken::from(AccessToken::new(authed_refresh_token.to_owned()))),
         None => match auth_fields.access_token {

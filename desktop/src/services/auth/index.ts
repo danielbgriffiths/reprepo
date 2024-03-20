@@ -4,5 +4,4 @@ export type {
   AuthBindings,
   AuthProviderProps,
   AuthenticationProvider,
-  GoogleOAuthResponse,
 } from "./index.types.ts";

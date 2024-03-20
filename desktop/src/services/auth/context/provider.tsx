@@ -16,7 +16,7 @@ export function AuthProvider(props: AuthProviderProps) {
   );
 
   return (
-    <AuthContext.Provider value={{ activeUser, setActiveUser }}>
+    <AuthContext.Provider value={[activeUser, setActiveUser]}>
       {props.children}
     </AuthContext.Provider>
   );

@@ -21,10 +21,11 @@ pub fn select_user_summaries(app_state: &State<AppState>) -> QueryResult<Vec<Use
     user_summaries
 }
 
-pub fn select_user_summary(app_state: &State<AppState>) -> QueryResult<UserSummary> {
+pub fn select_user_summary(app_state: &State<AppState>, user_id: &i32) -> QueryResult<UserSummary> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     users
+        .find(user_id)
         .select(UserSummary::as_select())
         .get_result::<UserSummary>(db_connection)
 }

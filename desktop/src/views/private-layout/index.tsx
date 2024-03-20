@@ -1,14 +1,14 @@
 // Third Party Imports
 import { children, createSignal } from "solid-js";
-import { invoke } from "@tauri-apps/api";
-import { RouteSectionProps } from "@solidjs/router";
+import { RouteSectionProps, useNavigate } from "@solidjs/router";
 
 // Local Imports
 import { LinkButton } from "@services/styled";
 import { useAuth } from "@services/auth";
-import { Commands, InvokeResult } from "@services/commands";
+import { Commands } from "@services/commands";
 import { useStronghold } from "@services/stronghold";
-import { StrongholdKeys } from "@services/stronghold/index.config.ts";
+import { StrongholdKeys } from "@services/stronghold/index.config";
+import { cmd } from "@services/commands/index.utils";
 
 interface PrivateLayoutProps extends RouteSectionProps {}
 
@@ -17,8 +17,9 @@ export default function PrivateLayout(props: PrivateLayoutProps) {
   // Hooks
   //
 
-  const auth = useAuth();
+  const [activeUser, setActiveUser] = useAuth();
   const stronghold = useStronghold();
+  const navigate = useNavigate();
 
   //
   // State
@@ -32,17 +33,19 @@ export default function PrivateLayout(props: PrivateLayoutProps) {
   //
 
   async function onClickLogout(): Promise<void> {
-    const logoutResult = await invoke<InvokeResult<boolean>>(Commands.Logout, {
-      userId: auth.activeUser()!.id,
+    const logoutResult = await cmd<boolean>(Commands.Logout, {
+      userId: activeUser()!.id,
     });
 
-    if (logoutResult.data) {
-      auth.setActiveUser(undefined);
-      await stronghold.remove(StrongholdKeys.AuthedSignature);
+    if (logoutResult.error) {
+      setLogoutError(logoutResult.error.message);
       return;
     }
 
-    setLogoutError(logoutResult.error.message);
+    setActiveUser(undefined);
+    await stronghold.remove(StrongholdKeys.AuthedSignature);
+    await stronghold.save();
+    navigate("/", { replace: true });
   }
 
   return (

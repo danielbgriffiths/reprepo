@@ -2,17 +2,17 @@
 import { createEffect, createSignal, onMount } from "solid-js";
 import { Client, Stronghold } from "tauri-plugin-stronghold-api";
 import { appDataDir } from "@tauri-apps/api/path";
-import { invoke } from "@tauri-apps/api";
 
 // Local Imports
-import { StrongholdProviderProps } from "../index.types.ts";
+import { StrongholdProviderProps } from "../index.types";
 import {
   MISSING_VARIABLES_ERROR,
   NOT_INITIALIZED_ERROR,
   NO_STORE_ERROR,
-} from "../index.config.ts";
-import { StrongholdContext } from "./create-context.tsx";
+} from "../index.config";
+import { StrongholdContext } from "./create-context";
 import { Commands } from "@services/commands";
+import { cmd } from "@services/commands/index.utils";
 
 export function StrongholdProvider(props: StrongholdProviderProps) {
   //
@@ -28,31 +28,35 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
   //
 
   onMount(async () => {
-    const VAULT_FILE_NAME = await invoke<string>(Commands.GetEnv, {
+    const vaultFileNameResult = await cmd<string>(Commands.GetEnv, {
       name: "VAULT_FILE_NAME",
     });
-    const VAULT_KEY = await invoke<string>(Commands.GetEnv, {
+    const vaultKeyResult = await cmd<string>(Commands.GetEnv, {
       name: "VAULT_KEY",
     });
-    const VAULT_CLIENT_NAME = await invoke<string>(Commands.GetEnv, {
+    const vaultClientNameResult = await cmd<string>(Commands.GetEnv, {
       name: "VAULT_CLIENT_NAME",
     });
 
-    if (!VAULT_FILE_NAME || !VAULT_KEY || !VAULT_CLIENT_NAME) {
+    if (
+      vaultFileNameResult.error ||
+      vaultKeyResult.error ||
+      vaultClientNameResult.error
+    ) {
       throw new Error(MISSING_VARIABLES_ERROR);
     }
 
     const _stronghold = await Stronghold.load(
-      `${await appDataDir()}/${VAULT_FILE_NAME}`,
-      VAULT_KEY!,
+      `${await appDataDir()}/${vaultFileNameResult.data}`,
+      vaultKeyResult.data!,
     );
 
     let _client!: Client;
 
     try {
-      _client = await _stronghold.loadClient(VAULT_CLIENT_NAME!);
+      _client = await _stronghold.loadClient(vaultClientNameResult.data!);
     } catch {
-      _client = await _stronghold.createClient(VAULT_CLIENT_NAME!);
+      _client = await _stronghold.createClient(vaultClientNameResult.data!);
     }
 
     setStronghold(_stronghold);
@@ -72,7 +76,8 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
     if (!client()) throw new Error(NOT_INITIALIZED_ERROR);
     const store = client()?.getStore();
     if (!store) throw new Error(NO_STORE_ERROR);
-    return await store.insert(key, Array.from(new TextEncoder().encode(value)));
+    await store.insert(key, Array.from(new TextEncoder().encode(value)));
+    console.info(`Stronghold insert ${key}: `, value);
   }
 
   async function read(key: string): Promise<string | undefined> {
@@ -81,7 +86,9 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
     if (!store) throw new Error(NO_STORE_ERROR);
     const data = await store.get(key);
     if (!data) return;
-    return new TextDecoder().decode(new Uint8Array(data));
+    const response = new TextDecoder().decode(new Uint8Array(data));
+    console.info(`Stronghold read ${key}: `, response);
+    return response;
   }
 
   async function save(): Promise<void> {
@@ -93,6 +100,7 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
     const store = client()?.getStore();
     if (!store) throw new Error(NO_STORE_ERROR);
     await store.remove(key);
+    console.info(`Stronghold remove ${key}`);
   }
 
   return (

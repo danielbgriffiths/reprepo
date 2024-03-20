@@ -25,6 +25,7 @@ oauth2 = { version = "4.4.2", features = ["reqwest"] }
 url = { version = "2.1", features = ["serde"] }
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 jsonwebtoken = "9.2.0"
+webbrowser = "0.8.13"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

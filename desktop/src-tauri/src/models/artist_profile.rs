@@ -1,3 +1,4 @@
+// External Imports
 use diesel::prelude::*;
 
 #[derive(Debug)]
@@ -26,7 +27,7 @@ pub enum ArtistSpecialization {
     ExoticDance,
 }
 
-#[derive(Queryable, Selectable)]
+#[derive(Debug, Queryable, Selectable)]
 #[diesel(table_name = crate::schema::artist_profile)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ArtistProfile {

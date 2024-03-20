@@ -4,7 +4,7 @@ import { createContext } from "solid-js";
 // Local Imports
 import { AuthBindings } from "../index.types.ts";
 
-export const AuthContext = createContext<AuthBindings>({
-  activeUser: () => undefined,
-  setActiveUser: () => {},
-});
+export const AuthContext = createContext<AuthBindings>([
+  () => undefined,
+  () => {},
+]);

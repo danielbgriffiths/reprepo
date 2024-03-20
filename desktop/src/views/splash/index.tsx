@@ -1,7 +1,6 @@
 // Third Party Imports
 import Icon from "solid-fa";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
-import { invoke } from "@tauri-apps/api";
 import { createSignal, onMount } from "solid-js";
 
 // Local Imports
@@ -9,10 +8,11 @@ import { PublicLayout } from "@components/partials/public-layout";
 import * as GlobalStyled from "@services/styled";
 import * as Styled from "./index.styled";
 import { Commands } from "@services/commands";
-import { AuthenticationProvider } from "@services/auth/index.types.ts";
+import { AuthenticationProvider } from "@services/auth/index.types";
 import { UserSummary } from "@/models";
-import { useAuthenticate } from "./hooks/authenticate.hook.ts";
+import { useAuthenticate } from "./hooks/authenticate.hook";
 import { useAuth } from "@services/auth";
+import { cmd } from "@services/commands/index.utils";
 
 /**
  * The splash view component
@@ -22,13 +22,9 @@ export default function Splash() {
   // Hooks
   //
 
-  const auth = useAuth();
-  const [
-    isAuthStateInitializing,
-    authFlowError,
-    createGoogleOAuth,
-    accessGoogleOAuth,
-  ] = useAuthenticate();
+  const [activeUser] = useAuth();
+  const [isAuthStateInitializing, authFlowError, createGoogleOAuth] =
+    useAuthenticate();
 
   //
   // State
@@ -41,14 +37,11 @@ export default function Splash() {
   //
 
   onMount(async () => {
-    try {
-      const fetchedUserSummaries = await invoke<UserSummary[]>(
-        Commands.GetUserSummaries,
-      );
-      setUserSummaries(fetchedUserSummaries);
-    } catch (e) {
-      console.error("onMount: ", e);
-    }
+    const fetchedUserSummariesResult = await cmd<UserSummary[]>(
+      Commands.GetUserSummaries,
+    );
+
+    setUserSummaries(fetchedUserSummariesResult.data || []);
   });
 
   //
@@ -56,19 +49,11 @@ export default function Splash() {
   //
 
   async function onClickGoogleOAuth(): Promise<void> {
-    try {
-      await createGoogleOAuth();
-    } catch (e) {
-      console.error("onClickGoogleOAuth: ", e);
-    }
+    await createGoogleOAuth();
   }
 
   async function onClickUserSummary(userSummaryId: number): Promise<void> {
-    try {
-      await accessGoogleOAuth(userSummaryId);
-    } catch (e) {
-      console.error("onClickUserSummary: ", e);
-    }
+    await createGoogleOAuth(userSummaryId);
   }
 
   return (
@@ -77,7 +62,7 @@ export default function Splash() {
         Welcome To Reprepo
       </GlobalStyled.PublicPageTitle>
       <Styled.Content>
-        {!isAuthStateInitializing() && !auth.activeUser() && (
+        {!isAuthStateInitializing() && !activeUser() && (
           <div>
             <GlobalStyled.LinkButton onClick={onClickGoogleOAuth}>
               <Icon icon={faGoogle} />
@@ -97,7 +82,7 @@ export default function Splash() {
               ))}
           </div>
         )}
-        {isAuthStateInitializing() && !auth.activeUser() && (
+        {isAuthStateInitializing() && !authFlowError() && !activeUser() && (
           <div>Initializing...</div>
         )}
         {authFlowError() && <p>{authFlowError()}</p>}
