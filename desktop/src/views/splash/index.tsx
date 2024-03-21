@@ -4,8 +4,6 @@ import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { createSignal, onMount } from "solid-js";
 
 // Local Imports
-import * as GlobalStyled from "@services/styled";
-import * as Styled from "./index.styled";
 import { Commands } from "@services/commands";
 import { AuthenticationProvider } from "@services/auth/index.types";
 import { UserSummary } from "@/models";
@@ -57,27 +55,26 @@ export default function Splash() {
 
   return (
     <div>
-      <GlobalStyled.PublicPageTitle>
-        Welcome To Reprepo
-      </GlobalStyled.PublicPageTitle>
-      <Styled.Content>
+      <h1>Welcome To Reprepo</h1>
+      <div>
         {!isAuthStateInitializing() && !activeUser() && (
           <div>
-            <GlobalStyled.LinkButton onClick={onClickGoogleOAuth}>
+            <button class={"btn btn-primary"} onClick={onClickGoogleOAuth}>
               <Icon icon={faGoogle} />
-            </GlobalStyled.LinkButton>
+            </button>
             {userSummaries()
               .filter(
                 (userSummary) =>
                   userSummary.provider === AuthenticationProvider.Google,
               )
               .map((userSummary) => (
-                <GlobalStyled.LinkButton
+                <button
+                  class={"btn btn-primary"}
                   onClick={() => onClickUserSummary(userSummary.id)}
                 >
                   <img alt="user avatar" src={userSummary.avatar} />
                   {userSummary.first_name} {userSummary.last_name}
-                </GlobalStyled.LinkButton>
+                </button>
               ))}
           </div>
         )}
@@ -85,7 +82,7 @@ export default function Splash() {
           <div>Initializing...</div>
         )}
         {authFlowError() && <p>{authFlowError()}</p>}
-      </Styled.Content>
+      </div>
     </div>
   );
 }

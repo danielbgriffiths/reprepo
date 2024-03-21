@@ -2,14 +2,13 @@
 import { createSignal } from "solid-js";
 
 // Local Imports
-import * as Styled from "./index.styled";
-import { cmd } from "@services/commands/index.utils.ts";
+import { cmd } from "@services/commands/index.utils";
 import { Commands } from "@services/commands";
-import { StrongholdKeys } from "@services/stronghold/index.config.ts";
+import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
 import { useNavigate } from "@solidjs/router";
-import { LinkButton } from "@services/styled";
+import { SideBarDisplay } from "./SideBarDisplay";
 
 export interface SideBarProps {}
 
@@ -48,9 +47,24 @@ export function SideBar(_props: SideBarProps) {
   }
 
   return (
-    <Styled.Wrapper>
-      {logoutError() && logoutError()}
-      <LinkButton onClick={onClickLogout}>Logout</LinkButton>
-    </Styled.Wrapper>
+    <SideBarDisplay>
+      <>
+        <div class="avatar">
+          <div class="w-24 rounded">
+            <img alt="Logo" src="../../../../public/logo.png" />
+          </div>
+        </div>
+        <li>
+          <a>Sidebar Item 1</a>
+        </li>
+        <li>
+          <a>Sidebar Item 2</a>
+        </li>
+        <div>
+          <img alt="avatar" src="" />
+          <a onClick={onClickLogout}>Logout</a>
+        </div>
+      </>
+    </SideBarDisplay>
   );
 }

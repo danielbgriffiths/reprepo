@@ -30,6 +30,7 @@ export default defineConfig(async () => ({
       "@services": path.resolve(__dirname, "./src/services"),
       "@models": path.resolve(__dirname, "./src/models"),
       "@views": path.resolve(__dirname, "./src/views"),
+      "@styles": path.resolve(__dirname, "./src/styles"),
     },
   },
 }));

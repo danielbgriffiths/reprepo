@@ -28,7 +28,8 @@
       "@partial-components/*":  ["./src/components/partials/*"],
       "@services/*":  ["./src/services/*"],
       "@models/*":  ["./src/models/*"],
-      "@views/*":  ["./src/views/*"]
+      "@views/*":  ["./src/views/*"],
+      "@styles/*": ["./src/styles/*"],
     }
   },
   "include": ["src"],

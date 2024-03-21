@@ -8,12 +8,12 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tailwind:build": "npx tailwindcss -i ./src/styles/_main.scss -o ./src/styles/output.css --watch"
   },
   "license": "MIT",
   "dependencies": {
-    "@ark-ui/solid": "^2.2.0",
-    "@formatjs/cli": "^6.2.7",
+    "@formatjs/intl": "^2.10.0",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-brands-svg-icons": "^6.5.1",
     "@fortawesome/pro-light-svg-icons": "^6.5.1",
@@ -22,13 +22,15 @@
     "@tauri-apps/api": "^1",
     "solid-fa": "^0.2.0",
     "solid-js": "^1.7.8",
-    "solid-styled-components": "^0.28.5",
     "tauri-plugin-stronghold-api": "github:tauri-apps/tauri-plugin-stronghold#v1"
   },
   "devDependencies": {
+    "@formatjs/cli": "^6.2.7",
     "@tauri-apps/cli": "^1",
     "@types/node": "^20.11.27",
+    "daisyui": "^4.7.3",
     "sass": "^1.71.1",
+    "tailwind": "^4.0.0",
     "typescript": "^5.0.2",
     "vite": "^5.0.0",
     "vite-plugin-solid": "^2.8.0"

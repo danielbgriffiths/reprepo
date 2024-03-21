@@ -4,14 +4,15 @@
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
 import { lazy } from "solid-js";
-import { ThemeProvider } from "solid-styled-components";
 
 // Local Imports
 import Views from "@views/index";
-import { theme } from "@services/styled";
 import { StrongholdProvider } from "@services/stronghold";
 import { AuthProvider } from "@services/auth";
 import { NotificationsProvider } from "@services/notifications";
+
+import "./styles/output.css";
+import "./styles/_main.scss";
 
 const ELEMENT_ID = "root";
 
@@ -30,13 +31,11 @@ render(
     <NotificationsProvider>
       <AuthProvider>
         <StrongholdProvider>
-          <ThemeProvider theme={theme}>
-            <Router root={Views}>
-              <Route path="/" component={Splash} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="*404" component={Catch} />
-            </Router>
-          </ThemeProvider>
+          <Router root={Views}>
+            <Route path="/" component={Splash} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="*404" component={Catch} />
+          </Router>
         </StrongholdProvider>
       </AuthProvider>
     </NotificationsProvider>
