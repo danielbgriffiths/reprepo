@@ -9,10 +9,10 @@ import { useStronghold } from "@services/stronghold";
 import { useAuth } from "@services/auth";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { cmd } from "@services/commands/index.utils";
+import { useNotifications } from "@services/notifications";
 
 export type UseAuthenticateBindings = [
   Accessor<boolean>,
-  Accessor<string | undefined>,
   (userId?: number) => Promise<void>,
 ];
 
@@ -24,6 +24,7 @@ export function useAuthenticate(): UseAuthenticateBindings {
   const stronghold = useStronghold();
   const navigate = useNavigate();
   const [activeUser, setActiveUser] = useAuth();
+  const [_, notificationActions] = useNotifications();
 
   //
   // State
@@ -31,7 +32,6 @@ export function useAuthenticate(): UseAuthenticateBindings {
 
   const [isAuthStateInitializing, setIsAuthStateInitializing] =
     createSignal<boolean>(true);
-  const [authFlowError, setAuthFlowError] = createSignal<string | undefined>();
 
   const reactWithStrongholdRead = createReaction(createAuthFromStronghold);
 
@@ -40,11 +40,7 @@ export function useAuthenticate(): UseAuthenticateBindings {
   //
 
   if (stronghold.isInitialized()) {
-    createAuthFromStronghold()
-      .then(() => console.info("Stronghold authentication complete."))
-      .catch((e) =>
-        console.error("Error during stronghold authentication: ", e),
-      );
+    createAuthFromStronghold().catch(console.error);
   } else {
     reactWithStrongholdRead(() => stronghold.isInitialized());
   }
@@ -66,7 +62,12 @@ export function useAuthenticate(): UseAuthenticateBindings {
     );
 
     if (authedSignatureResult.error) {
-      setAuthFlowError(authedSignatureResult.error.message);
+      notificationActions.addNotification({
+        message: <span>{authedSignatureResult.error.message}</span>,
+        type: "error",
+        duration: 5000,
+        isRemovableByClick: true,
+      });
       return;
     }
 
@@ -79,7 +80,12 @@ export function useAuthenticate(): UseAuthenticateBindings {
 
     if (authenticatedUserSummaryResult.error) {
       await removeAuthedSignature();
-      setAuthFlowError(authenticatedUserSummaryResult.error.message);
+      notificationActions.addNotification({
+        message: <span>{authenticatedUserSummaryResult.error.message}</span>,
+        type: "error",
+        duration: 5000,
+        isRemovableByClick: true,
+      });
       return;
     }
 
@@ -102,7 +108,12 @@ export function useAuthenticate(): UseAuthenticateBindings {
     );
 
     if (authenticatedUserSummary.error) {
-      setAuthFlowError(authenticatedUserSummary.error.message!);
+      notificationActions.addNotification({
+        message: <span>{authenticatedUserSummary.error.message}</span>,
+        type: "error",
+        duration: 5000,
+        isRemovableByClick: true,
+      });
       await removeAuthedSignature();
       return;
     }
@@ -124,5 +135,5 @@ export function useAuthenticate(): UseAuthenticateBindings {
     await stronghold.save();
   }
 
-  return [isAuthStateInitializing, authFlowError, createGoogleOAuth];
+  return [isAuthStateInitializing, createGoogleOAuth];
 }

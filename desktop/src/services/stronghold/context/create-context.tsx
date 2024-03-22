@@ -2,8 +2,8 @@
 import { createContext } from "solid-js";
 
 // Local Imports
-import { StrongholdBindings } from "../index.types.ts";
-import { NOT_INITIALIZED_ERROR } from "../index.config.ts";
+import { StrongholdBindings } from "../index.types";
+import { NOT_INITIALIZED_ERROR } from "../index.config";
 
 export const StrongholdContext = createContext<StrongholdBindings>({
   insert: async () => {

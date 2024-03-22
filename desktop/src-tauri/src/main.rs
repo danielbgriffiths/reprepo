@@ -10,6 +10,9 @@ pub mod commands;
 pub mod state;
 pub mod services;
 
+// External Usages
+use tauri::{LogicalSize, Manager};
+
 // Local Usages
 use crate::layout::menu::create_menu;
 use crate::commands::user::{get_user_summaries, get_authenticated_user_summary};
@@ -41,6 +44,19 @@ fn main() {
                 get_env
             ]
         )
+        .setup(|app| {
+            match app.get_window(&"main".to_string()) {
+                Some(main_window) => {
+                    let _min_size = main_window.set_min_size(Some(LogicalSize {
+                        width: 1100,
+                        height: 800,
+                    }));
+
+                    Ok(())
+                },
+                None => Ok(())
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

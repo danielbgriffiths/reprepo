@@ -1,1 +1,1 @@
-export * from "./index.types.ts";
+export * from "./index.types";

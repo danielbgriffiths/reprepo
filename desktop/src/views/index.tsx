@@ -3,16 +3,12 @@ import { children } from "solid-js";
 import { RouteSectionProps } from "@solidjs/router";
 
 // Local Imports
-import { SideBar } from "@components/partials/side-bar";
-import { TopBar } from "@components/partials/top-bar";
-import { ToastBar } from "@components/shared/toast-bar";
+import { SideBar } from "@components/side-bar";
+import { TopBar } from "@components/top-bar";
+import { ToastBar } from "@components/toast-bar";
 
 export interface ViewsProps extends RouteSectionProps {}
 
-/**
- * The main view component that wraps the entire application
- * @param {ViewsProps} props
- */
 export default function Views(props: ViewsProps) {
   //
   // State
@@ -23,9 +19,9 @@ export default function Views(props: ViewsProps) {
   return (
     <>
       <SideBar />
-      <div class="page-container">
+      <div class="primary-container">
         <TopBar />
-        <div class="page-content">{c()}</div>
+        <div class="view-container">{c()}</div>
       </div>
       <ToastBar />
     </>

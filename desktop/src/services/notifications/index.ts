@@ -1,6 +1,6 @@
-export { NotificationsProvider } from "./context/provider.tsx";
-export { useNotifications } from "./context/use-context.ts";
+export { NotificationsProvider } from "./context/provider";
+export { useNotifications } from "./context/use-context";
 export type {
   NotificationsBindings,
   NotificationsProviderProps,
-} from "./index.types.ts";
+} from "./index.types";

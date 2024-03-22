@@ -2,8 +2,8 @@
 import { useContext } from "solid-js";
 
 // Local Imports
-import { StrongholdBindings } from "../index.types.ts";
-import { StrongholdContext } from "./create-context.tsx";
+import { StrongholdBindings } from "../index.types";
+import { StrongholdContext } from "./create-context";
 
 export function useStronghold(): StrongholdBindings {
   return useContext(StrongholdContext)!;

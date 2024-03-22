@@ -20,8 +20,7 @@ export default function Splash() {
   //
 
   const [activeUser] = useAuth();
-  const [isAuthStateInitializing, authFlowError, createGoogleOAuth] =
-    useAuthenticate();
+  const [isAuthStateInitializing, createGoogleOAuth] = useAuthenticate();
 
   //
   // State
@@ -78,10 +77,9 @@ export default function Splash() {
               ))}
           </div>
         )}
-        {isAuthStateInitializing() && !authFlowError() && !activeUser() && (
+        {isAuthStateInitializing() && !activeUser() && (
           <div>Initializing...</div>
         )}
-        {authFlowError() && <p>{authFlowError()}</p>}
       </div>
     </div>
   );

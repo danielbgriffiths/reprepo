@@ -5,6 +5,9 @@ import { createContext } from "solid-js";
 import { NotificationsBindings } from "../index.types";
 
 export const NotificationsContext = createContext<NotificationsBindings>([
-  () => undefined,
-  () => {},
+  () => [],
+  {
+    addNotification: () => {},
+    removeNotification: () => {},
+  },
 ]);

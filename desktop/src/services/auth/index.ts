@@ -1,7 +1,7 @@
-export { AuthProvider } from "./context/provider.tsx";
-export { useAuth } from "./context/use-context.ts";
+export { AuthProvider } from "./context/provider";
+export { useAuth } from "./context/use-context";
 export type {
   AuthBindings,
   AuthProviderProps,
   AuthenticationProvider,
-} from "./index.types.ts";
+} from "./index.types";

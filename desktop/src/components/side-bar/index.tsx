@@ -1,6 +1,3 @@
-// Third Party Imports
-import { createSignal } from "solid-js";
-
 // Local Imports
 import { cmd } from "@services/commands/index.utils";
 import { Commands } from "@services/commands";
@@ -8,7 +5,7 @@ import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
 import { useNavigate } from "@solidjs/router";
-import { SideBarDisplay } from "./SideBarDisplay";
+import { useNotifications } from "@services/notifications";
 
 export interface SideBarProps {}
 
@@ -20,11 +17,7 @@ export function SideBar(_props: SideBarProps) {
   const [activeUser, setActiveUser] = useAuth();
   const stronghold = useStronghold();
   const navigate = useNavigate();
-
-  //
-  // State
-  //
-  const [logoutError, setLogoutError] = createSignal<string | undefined>();
+  const [_, notificationActions] = useNotifications();
 
   //
   // Event Handlers
@@ -36,7 +29,12 @@ export function SideBar(_props: SideBarProps) {
     });
 
     if (logoutResult.error) {
-      setLogoutError(logoutResult.error.message);
+      notificationActions.addNotification({
+        message: <span>{logoutResult.error.message}</span>,
+        type: "error",
+        duration: 5000,
+        isRemovableByClick: true,
+      });
       return;
     }
 
@@ -47,24 +45,24 @@ export function SideBar(_props: SideBarProps) {
   }
 
   return (
-    <SideBarDisplay>
-      <>
-        <div class="avatar">
-          <div class="w-24 rounded">
-            <img alt="Logo" src="../../../../public/logo.png" />
+    <div class="secondary-container">
+      <img class="primary-logo" alt="logo" src="../../assets/logo.svg" />
+
+      <div class="primary-side-bar">
+        <ul class="primary-navigation menu bg-base-400 text-base-content border-r border-r-solid border-r-base-200">
+          <li>
+            <a>Sidebar Item 1</a>
+          </li>
+          <li>
+            <a>Sidebar Item 2</a>
+          </li>
+          <div>
+            <img alt="avatar" src="" />
+            <a onClick={onClickLogout}>Logout</a>
           </div>
-        </div>
-        <li>
-          <a>Sidebar Item 1</a>
-        </li>
-        <li>
-          <a>Sidebar Item 2</a>
-        </li>
-        <div>
-          <img alt="avatar" src="" />
-          <a onClick={onClickLogout}>Logout</a>
-        </div>
-      </>
-    </SideBarDisplay>
+        </ul>
+      </div>
+      <div class="secondary-side-bar"></div>
+    </div>
   );
 }

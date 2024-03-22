@@ -1,20 +1,25 @@
+import Icon from "solid-fa";
+import { faGlobe } from "@fortawesome/pro-light-svg-icons";
+
 export interface TopBarProps {}
 
 export function TopBar(_props: TopBarProps) {
   return (
-    <div class="navbar bg-base-100">
-      <div class="flex-1">
-        <a class="btn btn-ghost text-xl">daisyUI</a>
+    <div class="top-bar-container">
+      <div class="">
+        <input class="scope-search-input" />
       </div>
-      <div class="flex-none">
-        <ul class="menu menu-horizontal px-1">
+      <div class="">
+        <ul class="">
           <li>
             <a>Link</a>
           </li>
           <li>
             <details>
-              <summary>Parent</summary>
-              <ul class="p-2 bg-base-100 rounded-t-none">
+              <summary>
+                <Icon icon={faGlobe} />
+              </summary>
+              <ul class="">
                 <li>
                   <a>Link 1</a>
                 </li>
