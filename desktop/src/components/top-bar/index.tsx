@@ -1,6 +1,9 @@
+// Third Party Imports
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
 import { faGlobe, faPaintbrushPencil } from "@fortawesome/pro-light-svg-icons";
+
+// Local Imports
 import { THEME_NAMES, useStyle } from "@services/styles";
 import { LOCALE_KEYS, LOCALE_MAP } from "@services/locale/index.config.ts";
 import { SupportedLocale, useLocale } from "@services/locale";
@@ -14,7 +17,7 @@ export function TopBar(_props: TopBarProps) {
   //
 
   const [activeLocale, localActions] = useLocale();
-  const [_, styleActions] = useStyle();
+  const [activeTheme, styleActions] = useStyle();
 
   //
   // Event Handlers
@@ -24,41 +27,21 @@ export function TopBar(_props: TopBarProps) {
     localActions.setActiveLocale(locale);
   }
 
-  async function onClickTheme(themeName: StyleThemeName): void {
+  async function onClickTheme(themeName: StyleThemeName): Promise<void> {
     await styleActions.setActiveTheme(themeName);
   }
 
+  function onScopeSearchInput(_event: Event): void {}
+
   return (
     <Styled.Container>
-      {/* Config List Item 1 */}
       <Styled.ScopeSearchContainer>
-        <Styled.ScopeSearchInput />
+        <Styled.ScopeSearchInput onInput={onScopeSearchInput} />
       </Styled.ScopeSearchContainer>
 
-      {/* Config List Item 1 */}
       <Styled.ConfigContainer>
         <Styled.ConfigList>
-          {/* Config List Item 1 */}
-          <Styled.ConfigListItem>
-            <Styled.ConfigDetailMenu>
-              <Styled.ConfigDetailMenuSummary>
-                <Icon icon={faPaintbrushPencil} />
-              </Styled.ConfigDetailMenuSummary>
-              <Styled.ConfigDetailMenuList>
-                {THEME_NAMES.map((themeName) => (
-                  <Styled.ConfigDetailMenuListItem>
-                    <Styled.ConfigDetailMenuTrigger
-                      onClick={() => onClickTheme(themeName)}
-                    >
-                      {themeName}
-                    </Styled.ConfigDetailMenuTrigger>
-                  </Styled.ConfigDetailMenuListItem>
-                ))}
-              </Styled.ConfigDetailMenuList>
-            </Styled.ConfigDetailMenu>
-          </Styled.ConfigListItem>
-
-          {/* Config List Item 1 */}
+          {/* Locale Menu */}
           <Styled.ConfigListItem>
             <Styled.ConfigDetailMenu>
               <Styled.ConfigDetailMenuSummary>
@@ -66,11 +49,35 @@ export function TopBar(_props: TopBarProps) {
               </Styled.ConfigDetailMenuSummary>
               <Styled.ConfigDetailMenuList>
                 {LOCALE_KEYS.map((locale) => (
-                  <Styled.ConfigDetailMenuListItem>
+                  <Styled.ConfigDetailMenuListItem
+                    $isActive={locale === activeLocale()}
+                  >
                     <Styled.ConfigDetailMenuTrigger
                       onClick={() => onClickLocale(locale)}
                     >
                       {LOCALE_MAP[locale]}
+                    </Styled.ConfigDetailMenuTrigger>
+                  </Styled.ConfigDetailMenuListItem>
+                ))}
+              </Styled.ConfigDetailMenuList>
+            </Styled.ConfigDetailMenu>
+          </Styled.ConfigListItem>
+
+          {/* Theme Menu */}
+          <Styled.ConfigListItem>
+            <Styled.ConfigDetailMenu>
+              <Styled.ConfigDetailMenuSummary>
+                <Icon icon={faPaintbrushPencil} />
+              </Styled.ConfigDetailMenuSummary>
+              <Styled.ConfigDetailMenuList>
+                {THEME_NAMES.map((themeName) => (
+                  <Styled.ConfigDetailMenuListItem
+                    $isActive={themeName === activeTheme()}
+                  >
+                    <Styled.ConfigDetailMenuTrigger
+                      onClick={() => onClickTheme(themeName)}
+                    >
+                      {themeName}
                     </Styled.ConfigDetailMenuTrigger>
                   </Styled.ConfigDetailMenuListItem>
                 ))}
@@ -93,6 +100,6 @@ const Styled = {
   ConfigDetailMenu: styled.details``,
   ConfigDetailMenuSummary: styled.summary``,
   ConfigDetailMenuList: styled.ul``,
-  ConfigDetailMenuListItem: styled.li``,
+  ConfigDetailMenuListItem: styled.li<{ $isActive: boolean }>``,
   ConfigDetailMenuTrigger: styled.a``,
 };

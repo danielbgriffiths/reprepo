@@ -4,7 +4,9 @@ import { UserSummary } from "@/models";
 
 export type AuthBindings = [
   Accessor<UserSummary | undefined>,
-  (user?: UserSummary) => void,
+  {
+    setActiveUser: (user?: UserSummary) => void;
+  },
 ];
 
 export interface AuthProviderProps {

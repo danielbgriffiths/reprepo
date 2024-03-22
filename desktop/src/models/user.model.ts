@@ -4,9 +4,19 @@ import { AuthenticationProvider } from "@services/auth/index.types";
 export interface UserSummary {
   id: number;
   email: string;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   avatar?: string;
   provider: AuthenticationProvider;
   locale: string;
+}
+
+export interface User extends UserSummary {
+  age: number;
+  password?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string;
 }

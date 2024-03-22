@@ -1,15 +1,14 @@
 // Third Party Imports
 import { createSignal, onMount } from "solid-js";
+import { ThemeProvider } from "solid-styled-components";
 
 // Local Imports
 import { StyleContext } from "./create-context";
 import {
   StyleBindings,
   StyleProviderProps,
-  StyleTheme,
   StyleThemeName,
 } from "../index.types";
-import { DEFAULT_THEME } from "@services/styles";
 import { useStronghold } from "@services/stronghold";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { THEMES_MAP } from "../index.config";
@@ -25,7 +24,9 @@ export function StyleProvider(props: StyleProviderProps) {
   // State
   //
 
-  const [activeTheme, setActiveTheme] = createSignal<StyleTheme>(DEFAULT_THEME);
+  const [activeTheme, setActiveTheme] = createSignal<StyleThemeName>(
+    StyleThemeName.Light,
+  );
 
   //
   // Lifecycle
@@ -38,14 +39,14 @@ export function StyleProvider(props: StyleProviderProps) {
 
     if (!themeName) return;
 
-    setActiveTheme(THEMES_MAP[themeName]);
+    setActiveTheme(themeName);
   });
 
   const styleBindings: StyleBindings = [
     activeTheme,
     {
       setActiveTheme: async (themeName: StyleThemeName) => {
-        setActiveTheme(THEMES_MAP[themeName]);
+        setActiveTheme(themeName);
 
         await stronghold.insert(StrongholdKeys.ActiveTheme, themeName);
         await stronghold.save();
@@ -54,8 +55,10 @@ export function StyleProvider(props: StyleProviderProps) {
   ];
 
   return (
-    <StyleContext.Provider value={styleBindings}>
-      {props.children}
-    </StyleContext.Provider>
+    <ThemeProvider theme={THEMES_MAP[activeTheme()]}>
+      <StyleContext.Provider value={styleBindings}>
+        {props.children}
+      </StyleContext.Provider>
+    </ThemeProvider>
   );
 }

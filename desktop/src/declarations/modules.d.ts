@@ -7,9 +7,5 @@ declare module "*.svg" {
 }
 
 declare module "solid-styled-components" {
-  export interface DefaultTheme {
-    colors: {
-      primary: string;
-    };
-  }
+  export interface DefaultTheme {}
 }

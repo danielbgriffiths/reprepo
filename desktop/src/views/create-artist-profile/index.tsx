@@ -1,10 +1,10 @@
 // Third Party Imports
 import { styled } from "solid-styled-components";
 
-export default function Dashboard() {
+export default function CreateArtistProfile() {
   return (
     <Styled.Container>
-      <h1>Dashboard</h1>
+      <h1>CreateArtistProfile</h1>
     </Styled.Container>
   );
 }

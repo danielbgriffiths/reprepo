@@ -6,5 +6,7 @@ import { AuthBindings } from "../index.types";
 
 export const AuthContext = createContext<AuthBindings>([
   () => undefined,
-  () => {},
+  {
+    setActiveUser: (_user: any) => {},
+  },
 ]);

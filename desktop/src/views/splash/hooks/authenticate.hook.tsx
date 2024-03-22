@@ -23,7 +23,7 @@ export function useAuthenticate(): UseAuthenticateBindings {
 
   const stronghold = useStronghold();
   const navigate = useNavigate();
-  const [activeUser, setActiveUser] = useAuth();
+  const [activeUser, authActions] = useAuth();
   const [_, notificationActions] = useNotifications();
 
   //
@@ -89,7 +89,7 @@ export function useAuthenticate(): UseAuthenticateBindings {
       return;
     }
 
-    setActiveUser(authenticatedUserSummaryResult.data);
+    authActions.setActiveUser(authenticatedUserSummaryResult.data);
   }
 
   async function createAuthFromStronghold(): Promise<void> {
@@ -118,7 +118,7 @@ export function useAuthenticate(): UseAuthenticateBindings {
       return;
     }
 
-    setActiveUser(authenticatedUserSummary.data);
+    authActions.setActiveUser(authenticatedUserSummary.data);
   }
 
   //

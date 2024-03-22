@@ -1,4 +1,10 @@
+import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
+import {
+  faGridHorizontal,
+  faNetworkWired,
+  faGrid2Plus,
+} from "@fortawesome/pro-light-svg-icons";
 
 // Local Imports
 import { cmd } from "@services/commands/index.utils";
@@ -16,7 +22,7 @@ export function SideBar(_props: SideBarProps) {
   // Hooks
   //
 
-  const [activeUser, setActiveUser] = useAuth();
+  const [activeUser, authActions] = useAuth();
   const stronghold = useStronghold();
   const navigate = useNavigate();
   const [_, notificationActions] = useNotifications();
@@ -40,7 +46,7 @@ export function SideBar(_props: SideBarProps) {
       return;
     }
 
-    setActiveUser(undefined);
+    authActions.setActiveUser(undefined);
     await stronghold.remove(StrongholdKeys.AuthedSignature);
     await stronghold.save();
     navigate("/", { replace: true });
@@ -49,22 +55,33 @@ export function SideBar(_props: SideBarProps) {
   return (
     <Styled.Container>
       <Styled.LogoContainer>
-        <Styled.Logo alt="logo" src="../../assets/logo.svg" />
+        <Styled.Logo alt="logo" src="/logo.png" />
       </Styled.LogoContainer>
 
       <Styled.List>
         {[
-          { name: "Overview", path: "/overview" },
-          { name: "Add Record", path: "/add-record" },
+          { name: "Overview", path: "/overview", icon: faGridHorizontal },
+          { name: "Connect", path: "/add-record", icon: faNetworkWired },
+          {
+            name: "Create Record",
+            path: "/create-record",
+            icon: faNetworkWired,
+          },
+          { name: "Addons", path: "/addons", icon: faGrid2Plus },
         ].map((item) => (
           <Styled.ListItem>
-            <Styled.LinkTo href={item.path}>{item.name}</Styled.LinkTo>
+            <Styled.LinkTo href={item.path}>
+              <Styled.ListItemIcon icon={item.icon} />
+            </Styled.LinkTo>
           </Styled.ListItem>
         ))}
       </Styled.List>
 
       <Styled.AvatarContainer>
-        <Styled.Avatar alt="avatar" src="" />
+        <Styled.Avatar
+          alt="avatar"
+          src={activeUser()?.avatar || "/avatar.png"}
+        />
         <Styled.SecondaryLinkTo onClick={onClickLogout}>
           Logout
         </Styled.SecondaryLinkTo>
@@ -80,6 +97,7 @@ const Styled = {
   List: styled.ul``,
   ListItem: styled.li``,
   LinkTo: styled.a``,
+  ListItemIcon: styled(Icon)``,
   AvatarContainer: styled.div``,
   Avatar: styled.img``,
   SecondaryLinkTo: styled.a``,

@@ -4,6 +4,8 @@ export enum Commands {
   GetEnv = "get_env",
   GetAuthenticatedUserSummary = "get_authenticated_user_summary",
   Logout = "logout",
+  GetArtistProfiles = "get_artist_profiles",
+  UpdateUser = "update user",
 }
 
 export interface InvokeResult<T> {

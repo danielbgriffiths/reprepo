@@ -70,10 +70,7 @@ export default function Splash() {
                   userSummary.provider === AuthenticationProvider.Google,
               )
               .map((userSummary) => (
-                <button
-                  class={"btn btn-primary"}
-                  onClick={() => onClickUserSummary(userSummary.id)}
-                >
+                <button onClick={() => onClickUserSummary(userSummary.id)}>
                   <img alt="user avatar" src={userSummary.avatar} />
                   {userSummary.first_name} {userSummary.last_name}
                 </button>

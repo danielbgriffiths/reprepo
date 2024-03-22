@@ -3,7 +3,7 @@ import { createSignal } from "solid-js";
 
 // Local Imports
 import { AuthContext } from "./create-context";
-import { AuthProviderProps } from "../index.types";
+import { AuthBindings, AuthProviderProps } from "../index.types";
 import { UserSummary } from "@/models";
 
 export function AuthProvider(props: AuthProviderProps) {
@@ -15,8 +15,10 @@ export function AuthProvider(props: AuthProviderProps) {
     undefined,
   );
 
+  const authBindings: AuthBindings = [activeUser, { setActiveUser }];
+
   return (
-    <AuthContext.Provider value={[activeUser, setActiveUser]}>
+    <AuthContext.Provider value={authBindings}>
       {props.children}
     </AuthContext.Provider>
   );

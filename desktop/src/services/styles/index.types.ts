@@ -2,7 +2,7 @@
 import { Accessor, JSXElement } from "solid-js";
 
 export type StyleBindings = [
-  Accessor<StyleTheme>,
+  Accessor<StyleThemeName>,
   {
     setActiveTheme: (themeName: StyleThemeName) => Promise<void>;
   },

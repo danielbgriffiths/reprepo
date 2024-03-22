@@ -6,4 +6,5 @@ export const NO_STORE_ERROR = "Store not found";
 export enum StrongholdKeys {
   AuthedSignature = "authed_signature",
   ActiveTheme = "active_theme",
+  ActiveArtistProfile = "active_artist_profile",
 }
