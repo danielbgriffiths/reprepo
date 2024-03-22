@@ -61,3 +61,5 @@ export const THEMES_MAP: Record<StyleThemeName, StyleTheme> = {
     },
   },
 };
+
+export const THEME_NAMES = Object.keys(THEMES_MAP) as StyleThemeName[];

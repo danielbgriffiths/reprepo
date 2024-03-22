@@ -10,6 +10,8 @@ import { UserSummary } from "@/models";
 import { useAuthenticate } from "./hooks/authenticate.hook";
 import { useAuth } from "@services/auth";
 import { cmd } from "@services/commands/index.utils";
+import { useLocale } from "@services/locale";
+import { TranslationKey } from "@services/locale/index.types";
 
 /**
  * The splash view component
@@ -21,6 +23,7 @@ export default function Splash() {
 
   const [activeUser] = useAuth();
   const [isAuthStateInitializing, createGoogleOAuth] = useAuthenticate();
+  const [_, localeActions] = useLocale();
 
   //
   // State
@@ -54,11 +57,11 @@ export default function Splash() {
 
   return (
     <div>
-      <h1>Welcome To Reprepo</h1>
+      <h1>{localeActions.text(TranslationKey.SplashWelcome)}</h1>
       <div>
         {!isAuthStateInitializing() && !activeUser() && (
           <div>
-            <button class={"btn btn-primary"} onClick={onClickGoogleOAuth}>
+            <button onClick={onClickGoogleOAuth}>
               <Icon icon={faGoogle} />
             </button>
             {userSummaries()

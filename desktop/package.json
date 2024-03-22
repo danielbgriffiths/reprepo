@@ -19,6 +19,7 @@
     "@fortawesome/sharp-light-svg-icons": "^6.5.1",
     "@solidjs/router": "^0.13.0",
     "@tauri-apps/api": "^1",
+    "i18next": "^23.10.1",
     "solid-fa": "^0.2.0",
     "solid-js": "^1.7.8",
     "solid-styled-components": "^0.28.5",

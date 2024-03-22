@@ -116,9 +116,6 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<
         .set_pkce_challenge(pkce_code_challenge)
         .url();
 
-    // TODO: Can we do this programmatically, yes, how?
-    // println!("Open this URL in your browser:\n{}\n", authorize_url);
-
     use webbrowser;
 
     if !webbrowser::open(&authorize_url.to_string()).is_ok() {

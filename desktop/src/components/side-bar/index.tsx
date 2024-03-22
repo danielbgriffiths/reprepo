@@ -1,3 +1,5 @@
+import { styled } from "solid-styled-components";
+
 // Local Imports
 import { cmd } from "@services/commands/index.utils";
 import { Commands } from "@services/commands";
@@ -45,24 +47,40 @@ export function SideBar(_props: SideBarProps) {
   }
 
   return (
-    <div class="secondary-container">
-      <img class="primary-logo" alt="logo" src="../../assets/logo.svg" />
+    <Styled.Container>
+      <Styled.LogoContainer>
+        <Styled.Logo alt="logo" src="../../assets/logo.svg" />
+      </Styled.LogoContainer>
 
-      <div class="primary-side-bar">
-        <ul class="primary-navigation menu bg-base-400 text-base-content border-r border-r-solid border-r-base-200">
-          <li>
-            <a>Sidebar Item 1</a>
-          </li>
-          <li>
-            <a>Sidebar Item 2</a>
-          </li>
-          <div>
-            <img alt="avatar" src="" />
-            <a onClick={onClickLogout}>Logout</a>
-          </div>
-        </ul>
-      </div>
-      <div class="secondary-side-bar"></div>
-    </div>
+      <Styled.List>
+        {[
+          { name: "Overview", path: "/overview" },
+          { name: "Add Record", path: "/add-record" },
+        ].map((item) => (
+          <Styled.ListItem>
+            <Styled.LinkTo href={item.path}>{item.name}</Styled.LinkTo>
+          </Styled.ListItem>
+        ))}
+      </Styled.List>
+
+      <Styled.AvatarContainer>
+        <Styled.Avatar alt="avatar" src="" />
+        <Styled.SecondaryLinkTo onClick={onClickLogout}>
+          Logout
+        </Styled.SecondaryLinkTo>
+      </Styled.AvatarContainer>
+    </Styled.Container>
   );
 }
+
+const Styled = {
+  Container: styled.div``,
+  LogoContainer: styled.div``,
+  Logo: styled.img``,
+  List: styled.ul``,
+  ListItem: styled.li``,
+  LinkTo: styled.a``,
+  AvatarContainer: styled.div``,
+  Avatar: styled.img``,
+  SecondaryLinkTo: styled.a``,
+};
