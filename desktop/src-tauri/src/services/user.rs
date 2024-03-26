@@ -3,66 +3,56 @@ use diesel::QueryResult;
 use tauri::State;
 use diesel::prelude::*;
 use diesel;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 
 // Local Usages
-use crate::models::user::{CreateOAuthUser, UserCore, UserSummary};
-use crate::models::auth::{UserAuthenticationFields};
-use crate::schema::users::dsl::users;
-use crate::schema::users::{access_token, id, refresh_token};
+use crate::models::user::{AuthenticatedUser, CreateUser, UpdateUser, User};
 use crate::state::AppState;
+use crate::schema::user;
+use crate::schema::auth_account;
+use crate::services::auth::select_auth_core;
 
-pub fn select_user_summaries(app_state: &State<AppState>) -> QueryResult<Vec<UserSummary>> {
+pub fn select_account_users(app_state: &State<AppState>, target_account_id: &i32) -> QueryResult<Vec<User>> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
-    let user_summaries = users
-        .select(UserSummary::as_select())
-        .get_results::<UserSummary>(db_connection);
-
-    user_summaries
+    user::table
+        .inner_join(
+            auth_account::table.on(
+                user::auth_id.eq(auth_account::auth_id)
+            )
+        )
+        .filter(auth_account::account_id.eq(target_account_id))
+        .select(user::all_columns)
+        .load::<User>(db_connection)
 }
 
-pub fn select_user_summary(app_state: &State<AppState>, user_id: &i32) -> QueryResult<UserSummary> {
+pub fn select_authenticated_user(app_state: &State<AppState>, target_user_id: &i32) -> QueryResult<AuthenticatedUser> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
-    users
-        .find(user_id)
-        .select(UserSummary::as_select())
-        .get_result::<UserSummary>(db_connection)
+    let result: User = user::table
+        .find(target_user_id)
+        .get_result(db_connection)?;
+
+    let auth_id = result.auth_id;
+
+    Ok(AuthenticatedUser {
+        user: result,
+        auth: select_auth_core(&app_state, &auth_id)?,
+    })
 }
 
-pub fn select_user_core(app_state: &State<AppState>, user_id: &i32) -> QueryResult<UserCore> {
-    let db_connection = &mut app_state.pool.get().unwrap();
-
-    users
-        .find(user_id)
-        .select(UserCore::as_select())
-        .first::<UserCore>(db_connection)
-}
-
-pub fn select_user_authentication_fields(app_state: &State<AppState>, user_id: &i32) -> QueryResult<UserAuthenticationFields> {
-    let db_connection = &mut app_state.pool.get().unwrap();
-
-    users
-        .find(user_id)
-        .select(UserAuthenticationFields::as_select())
-        .first::<UserAuthenticationFields>(db_connection)
-}
-
-pub fn create_user(app_state: &State<AppState>, new_user: &CreateOAuthUser) -> QueryResult<i32> {
-    let db_connection = &mut app_state.pool.get().unwrap();
-
-    diesel::insert_into(users)
+pub fn create_user(db_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, new_user: &CreateUser) -> QueryResult<i32> {
+    diesel::insert_into(user::table)
         .values(new_user)
-        .returning(id)
+        .returning(user::id)
         .get_result::<i32>(db_connection)
 }
 
-pub fn update_user_access_tokens_null(app_state: &State<AppState>, user_id: &i32) -> QueryResult<i32> {
+pub fn update_user(app_state: &State<AppState>, user_id: &i32, user_changes: &UpdateUser) -> QueryResult<i32> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
-    diesel::update(users)
-        .filter(id.eq(user_id))
-        .set((access_token.eq(None::<String>), refresh_token.eq(None::<String>)))
-        .returning(id)
+    diesel::update(user::table.find(user_id))
+        .set(user_changes)
+        .returning(user::id)
         .get_result::<i32>(db_connection)
 }

@@ -2,136 +2,13 @@
 
 pub mod sql_types {
     #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "artist_field"))]
-    pub struct ArtistField;
-
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "artist_specialization"))]
-    pub struct ArtistSpecialization;
-
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "checkpoint_status"))]
-    pub struct CheckpointStatus;
-
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "media_type"))]
-    pub struct MediaType;
-
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "oauth_provider"))]
     pub struct OauthProvider;
 }
 
 diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::ArtistField;
-    use super::sql_types::ArtistSpecialization;
-
-    artist_profile (id) {
+    account (id) {
         id -> Int4,
-        user_id -> Int4,
-        field -> ArtistField,
-        specialization -> ArtistSpecialization,
-        is_private -> Bool,
-        start_date -> Timestamp,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::CheckpointStatus;
-
-    checkpoint (id) {
-        id -> Int4,
-        record_id -> Int4,
-        status -> CheckpointStatus,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::MediaType;
-
-    media (id) {
-        id -> Int4,
-        user_id -> Int4,
-        #[max_length = 255]
-        label -> Varchar,
-        #[max_length = 255]
-        file_name -> Varchar,
-        #[max_length = 255]
-        file_path -> Varchar,
-        #[max_length = 255]
-        media_uri -> Varchar,
-        is_private -> Bool,
-        media_type -> MediaType,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    media_checkpoint (id) {
-        id -> Int4,
-        media_id -> Int4,
-        checkpoint_id -> Int4,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    media_record (id) {
-        id -> Int4,
-        media_id -> Int4,
-        record_id -> Int4,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    musician_repertoire (id) {
-        id -> Int4,
-        user_id -> Int4,
-        #[max_length = 255]
-        composer -> Varchar,
-        #[max_length = 255]
-        name -> Varchar,
-        mvmt -> Nullable<Int4>,
-        n -> Nullable<Int4>,
-        op -> Nullable<Int4>,
-        kvv -> Nullable<Int4>,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    musician_repertoire_record (id) {
-        id -> Int4,
-        musician_repertoire_id -> Int4,
-        record_id -> Int4,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    record (id) {
-        id -> Int4,
-        artist_profile_id -> Int4,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
         deleted_at -> Nullable<Timestamp>,
@@ -142,52 +19,84 @@ diesel::table! {
     use diesel::sql_types::*;
     use super::sql_types::OauthProvider;
 
-    users (id) {
+    auth (id) {
         id -> Int4,
-        #[max_length = 100]
-        first_name -> Varchar,
-        #[max_length = 100]
-        last_name -> Varchar,
         #[max_length = 255]
         email -> Varchar,
         #[max_length = 255]
         password -> Nullable<Varchar>,
-        age -> Nullable<Int4>,
         provider -> OauthProvider,
-        #[max_length = 2000]
-        access_token -> Nullable<Varchar>,
-        #[max_length = 2000]
-        refresh_token -> Nullable<Varchar>,
-        #[max_length = 255]
-        avatar -> Nullable<Varchar>,
-        #[max_length = 15]
-        locale -> Varchar,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
         deleted_at -> Nullable<Timestamp>,
     }
 }
 
-diesel::joinable!(artist_profile -> users (user_id));
-diesel::joinable!(checkpoint -> record (record_id));
-diesel::joinable!(media -> users (user_id));
-diesel::joinable!(media_checkpoint -> checkpoint (checkpoint_id));
-diesel::joinable!(media_checkpoint -> media (media_id));
-diesel::joinable!(media_record -> media (media_id));
-diesel::joinable!(media_record -> record (record_id));
-diesel::joinable!(musician_repertoire -> users (user_id));
-diesel::joinable!(musician_repertoire_record -> musician_repertoire (musician_repertoire_id));
-diesel::joinable!(musician_repertoire_record -> record (record_id));
-diesel::joinable!(record -> artist_profile (artist_profile_id));
+diesel::table! {
+    auth_account (id) {
+        id -> Int4,
+        auth_id -> Int4,
+        account_id -> Int4,
+        is_root -> Bool,
+        #[max_length = 2000]
+        access_token -> Nullable<Varchar>,
+        #[max_length = 2000]
+        refresh_token -> Nullable<Varchar>,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    repository (id) {
+        id -> Int4,
+        user_id -> Int4,
+        #[max_length = 50]
+        name -> Varchar,
+        #[max_length = 50]
+        field -> Varchar,
+        #[max_length = 50]
+        specialization -> Varchar,
+        #[max_length = 255]
+        avatar -> Nullable<Varchar>,
+        is_private -> Bool,
+        start_date -> Timestamp,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    user (id) {
+        id -> Int4,
+        auth_id -> Int4,
+        #[max_length = 30]
+        first_name -> Varchar,
+        #[max_length = 50]
+        last_name -> Varchar,
+        age -> Nullable<Int4>,
+        #[max_length = 255]
+        avatar -> Nullable<Varchar>,
+        #[max_length = 10]
+        locale -> Varchar,
+        is_onboarded -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::joinable!(auth_account -> account (account_id));
+diesel::joinable!(auth_account -> auth (auth_id));
+diesel::joinable!(repository -> user (user_id));
+diesel::joinable!(user -> auth (auth_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    artist_profile,
-    checkpoint,
-    media,
-    media_checkpoint,
-    media_record,
-    musician_repertoire,
-    musician_repertoire_record,
-    record,
-    users,
+    account,
+    auth,
+    auth_account,
+    repository,
+    user,
 );

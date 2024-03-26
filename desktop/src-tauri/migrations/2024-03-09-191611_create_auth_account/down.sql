@@ -1,2 +1,3 @@
 -- This file should undo anything in `up.sql`
-DROP TABLE IF EXISTS musician_repertoire;
+
+DROP TABLE IF EXISTS auth_account;

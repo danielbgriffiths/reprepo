@@ -1,5 +1,5 @@
 // Third Party Imports
-import { createSignal, onMount } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import { ThemeProvider } from "solid-styled-components";
 
 // Local Imports
@@ -12,6 +12,7 @@ import {
 import { useStronghold } from "@services/stronghold";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { THEMES_MAP } from "../index.config";
+import { useAuth } from "@services/auth";
 
 export function StyleProvider(props: StyleProviderProps) {
   //
@@ -19,6 +20,7 @@ export function StyleProvider(props: StyleProviderProps) {
   //
 
   const stronghold = useStronghold();
+  const [activeUser] = useAuth();
 
   //
   // State
@@ -32,10 +34,16 @@ export function StyleProvider(props: StyleProviderProps) {
   // Lifecycle
   //
 
-  onMount(async () => {
-    const themeName = (await stronghold.read(
+  createEffect(() => {
+    if (!activeUser()) {
+      setActiveTheme(StyleThemeName.Light);
+      return;
+    }
+
+    const themeName = stronghold.readWithParse(
       StrongholdKeys.ActiveTheme,
-    )) as StyleThemeName;
+      activeUser()!.id,
+    ) as unknown as StyleThemeName;
 
     if (!themeName) return;
 
@@ -48,8 +56,15 @@ export function StyleProvider(props: StyleProviderProps) {
       setActiveTheme: async (themeName: StyleThemeName) => {
         setActiveTheme(themeName);
 
-        await stronghold.insert(StrongholdKeys.ActiveTheme, themeName);
-        await stronghold.save();
+        if (!activeUser()) return;
+
+        await stronghold.insertWithParse(
+          StrongholdKeys.ActiveTheme,
+          { key: activeUser()!.id, value: themeName },
+          {
+            save: true,
+          },
+        );
       },
     },
   ];

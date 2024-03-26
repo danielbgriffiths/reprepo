@@ -10,53 +10,48 @@ pub mod commands;
 pub mod state;
 pub mod services;
 
+use std::error::Error;
 // External Usages
-use tauri::{LogicalSize, Manager};
+use tauri::{App, LogicalSize, Manager};
 
 // Local Usages
 use crate::layout::menu::create_menu;
-use crate::commands::user::{get_user_summaries, get_authenticated_user_summary};
+use crate::commands::user::{get_users, get_authenticated_user};
 use crate::commands::utilities::get_env;
 use crate::commands::auth::{create_google_oauth, logout};
 use crate::database::connection::get_connection_pool;
 use crate::services::stronghold::create_stronghold_plugin;
 use crate::state::{AppState};
 
+fn setup_window_constraints(app: &mut App) -> Result<(), Box<dyn Error>> {
+    match app.get_window(&"main".to_string()) {
+        Some(main_window) => {
+            let _min_size = main_window.set_min_size(Some(LogicalSize {
+                width: 1100,
+                height: 800,
+            }));
+
+            Ok(())
+        },
+        None => Ok(())
+    }
+}
+
 fn main() {
-    let menu = create_menu();
-
-    let pool = get_connection_pool();
-
-    let stronghold_plugin = create_stronghold_plugin();
-
-    let app_state = AppState { pool };
-
     tauri::Builder::default()
-        .plugin(stronghold_plugin.build())
-        .menu(menu)
-        .manage(app_state)
+        .plugin(create_stronghold_plugin().build())
+        .menu(create_menu())
+        .manage(AppState { pool: get_connection_pool() })
         .invoke_handler(
             tauri::generate_handler![
-                get_user_summaries,
-                get_authenticated_user_summary,
+                get_users,
+                get_authenticated_user,
                 create_google_oauth,
                 logout,
                 get_env
             ]
         )
-        .setup(|app| {
-            match app.get_window(&"main".to_string()) {
-                Some(main_window) => {
-                    let _min_size = main_window.set_min_size(Some(LogicalSize {
-                        width: 1100,
-                        height: 800,
-                    }));
-
-                    Ok(())
-                },
-                None => Ok(())
-            }
-        })
+        .setup(setup_window_constraints)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -6,22 +6,29 @@ use crate::models::commands::{CommandError, CommandErrorType, CommandResponse};
 
 
 // Local Usages
-use crate::models::user::{UserSummary};
+use crate::models::user::{AuthenticatedUser, User};
 use crate::models::auth::{AuthedSignatureClaims};
 use crate::state::{AppState};
-use crate::services::user::{select_user_summaries, select_user_summary};
+use crate::services::user::{select_account_users, select_authenticated_user};
 
 #[tauri::command]
-pub fn get_user_summaries(app_state: State<AppState>) -> CommandResponse::<Vec<UserSummary>> {
-    match select_user_summaries(&app_state) {
-        Ok(user_summaries) => CommandResponse::<Vec<UserSummary>> {
-            data: Some(user_summaries),
+pub fn get_users(app_state: State<AppState>, account_id: Option<i32>) -> CommandResponse::<Vec<User>> {
+    if !account_id.is_some() {
+        return CommandResponse::<Vec<User>> {
+            data: Some(Vec::new()),
+            error: None
+        }
+    }
+
+    match select_account_users(&app_state, &account_id.unwrap()) {
+        Ok(users) => CommandResponse::<Vec<User>> {
+            data: Some(users),
             error: None
         },
-        Err(e) => CommandResponse::<Vec<UserSummary>> {
+        Err(e) => CommandResponse::<Vec<User>> {
             data: Some(Vec::new()),
             error: Some(CommandError {
-                message: format!("Error selecting user summaries: {}", e),
+                message: format!("Error selecting account users: {}", e),
                 error_type: Some(CommandErrorType::Database)
             })
         }
@@ -29,64 +36,73 @@ pub fn get_user_summaries(app_state: State<AppState>) -> CommandResponse::<Vec<U
 }
 
 #[tauri::command]
-pub fn get_authenticated_user_summary(app_state: State<AppState>, authed_signature: Option<String>) -> CommandResponse::<UserSummary> {
-    match authed_signature {
-        Some(signature) => {
-            let authed_signature_secret_env = env::var("AUTHED_SIGNATURE_SECRET")
-                .expect("Missing the AUTHED_SIGNATURE_SECRET environment variable.");
+pub fn get_authenticated_user(app_state: State<AppState>, authed_signature: Option<String>, account_id: Option<i32>) -> CommandResponse::<AuthenticatedUser> {
+    if !account_id.is_some() {
+        return CommandResponse::<AuthenticatedUser> {
+            data: None,
+            error: Some(CommandError {
+                message: "No account id provided".to_string(),
+                error_type: Some(CommandErrorType::Process)
+            })
+        }
+    }
 
-            let authed_signature_result = decode::<AuthedSignatureClaims>(
-                &signature,
-                &DecodingKey::from_secret(authed_signature_secret_env.as_ref()),
-                &Validation::new(Algorithm::HS256)
-            );
-
-            match authed_signature_result {
-                Ok(authed_signature) => {
-                    match select_user_summary(&app_state, &authed_signature.claims.id) {
-                        Ok(user_summary) => {
-                            if authed_signature.claims.email == user_summary.email {
-                                return CommandResponse::<UserSummary> {
-                                    data: Some(user_summary),
-                                    error: None
-                                }
-                            }
-
-                            return CommandResponse::<UserSummary> {
-                                data: None,
-                                error: Some(CommandError {
-                                    message: format!(
-                                        "Token data did not match stored data:\nauthed_signature.email={},user_summary.email={}",
-                                        authed_signature.claims.email,
-                                        user_summary.email,
-                                    ),
-                                    error_type: Some(CommandErrorType::Process)
-                                })
-                            }
-                        },
-                        Err(e) => CommandResponse::<UserSummary> {
-                            data: None,
-                            error: Some(CommandError {
-                                message: format!("Error selecting user summary: {}", e),
-                                error_type: Some(CommandErrorType::Database)
-                            })
-                        }
-                    }
-                },
-                Err(e) => CommandResponse::<UserSummary> {
-                    data: None,
-                    error: Some(CommandError {
-                        message: format!("Error decoding token: {}", e),
-                        error_type: Some(CommandErrorType::External)
-                    })
-                }
-            }
-        },
-        None => CommandResponse::<UserSummary> {
+    if !authed_signature.is_some() {
+        return CommandResponse::<AuthenticatedUser> {
             data: None,
             error: Some(CommandError {
                 message: "No auth signature provided".to_string(),
                 error_type: Some(CommandErrorType::Process)
+            })
+        }
+    }
+
+    let authed_signature_secret_env = env::var("AUTHED_SIGNATURE_SECRET")
+        .expect("Missing the AUTHED_SIGNATURE_SECRET environment variable.");
+
+    let authed_signature_result = decode::<AuthedSignatureClaims>(
+        &authed_signature.unwrap(),
+        &DecodingKey::from_secret(authed_signature_secret_env.as_ref()),
+        &Validation::new(Algorithm::HS256)
+    );
+
+    match authed_signature_result {
+        Ok(authed_signature) => {
+            match select_authenticated_user(&app_state, &authed_signature.claims.id) {
+                Ok(authenticated_user) => {
+                    if authed_signature.claims.email == authenticated_user.auth.email {
+                        return CommandResponse::<AuthenticatedUser> {
+                            data: Some(authenticated_user),
+                            error: None
+                        }
+                    }
+
+                    return CommandResponse::<AuthenticatedUser> {
+                        data: None,
+                        error: Some(CommandError {
+                            message: format!(
+                                "Token data did not match stored data:\nauthed_signature.email={},user_summary.email={}",
+                                authed_signature.claims.email,
+                                authenticated_user.auth.email,
+                            ),
+                            error_type: Some(CommandErrorType::Process)
+                        })
+                    }
+                },
+                Err(e) => CommandResponse::<AuthenticatedUser> {
+                    data: None,
+                    error: Some(CommandError {
+                        message: format!("Error selecting authenticated user: {}", e),
+                        error_type: Some(CommandErrorType::Database)
+                    })
+                }
+            }
+        },
+        Err(e) => CommandResponse::<AuthenticatedUser> {
+            data: None,
+            error: Some(CommandError {
+                message: format!("Error decoding token: {}", e),
+                error_type: Some(CommandErrorType::External)
             })
         }
     }

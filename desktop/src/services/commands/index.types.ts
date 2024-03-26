@@ -6,6 +6,7 @@ export enum Commands {
   Logout = "logout",
   GetArtistProfiles = "get_artist_profiles",
   UpdateUser = "update user",
+  CreateArtistProfile = "create_artist_profile",
 }
 
 export interface InvokeResult<T> {

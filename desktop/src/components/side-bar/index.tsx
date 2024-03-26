@@ -1,3 +1,4 @@
+// Third Party Imports
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
 import {
@@ -47,8 +48,13 @@ export function SideBar(_props: SideBarProps) {
     }
 
     authActions.setActiveUser(undefined);
-    await stronghold.remove(StrongholdKeys.AuthedSignature);
-    await stronghold.save();
+    await stronghold.remove(StrongholdKeys.AuthedSignature, { save: true });
+    notificationActions.addNotification({
+      message: "Successfully logged out",
+      type: "info",
+      duration: 2000,
+      isRemovableByClick: true,
+    });
     navigate("/", { replace: true });
   }
 

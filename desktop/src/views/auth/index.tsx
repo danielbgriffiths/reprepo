@@ -34,7 +34,7 @@ export default function Auth(props: AuthProps) {
 
     if (data.artistProfile.store.activeArtistProfile) {
       return navigation(
-        `/auth/${data.artistProfile.store.activeArtistProfile.id}`,
+        `/auth/artist-profiles/${data.artistProfile.store.activeArtistProfile.id}`,
       );
     }
 

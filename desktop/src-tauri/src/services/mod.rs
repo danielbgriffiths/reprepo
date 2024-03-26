@@ -1,3 +1,6 @@
 pub mod stronghold;
 pub mod user;
-mod artist_profile;
+pub mod auth;
+pub mod auth_account;
+pub mod repository;
+pub mod account;

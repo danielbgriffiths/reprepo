@@ -9,15 +9,22 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
 use oauth2::basic::{BasicClient, BasicErrorResponse, BasicRevocationErrorResponse, BasicTokenIntrospectionResponse, BasicTokenResponse, BasicTokenType};
 use std::env;
+use diesel::{Connection};
+use diesel::result::Error;
 use tauri::State;
 use jsonwebtoken::{encode, Header, EncodingKey};
+use webbrowser;
 
 // Local Usages
 use crate::state::AppState;
-use crate::models::user::{CreateOAuthUser, OauthProvider};
-use crate::models::auth::{GoogleOAuthUserTokenBody, AuthedSignatureClaims, UserAuthenticationFields};
+use crate::models::auth::{GoogleOAuthUserTokenBody, AuthedSignatureClaims, OauthProvider, AllAuthFields, CreateAuth};
+use crate::models::auth_account::{CreateAuthAccount, PartialCreateAuthAccount};
 use crate::models::commands::{CommandErrorType, CommandError, CommandResponse};
-use crate::services::user::{create_user, select_user_core, update_user_access_tokens_null, select_user_authentication_fields};
+use crate::models::user::{CreateUser, PartialCreateUser};
+use crate::services::account::{create_account_if_not_exists};
+use crate::services::auth::{select_auth_core, create_auth, select_auth_fields_from_auth};
+use crate::services::auth_account::{create_auth_account, remove_auth_account_tokens, select_auth_fields_from_account};
+use crate::services::user::create_user;
 
 fn get_google_oauth_client() -> Client<
     BasicErrorResponse,
@@ -97,8 +104,37 @@ fn create_oauth_redirect_listener() -> (AuthorizationCode, CsrfToken) {
     (code, state)
 }
 
+fn create_account_auth_user_records(
+    app_state: &State<AppState>,
+    target_account_id: &Option<i32>,
+    new_auth: CreateAuth,
+    partial_new_auth_account: PartialCreateAuthAccount,
+    partial_new_user: PartialCreateUser
+) -> Result<i32, Error> {
+    let db_connection = &mut app_state.pool.get().unwrap();
+
+    db_connection.transaction(|db_connection| {
+        let account_id = create_account_if_not_exists(db_connection, &target_account_id).unwrap();
+        let auth_id = create_auth(db_connection, &new_auth).unwrap();
+        let _auth_account_id_result = create_auth_account(db_connection, &CreateAuthAccount {
+            auth_id: &auth_id,
+            account_id: &account_id,
+            access_token: partial_new_auth_account.access_token,
+            refresh_token: partial_new_auth_account.refresh_token
+        });
+        let _user_id_result = create_user(db_connection, &CreateUser {
+            auth_id: &auth_id,
+            first_name: &partial_new_user.first_name,
+            last_name: &partial_new_user.last_name,
+            avatar: &partial_new_user.avatar,
+            locale: &partial_new_user.locale,
+        });
+        Ok(auth_id)
+    })
+}
+
 #[tauri::command]
-pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<i32>) -> CommandResponse::<String> {
+pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> CommandResponse::<String> {
     let google_oauth_client = get_google_oauth_client();
 
     let (pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -115,8 +151,6 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<
         .add_scope(Scope::new("https://www.googleapis.com/auth/userinfo.profile".to_string()))
         .set_pkce_challenge(pkce_code_challenge)
         .url();
-
-    use webbrowser;
 
     if !webbrowser::open(&authorize_url.to_string()).is_ok() {
         return CommandResponse::<String> {
@@ -153,40 +187,54 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<
             match user_info_token_body_result {
                 Ok(user_info_token_body) => {
 
-                    if existing_user_id.is_some() {
-                        let existing_user_core = select_user_core(&app_state, &existing_user_id.unwrap()).unwrap();
-                        if existing_user_core.email != user_info_token_body.email {
+                    if existing_auth_id.is_some() {
+                        let auth_core_result = select_auth_core(&app_state, &existing_auth_id.unwrap());
+                        let auth_core = auth_core_result.unwrap();
+                        if auth_core.email != user_info_token_body.email {
                             return CommandResponse::<String> {
                                 data: None,
                                 error: Some(CommandError {
-                                    message: format!("Existing user core does not match token. Existing: {}, Token: {}", existing_user_core.email, user_info_token_body.email),
+                                    message: format!(
+                                        "Existing auth core does not match token. Existing: {}, Token: {}",
+                                        auth_core.email,
+                                        user_info_token_body.email
+                                    ),
                                     error_type: Some(CommandErrorType::Process)
                                 })
                             }
                         }
                     }
 
-                    let user_id = match existing_user_id {
-                        Some(user_id) => Ok(user_id),
-                        None => create_user(&app_state, &CreateOAuthUser {
-                            first_name: &user_info_token_body.given_name,
-                            last_name: &user_info_token_body.family_name,
-                            email: &user_info_token_body.email,
-                            avatar: &user_info_token_body.picture,
-                            access_token: &basic_token_response.access_token().secret(),
-                            refresh_token: &basic_token_response.refresh_token().unwrap().secret(),
-                            locale: &user_info_token_body.locale,
-                            provider: &OauthProvider::Google,
-                        })
+                    let auth_id_result = match existing_auth_id {
+                        Some(auth_id) => Ok(auth_id),
+                        None => create_account_auth_user_records(
+                            &app_state,
+                            &existing_account_id,
+                            CreateAuth {
+                                email: &user_info_token_body.email,
+                                password: None,
+                                provider: &OauthProvider::Google,
+                            },
+                            PartialCreateAuthAccount {
+                                access_token: Some(basic_token_response.access_token().secret().clone()),
+                                refresh_token: Some(basic_token_response.refresh_token().unwrap().secret().clone()),
+                            },
+                            PartialCreateUser {
+                                first_name: &user_info_token_body.given_name,
+                                last_name: &user_info_token_body.family_name,
+                                avatar: &user_info_token_body.picture,
+                                locale: &user_info_token_body.locale,
+                            },
+                        )
                     };
 
-                    match user_id {
-                        Ok(user_id) => {
-                            match select_user_core(&app_state, &user_id) {
-                                Ok(user) => {
+                    match auth_id_result {
+                        Ok(auth_id) => {
+                            match select_auth_core(&app_state, &auth_id) {
+                                Ok(auth_core) => {
                                     let claims = AuthedSignatureClaims {
-                                        id: user.id,
-                                        email: user.email,
+                                        id: auth_core.id,
+                                        email: auth_core.email,
                                         exp: 1735689600, // TODO: 01-01-2025
                                     };
 
@@ -216,7 +264,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<
                                 Err(e) => CommandResponse::<String> {
                                     data: None,
                                     error: Some(CommandError {
-                                        message: format!("Error getting created user: {}", e),
+                                        message: format!("Error getting created auth information: {}", e),
                                         error_type: Some(CommandErrorType::Database)
                                     })
                                 }
@@ -225,7 +273,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<
                         Err(e) => CommandResponse::<String> {
                             data: None,
                             error: Some(CommandError {
-                                message: format!("Error creating user: {}", e),
+                                message: format!("Error creating or getting auth information: {}", e),
                                 error_type: Some(CommandErrorType::Database)
                             })
                         }
@@ -250,41 +298,68 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_user_id: Option<
     }
 }
 
-fn logout_google_oauth(app_state: State<AppState>, user_id: i32, auth_fields: UserAuthenticationFields) -> CommandResponse::<bool> {
-    if !auth_fields.access_token.is_some() && !auth_fields.refresh_token.is_some() {
+fn select_all_auth_fields(app_state: &State<AppState>, target_account_id: &i32, target_auth_id: &i32) -> Result<AllAuthFields, CommandResponse::<bool>> {
+    Ok(AllAuthFields {
+        auth_fields_from_auth_account: select_auth_fields_from_account(app_state, target_account_id, target_auth_id)
+            .map_err(|e| CommandResponse::<bool> {
+                data: None,
+                error: Some(CommandError {
+                    message: format!("Error fetching auth fields from auth account: {}", e),
+                    error_type: Some(CommandErrorType::Database)
+                })
+            })?,
+        auth_fields_from_auth: select_auth_fields_from_auth(app_state, target_auth_id)
+            .map_err(|e| CommandResponse::<bool> {
+                data: None,
+                error: Some(CommandError {
+                    message: format!("Error fetching auth fields from auth: {}", e),
+                    error_type: Some(CommandErrorType::Database)
+                })
+            })?,
+    })
+}
+
+fn has_access_tokens(auth_fields: &AllAuthFields) -> bool {
+    auth_fields.auth_fields_from_auth_account.access_token.is_some() ||
+        auth_fields.auth_fields_from_auth_account.refresh_token.is_some()
+}
+
+fn get_standard_revocable_token(auth_fields: &AllAuthFields) -> Option<StandardRevocableToken> {
+    auth_fields.auth_fields_from_auth_account.refresh_token.as_ref()
+        .or_else(|| auth_fields.auth_fields_from_auth_account.access_token.as_ref())
+        .map(|token| StandardRevocableToken::from(AccessToken::new(token.to_owned())))
+}
+
+fn logout_google_oauth(
+    app_state: State<AppState>,
+    account_id: &i32,
+    auth_id: &i32,
+    auth_fields: &AllAuthFields
+) -> CommandResponse::<bool> {
+    if !has_access_tokens(&auth_fields) {
         return CommandResponse::<bool> {
             data: Some(true),
             error: None
         }
     }
 
-    let standard_revocable_token_option = match auth_fields.refresh_token {
-        Some(authed_refresh_token) => Some(StandardRevocableToken::from(AccessToken::new(authed_refresh_token.to_owned()))),
-        None => match auth_fields.access_token {
-            Some(authed_access_token) => Some(StandardRevocableToken::from(AccessToken::new(authed_access_token.to_owned()))),
-            None => None
-        }
-    };
-
-    match standard_revocable_token_option {
+    match get_standard_revocable_token(&auth_fields) {
         Some(standard_revocable_token) => {
-            let google_oauth_client = get_google_oauth_client();
-
-            let revoke_response_result = google_oauth_client
+            let revoke_response_result = get_google_oauth_client()
                 .revoke_token(standard_revocable_token)
                 .unwrap()
                 .request(&oauth2::reqwest::http_client);
 
             match revoke_response_result {
                 Ok(_revoke_response) => {
-                    match update_user_access_tokens_null(&app_state, &user_id) {
-                        Ok(_user_id) => CommandResponse::<bool> {
+                    match remove_auth_account_tokens(&app_state, &account_id, &auth_id) {
+                        Ok(_auth_account_id) => CommandResponse::<bool> {
                             error: None,
                             data: Some(true)
                         },
                         Err(_e) => CommandResponse::<bool> {
                             error: Some(CommandError {
-                                message: "Unable to update user data".to_string(),
+                                message: "Unable to update auth account data".to_string(),
                                 error_type: Some(CommandErrorType::Database)
                             }),
                             data: None
@@ -311,10 +386,10 @@ fn logout_google_oauth(app_state: State<AppState>, user_id: i32, auth_fields: Us
 }
 
 #[tauri::command]
-pub fn logout(user_id: i32, app_state: State<AppState>) -> CommandResponse::<bool> {
-    match select_user_authentication_fields(&app_state, &user_id) {
-        Ok(user_authentication_fields) => {
-            match user_authentication_fields.provider {
+pub fn logout(app_state: State<AppState>, account_id: i32, auth_id: i32) -> CommandResponse::<bool> {
+    match select_all_auth_fields(&app_state, &account_id, &auth_id) {
+        Ok(all_auth_fields) => {
+            match all_auth_fields.auth_fields_from_auth.provider {
                 OauthProvider::Email => CommandResponse::<bool> {
                     error: Some(CommandError {
                         message: "Email auth is not configured".to_string(),
@@ -322,7 +397,7 @@ pub fn logout(user_id: i32, app_state: State<AppState>) -> CommandResponse::<boo
                     }),
                     data: None
                 },
-                OauthProvider::Google => logout_google_oauth(app_state, user_id, user_authentication_fields),
+                OauthProvider::Google => logout_google_oauth(app_state, &account_id, &auth_id, &all_auth_fields),
                 OauthProvider::Pinterest => CommandResponse::<bool> {
                     error: Some(CommandError {
                         message: "Pinterest OAuth is not configured".to_string(),
@@ -339,12 +414,6 @@ pub fn logout(user_id: i32, app_state: State<AppState>) -> CommandResponse::<boo
                 }
             }
         },
-        Err(e) => CommandResponse::<bool> {
-            error: Some(CommandError {
-                message: format!("Unable to select user: {}", e),
-                error_type: Some(CommandErrorType::Database)
-            }),
-            data: None
-        }
+        Err(e) => e
     }
 }

@@ -47,11 +47,14 @@ export function DataProvider(props: DataProviderProps) {
       ),
     }));
 
-    await stronghold.insert(
+    await stronghold.insertWithParse(
       StrongholdKeys.ActiveArtistProfile,
-      artistProfileId.toString(),
+      {
+        key: activeUser()!.id,
+        value: artistProfileId.toString(),
+      },
+      { save: true },
     );
-    await stronghold.save();
   }
 
   //
@@ -75,8 +78,9 @@ export function DataProvider(props: DataProviderProps) {
       return;
     }
 
-    const activeArtistProfileId = await stronghold.read(
+    const activeArtistProfileId = await stronghold.readWithParse(
       StrongholdKeys.ActiveArtistProfile,
+      activeUser()!.id,
     );
 
     if (!activeArtistProfileId) return;

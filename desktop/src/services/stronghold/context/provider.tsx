@@ -4,11 +4,16 @@ import { Client, Stronghold } from "tauri-plugin-stronghold-api";
 import { appDataDir } from "@tauri-apps/api/path";
 
 // Local Imports
-import { StrongholdProviderProps } from "../index.types";
+import {
+  StrongholdCmdOptions,
+  StrongholdParseArgs,
+  StrongholdProviderProps,
+} from "../index.types";
 import {
   MISSING_VARIABLES_ERROR,
   NOT_INITIALIZED_ERROR,
   NO_STORE_ERROR,
+  StrongholdKeys,
 } from "../index.config";
 import { StrongholdContext } from "./create-context";
 import { Commands } from "@services/commands";
@@ -72,15 +77,38 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
   // Functions
   //
 
-  async function insert(key: string, value: string): Promise<void> {
+  async function insert(
+    key: StrongholdKeys,
+    value: string,
+    options?: StrongholdCmdOptions,
+  ): Promise<void> {
     if (!client()) throw new Error(NOT_INITIALIZED_ERROR);
     const store = client()?.getStore();
     if (!store) throw new Error(NO_STORE_ERROR);
     await store.insert(key, Array.from(new TextEncoder().encode(value)));
     console.info(`Stronghold insert ${key}: `, value);
+    if (!options?.save) return;
+    await save();
   }
 
-  async function read(key: string): Promise<string | undefined> {
+  async function insertWithParse(
+    key: StrongholdKeys,
+    args: StrongholdParseArgs,
+    options?: StrongholdCmdOptions,
+  ): Promise<void> {
+    const readResponse = await read(key);
+    await insert(
+      key,
+      [
+        ...(!readResponse ? [] : readResponse.split(";")),
+        `${args.key.toString()}:${args.value.toString()}`,
+      ].join(";"),
+    );
+    if (!options?.save) return;
+    await save();
+  }
+
+  async function read(key: StrongholdKeys): Promise<string | undefined> {
     if (!client()) throw new Error(NOT_INITIALIZED_ERROR);
     const store = client()?.getStore();
     if (!store) throw new Error(NO_STORE_ERROR);
@@ -91,23 +119,43 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
     return response;
   }
 
+  async function readWithParse(
+    key: StrongholdKeys,
+    uid: string | number,
+  ): Promise<string | undefined> {
+    const readResponse = await read(key);
+    if (!readResponse) return;
+    const parsedReadResponse: string[] = readResponse.split(";");
+    const targetReadResponse = parsedReadResponse.find((item) =>
+      item.startsWith(`${uid.toString()}:`),
+    );
+    if (!targetReadResponse) return;
+    return targetReadResponse.split(":")[1];
+  }
+
   async function save(): Promise<void> {
     await stronghold()?.save();
   }
 
-  async function remove(key: string): Promise<void> {
+  async function remove(
+    key: StrongholdKeys,
+    options?: StrongholdCmdOptions,
+  ): Promise<void> {
     if (!client()) throw new Error(NOT_INITIALIZED_ERROR);
     const store = client()?.getStore();
     if (!store) throw new Error(NO_STORE_ERROR);
     await store.remove(key);
-    console.info(`Stronghold remove ${key}`);
+    if (!options?.save) return;
+    await save();
   }
 
   return (
     <StrongholdContext.Provider
       value={{
         insert,
+        insertWithParse,
         read,
+        readWithParse,
         save,
         remove,
         isInitialized,

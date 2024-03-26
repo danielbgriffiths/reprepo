@@ -126,13 +126,13 @@ export function useAuthenticate(): UseAuthenticateBindings {
   //
 
   async function storeAuthedSignature(authedSignature: string): Promise<void> {
-    await stronghold.insert(StrongholdKeys.AuthedSignature, authedSignature);
-    await stronghold.save();
+    await stronghold.insert(StrongholdKeys.AuthedSignature, authedSignature, {
+      save: true,
+    });
   }
 
   async function removeAuthedSignature(): Promise<void> {
-    await stronghold.remove(StrongholdKeys.AuthedSignature);
-    await stronghold.save();
+    await stronghold.remove(StrongholdKeys.AuthedSignature, { save: true });
   }
 
   return [isAuthStateInitializing, createGoogleOAuth];

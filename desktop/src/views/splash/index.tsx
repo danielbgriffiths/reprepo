@@ -72,7 +72,7 @@ export default function Splash() {
               .map((userSummary) => (
                 <button onClick={() => onClickUserSummary(userSummary.id)}>
                   <img alt="user avatar" src={userSummary.avatar} />
-                  {userSummary.first_name} {userSummary.last_name}
+                  {userSummary.firstName} {userSummary.lastName}
                 </button>
               ))}
           </div>
