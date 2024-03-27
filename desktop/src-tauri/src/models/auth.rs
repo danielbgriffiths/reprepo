@@ -55,6 +55,7 @@ pub struct AuthFieldsFromAuth {
 pub struct AuthedSignatureClaims {
     pub id: i32,
     pub email: String,
+    pub account_id: i32,
     pub exp: i64,
 }
 

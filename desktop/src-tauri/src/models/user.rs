@@ -5,6 +5,7 @@ use diesel::{Queryable, Selectable};
 
 // Local Usages
 use crate::models::auth::{AuthCore};
+use crate::models::auth_account::AuthAccount;
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::user)]
@@ -57,4 +58,5 @@ pub struct UpdateUser {
 pub struct AuthenticatedUser {
     pub user: User,
     pub auth: AuthCore,
+    pub auth_account: AuthAccount,
 }

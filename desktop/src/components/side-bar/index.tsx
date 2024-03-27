@@ -15,6 +15,7 @@ import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
 import { useNavigate } from "@solidjs/router";
 import { useNotifications } from "@services/notifications";
+import { useData } from "@services/data";
 
 export interface SideBarProps {}
 
@@ -23,10 +24,11 @@ export function SideBar(_props: SideBarProps) {
   // Hooks
   //
 
-  const [activeUser, authActions] = useAuth();
+  const auth = useAuth();
   const stronghold = useStronghold();
   const navigate = useNavigate();
   const [_, notificationActions] = useNotifications();
+  const data = useData();
 
   //
   // Event Handlers
@@ -34,7 +36,8 @@ export function SideBar(_props: SideBarProps) {
 
   async function onClickLogout(): Promise<void> {
     const logoutResult = await cmd<boolean>(Commands.Logout, {
-      userId: activeUser()!.id,
+      authId: auth.store.auth!.id,
+      accountId: data.general.store.accountId,
     });
 
     if (logoutResult.error) {
@@ -47,7 +50,7 @@ export function SideBar(_props: SideBarProps) {
       return;
     }
 
-    authActions.setActiveUser(undefined);
+    auth.setAuth(undefined);
     await stronghold.remove(StrongholdKeys.AuthedSignature, { save: true });
     notificationActions.addNotification({
       message: "Successfully logged out",
@@ -86,7 +89,7 @@ export function SideBar(_props: SideBarProps) {
       <Styled.AvatarContainer>
         <Styled.Avatar
           alt="avatar"
-          src={activeUser()?.avatar || "/avatar.png"}
+          src={auth.store.user!.avatar || "/avatar.png"}
         />
         <Styled.SecondaryLinkTo onClick={onClickLogout}>
           Logout

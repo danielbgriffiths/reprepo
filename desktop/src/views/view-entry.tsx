@@ -7,9 +7,6 @@ import Views from "@views/index";
 import { StyleProvider } from "@services/styles";
 import { DataProvider } from "@services/data";
 
-/**
- * Lazy import the base routes of certain use-cases
- */
 const Splash = lazy(() => import("@views/splash"));
 const Dashboard = lazy(() => import("@views/dashboard"));
 const Records = lazy(() => import("@views/records"));
@@ -17,10 +14,10 @@ const Record = lazy(() => import("@views/record"));
 const CreateRecord = lazy(() => import("@views/create-record"));
 const CreateConnect = lazy(() => import("@views/create-connect"));
 const Onboarding = lazy(() => import("@views/onboarding"));
-const CreateArtistProfile = lazy(() => import("@views/create-artist-profile"));
+const CreateRepository = lazy(() => import("@views/create-repository"));
 const Catch = lazy(() => import("@views/catch"));
 const Auth = lazy(() => import("@views/auth"));
-const ArtistProfiles = lazy(() => import("@views/artist-profiles"));
+const Repositories = lazy(() => import("@views/repositories"));
 
 export function ViewEntry() {
   return (
@@ -30,12 +27,9 @@ export function ViewEntry() {
           <Route path="/" component={Splash} />
           <Route path="/auth" component={Auth}>
             <Route path="/onboarding" component={Onboarding} />
-            <Route path="/artist-profiles" component={ArtistProfiles} />
-            <Route
-              path="/artist-profiles/create"
-              component={CreateArtistProfile}
-            />
-            <Route path="/artist-profiles/:id" component={Dashboard}>
+            <Route path="/repositories" component={Repositories} />
+            <Route path="/repositories/create" component={CreateRepository} />
+            <Route path="/repositories/:id" component={Dashboard}>
               <Route path="/records" component={Records}>
                 <Route path="/create" component={CreateRecord} />
                 <Route path="/:id" component={Record} />

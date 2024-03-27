@@ -14,31 +14,30 @@ export default function Auth(props: AuthProps) {
   //
 
   const navigation = useNavigate();
-  const [activeUser] = useAuth();
+  const auth = useAuth();
   const data = useData();
 
   //
   // Lifecycle
   //
 
-  if (!activeUser()) {
+  if (!auth.store.auth) {
     navigation("/");
     return;
   }
 
   createEffect(async () => {
-    if (!activeUser()?.email) {
-      // TODO: data.user.store.profile
+    if (!auth.store.user?.isOnboarded) {
       return navigation("/auth/onboarding");
     }
 
-    if (data.artistProfile.store.activeArtistProfile) {
+    if (data.repository.store.activeRepository) {
       return navigation(
-        `/auth/artist-profiles/${data.artistProfile.store.activeArtistProfile.id}`,
+        `/auth/repositories/${data.repository.store.activeRepository.id}`,
       );
     }
 
-    return navigation("/auth/artist-profiles");
+    return navigation("/auth/repositories");
   });
 
   return <>{props.children}</>;

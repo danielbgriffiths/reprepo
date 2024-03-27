@@ -1,3 +1,6 @@
+// Local Imports
+import { ApiBaseDataModel, BaseDataModel } from "@models/api.model";
+
 export enum ArtistField {
   Musician = "Musician",
   Dancer = "Dancer",
@@ -18,26 +21,22 @@ export enum ArtistSpecialization {
   ExoticDance = "ExoticDance",
 }
 
-export interface ApiArtistProfile {
-  id: number;
+export interface ApiRepository extends ApiBaseDataModel {
   user_id: number;
+  name: string;
   field: ArtistField;
   specialization: ArtistSpecialization;
   is_private: boolean;
   start_date: Date;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date;
+  avatar?: string;
 }
 
-export interface ArtistProfile {
-  id: number;
+export interface Repository extends BaseDataModel {
+  name: string;
   userId: number;
   field: ArtistField;
   specialization: ArtistSpecialization;
   isPrivate: boolean;
+  avatar?: string;
   startDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
 }

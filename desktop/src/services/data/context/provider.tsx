@@ -5,11 +5,12 @@ import { createEffect } from "solid-js";
 // Local Imports
 import { DataContext } from "./create-context";
 import {
-  ArtistProfileStore,
   DataBindings,
   DataProviderProps,
+  GeneralStore,
+  RepositoryStore,
 } from "../index.types";
-import { ArtistProfile } from "@/models";
+import { Repository } from "@/models";
 import { useStronghold } from "@services/stronghold";
 import { useAuth } from "@services/auth";
 import { StrongholdKeys } from "@services/stronghold/index.config";
@@ -22,39 +23,65 @@ export function DataProvider(props: DataProviderProps) {
   //
 
   const stronghold = useStronghold();
-  const [activeUser] = useAuth();
+  const auth = useAuth();
 
   //
   // State
   //
 
-  const [store, setStore] = createStore<ArtistProfileStore>({
-    artistProfiles: [],
-    activeArtistProfile: undefined as unknown as ArtistProfile,
+  const [repositoryStore, setRepositoryStore] = createStore<RepositoryStore>({
+    repositories: [],
+    activeRepository: undefined as unknown as Repository,
+  });
+  const [generalStore, setGeneralStore] = createStore<GeneralStore>({
+    accountId: undefined,
   });
 
   //
   // Functions
   //
 
-  async function setActiveArtistProfile(
-    artistProfileId: number,
-  ): Promise<void> {
-    setStore((prevStore) => ({
+  async function setActiveRepository(repositoryId: number): Promise<void> {
+    setRepositoryStore((prevStore) => ({
       ...prevStore,
-      activeArtistProfile: prevStore.artistProfiles.find(
-        (artistProfile) => artistProfile.id === artistProfileId,
+      activeRepository: prevStore.repositories.find(
+        (repository) => repository.id === repositoryId,
       ),
     }));
 
     await stronghold.insertWithParse(
-      StrongholdKeys.ActiveArtistProfile,
+      StrongholdKeys.ActiveRepository,
       {
-        key: activeUser()!.id,
-        value: artistProfileId.toString(),
+        key: auth.store.user!.id,
+        value: repositoryId.toString(),
       },
       { save: true },
     );
+  }
+
+  async function storeAccountId(accountId?: number): Promise<void> {
+    if (!accountId) {
+      return await stronghold.remove(StrongholdKeys.AccountId, { save: true });
+    }
+
+    await stronghold.insert(StrongholdKeys.AccountId, String(accountId), {
+      save: true,
+    });
+
+    const savedAccountId = await stronghold.read(StrongholdKeys.AccountId);
+
+    setGeneralStore(
+      "accountId",
+      savedAccountId ? Number(savedAccountId) : undefined,
+    );
+  }
+
+  async function hydrateAccountId(): Promise<void> {
+    const savedAccountId = await stronghold.read(StrongholdKeys.AccountId);
+
+    if (!savedAccountId) return;
+
+    setGeneralStore("accountId", Number(savedAccountId));
   }
 
   //
@@ -62,42 +89,50 @@ export function DataProvider(props: DataProviderProps) {
   //
 
   createEffect(async () => {
-    if (!activeUser()) {
-      setStore("artistProfiles", []);
-      setStore("activeArtistProfile", undefined as unknown as ArtistProfile);
+    if (!auth.store.auth) {
+      setRepositoryStore("repositories", []);
+      setRepositoryStore(
+        "activeRepository",
+        undefined as unknown as Repository,
+      );
       return;
     }
 
-    const artistProfilesResult = await cmd<ArtistProfile[]>(
-      Commands.GetArtistProfiles,
-      { userId: activeUser()!.id },
+    const repositoriesResult = await cmd<Repository[]>(
+      Commands.GetRepositories,
+      { userId: auth.store.user!.id },
     );
 
-    if (artistProfilesResult.error) {
-      console.error(artistProfilesResult.error);
+    if (repositoriesResult.error) {
+      console.error(repositoriesResult.error);
       return;
     }
 
-    const activeArtistProfileId = await stronghold.readWithParse(
-      StrongholdKeys.ActiveArtistProfile,
-      activeUser()!.id,
+    const activeRepositoryId = await stronghold.readWithParse(
+      StrongholdKeys.ActiveRepository,
+      auth.store.user!.id,
     );
 
-    if (!activeArtistProfileId) return;
+    if (!activeRepositoryId) return;
 
-    setStore("artistProfiles", artistProfilesResult.data!);
-    setStore(
-      "activeArtistProfile",
-      artistProfilesResult.data!.find(
-        (artistProfile) => artistProfile.id === Number(activeArtistProfileId),
+    setRepositoryStore("repositories", repositoriesResult.data!);
+    setRepositoryStore(
+      "activeRepository",
+      repositoriesResult.data!.find(
+        (repository) => repository.id === Number(activeRepositoryId),
       ),
     );
   });
 
   const DataBindings: DataBindings = {
-    artistProfile: {
-      store,
-      setActiveArtistProfile,
+    repository: {
+      store: repositoryStore,
+      setActiveRepository,
+    },
+    general: {
+      store: generalStore,
+      storeAccountId,
+      hydrateAccountId,
     },
   };
 

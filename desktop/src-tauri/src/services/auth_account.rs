@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 
-use crate::models::auth_account::{AuthFieldsFromAuthAccount, CreateAuthAccount};
+use crate::models::auth_account::{AuthAccount, AuthFieldsFromAuthAccount, CreateAuthAccount};
 use crate::schema::auth_account;
 use crate::state::AppState;
 
@@ -40,4 +40,14 @@ pub fn create_auth_account(db_connection: &mut PooledConnection<ConnectionManage
         .values(new_auth_account)
         .returning(auth_account::id)
         .get_result::<i32>(db_connection)
+}
+
+pub fn select_auth_account(app_state: &State<AppState>, target_account_id: &i32, target_auth_id: &i32) -> QueryResult<AuthAccount> {
+    let db_connection = &mut app_state.pool.get().unwrap();
+
+    auth_account::table
+        .filter(auth_account::account_id.eq(target_account_id))
+        .filter(auth_account::auth_id.eq(target_auth_id))
+        .select(AuthAccount::as_select())
+        .get_result::<AuthAccount>(db_connection)
 }

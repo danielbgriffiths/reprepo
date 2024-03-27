@@ -21,7 +21,7 @@ export function TopBar(_props: TopBarProps) {
   //
 
   const location = useLocation();
-  const [activeUser] = useAuth();
+  const auth = useAuth();
   const [activeLocale, localActions] = useLocale();
   const [activeTheme, styleActions] = useStyle();
   const data = useData();
@@ -44,8 +44,8 @@ export function TopBar(_props: TopBarProps) {
     await styleActions.setActiveTheme(themeName);
   }
 
-  async function onClickArtistProfile(artistProfileId: number): Promise<void> {
-    await data.artistProfile.setActiveArtistProfile(artistProfileId);
+  async function onClickRepository(repositoryId: number): Promise<void> {
+    await data.repository.setActiveRepository(repositoryId);
   }
 
   function onScopeSearchInput(_event: Event): void {}
@@ -58,25 +58,25 @@ export function TopBar(_props: TopBarProps) {
 
       <Styled.ConfigContainer>
         <Styled.ConfigList>
-          <Show when={activeUser() && pathname() !== "/artist-profiles"}>
+          <Show when={auth.store.auth && pathname() !== "/repositories"}>
             <Styled.ConfigListItem>
               <Styled.ConfigDetailMenu>
                 <Styled.ConfigDetailMenuSummary>
                   <Icon icon={faGlobe} /> {activeLocale()}
                 </Styled.ConfigDetailMenuSummary>
                 <Styled.ConfigDetailMenuList>
-                  {(data.artistProfile.store.artistProfiles || []).map(
-                    (artistProfile) => (
+                  {(data.repository.store.repositories || []).map(
+                    (repository) => (
                       <Styled.ConfigDetailMenuListItem
-                        $isActive={
-                          artistProfile.id ===
-                          data.artistProfile.store.activeArtistProfile?.id
+                        isActive={
+                          repository.id ===
+                          data.repository.store.activeRepository?.id
                         }
                       >
                         <Styled.ConfigDetailMenuTrigger
-                          onClick={() => onClickArtistProfile(artistProfile.id)}
+                          onClick={() => onClickRepository(repository.id)}
                         >
-                          {artistProfile.field} {artistProfile.specialization}
+                          {repository.field} {repository.specialization}
                         </Styled.ConfigDetailMenuTrigger>
                       </Styled.ConfigDetailMenuListItem>
                     ),
@@ -95,7 +95,7 @@ export function TopBar(_props: TopBarProps) {
               <Styled.ConfigDetailMenuList>
                 {LOCALE_KEYS.map((locale) => (
                   <Styled.ConfigDetailMenuListItem
-                    $isActive={locale === activeLocale()}
+                    isActive={locale === activeLocale()}
                   >
                     <Styled.ConfigDetailMenuTrigger
                       onClick={() => onClickLocale(locale)}
@@ -117,7 +117,7 @@ export function TopBar(_props: TopBarProps) {
               <Styled.ConfigDetailMenuList>
                 {THEME_NAMES.map((themeName) => (
                   <Styled.ConfigDetailMenuListItem
-                    $isActive={themeName === activeTheme()}
+                    isActive={themeName === activeTheme()}
                   >
                     <Styled.ConfigDetailMenuTrigger
                       onClick={() => onClickTheme(themeName)}
@@ -145,6 +145,6 @@ const Styled = {
   ConfigDetailMenu: styled.details``,
   ConfigDetailMenuSummary: styled.summary``,
   ConfigDetailMenuList: styled.ul``,
-  ConfigDetailMenuListItem: styled.li<{ $isActive: boolean }>``,
+  ConfigDetailMenuListItem: styled.li<{ isActive: boolean }>``,
   ConfigDetailMenuTrigger: styled.a``,
 };

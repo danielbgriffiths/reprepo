@@ -9,8 +9,8 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
 use oauth2::basic::{BasicClient, BasicErrorResponse, BasicRevocationErrorResponse, BasicTokenIntrospectionResponse, BasicTokenResponse, BasicTokenType};
 use std::env;
-use diesel::{Connection};
 use diesel::result::Error;
+use diesel::{Connection};
 use tauri::State;
 use jsonwebtoken::{encode, Header, EncodingKey};
 use webbrowser;
@@ -110,7 +110,7 @@ fn create_account_auth_user_records(
     new_auth: CreateAuth,
     partial_new_auth_account: PartialCreateAuthAccount,
     partial_new_user: PartialCreateUser
-) -> Result<i32, Error> {
+) -> Result<(i32, i32), Error> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     db_connection.transaction(|db_connection| {
@@ -129,7 +129,7 @@ fn create_account_auth_user_records(
             avatar: &partial_new_user.avatar,
             locale: &partial_new_user.locale,
         });
-        Ok(auth_id)
+        Ok((auth_id, account_id))
     })
 }
 
@@ -205,8 +205,8 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                         }
                     }
 
-                    let auth_id_result = match existing_auth_id {
-                        Some(auth_id) => Ok(auth_id),
+                    let auth_creation_result: Result<(i32, i32), Error> = match existing_auth_id {
+                        Some(auth_id) => Ok((auth_id, existing_account_id.unwrap())),
                         None => create_account_auth_user_records(
                             &app_state,
                             &existing_account_id,
@@ -228,13 +228,14 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                         )
                     };
 
-                    match auth_id_result {
-                        Ok(auth_id) => {
+                    match auth_creation_result {
+                        Ok((auth_id, account_id)) => {
                             match select_auth_core(&app_state, &auth_id) {
                                 Ok(auth_core) => {
                                     let claims = AuthedSignatureClaims {
                                         id: auth_core.id,
                                         email: auth_core.email,
+                                        account_id,
                                         exp: 1735689600, // TODO: 01-01-2025
                                     };
 

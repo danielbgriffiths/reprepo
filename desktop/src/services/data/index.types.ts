@@ -2,17 +2,26 @@
 import { JSXElement } from "solid-js";
 
 // Local Imports
-import { ArtistProfile } from "@/models";
+import { Repository } from "@/models";
 
-export interface ArtistProfileStore {
-  activeArtistProfile?: ArtistProfile;
-  artistProfiles: ArtistProfile[];
+export interface RepositoryStore {
+  activeRepository?: Repository;
+  repositories: Repository[];
+}
+
+export interface GeneralStore {
+  accountId?: number;
 }
 
 export type DataBindings = {
-  artistProfile: {
-    store: ArtistProfileStore;
-    setActiveArtistProfile: (artistProfileId: number) => Promise<void>;
+  repository: {
+    store: RepositoryStore;
+    setActiveRepository: (repositoryId: number) => Promise<void>;
+  };
+  general: {
+    store: GeneralStore;
+    storeAccountId: (accountId?: number) => Promise<void>;
+    hydrateAccountId: () => Promise<void>;
   };
 };
 

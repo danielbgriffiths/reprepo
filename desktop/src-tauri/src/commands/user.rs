@@ -68,9 +68,10 @@ pub fn get_authenticated_user(app_state: State<AppState>, authed_signature: Opti
 
     match authed_signature_result {
         Ok(authed_signature) => {
-            match select_authenticated_user(&app_state, &authed_signature.claims.id) {
+            match select_authenticated_user(&app_state, &authed_signature.claims.id, &account_id.unwrap()) {
                 Ok(authenticated_user) => {
-                    if authed_signature.claims.email == authenticated_user.auth.email {
+                    if authed_signature.claims.email == authenticated_user.auth.email &&
+                        authed_signature.claims.account_id == authenticated_user.auth_account.account_id {
                         return CommandResponse::<AuthenticatedUser> {
                             data: Some(authenticated_user),
                             error: None
@@ -81,9 +82,11 @@ pub fn get_authenticated_user(app_state: State<AppState>, authed_signature: Opti
                         data: None,
                         error: Some(CommandError {
                             message: format!(
-                                "Token data did not match stored data:\nauthed_signature.email={},user_summary.email={}",
+                                "Token data did not match stored data:\nclaims.email={},user.email={}\nclaims.acount_id={},user.account_id={}",
                                 authed_signature.claims.email,
                                 authenticated_user.auth.email,
+                                authed_signature.claims.account_id,
+                                authenticated_user.auth_account.account_id
                             ),
                             error_type: Some(CommandErrorType::Process)
                         })

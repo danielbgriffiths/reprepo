@@ -23,7 +23,7 @@ export default function Onboarding() {
   //
 
   const [_, notificationActions] = useNotifications();
-  const [activeUser] = useAuth();
+  const auth = useAuth();
   const navigate = useNavigate();
 
   //
@@ -67,12 +67,12 @@ export default function Onboarding() {
 
     notificationActions.addNotification({
       type: "success",
-      message: `Good job onboarding, ${activeUser()!.firstName}!`,
+      message: `Good job onboarding, ${auth.store.user!.firstName}!`,
       duration: 5000,
       isRemovableByClick: false,
     });
 
-    navigate("/auth/artist-profiles");
+    navigate("/auth/repositories");
   });
 
   //

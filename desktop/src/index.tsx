@@ -21,11 +21,11 @@ render(
   () => (
     <NotificationsProvider>
       <LocaleProvider>
-        <AuthProvider>
-          <StrongholdProvider>
+        <StrongholdProvider>
+          <AuthProvider>
             <ViewEntry />
-          </StrongholdProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </StrongholdProvider>
       </LocaleProvider>
     </NotificationsProvider>
   ),

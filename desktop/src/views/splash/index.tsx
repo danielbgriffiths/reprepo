@@ -1,17 +1,16 @@
 // Third Party Imports
 import Icon from "solid-fa";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
-import { createSignal, onMount } from "solid-js";
+import { createReaction, createSignal } from "solid-js";
 
 // Local Imports
 import { Commands } from "@services/commands";
-import { AuthenticationProvider } from "@services/auth/index.types";
-import { UserSummary } from "@/models";
-import { useAuthenticate } from "./hooks/authenticate.hook";
+import { User } from "@/models";
 import { useAuth } from "@services/auth";
 import { cmd } from "@services/commands/index.utils";
 import { useLocale } from "@services/locale";
 import { TranslationKey } from "@services/locale/index.types";
+import { useData } from "@services/data";
 
 /**
  * The splash view component
@@ -21,65 +20,66 @@ export default function Splash() {
   // Hooks
   //
 
-  const [activeUser] = useAuth();
-  const [isAuthStateInitializing, createGoogleOAuth] = useAuthenticate();
+  const auth = useAuth();
   const [_, localeActions] = useLocale();
+  const data = useData();
 
   //
   // State
   //
 
-  const [userSummaries, setUserSummaries] = createSignal<UserSummary[]>([]);
+  const [users, setUsers] = createSignal<User[]>([]);
+
+  const reactWithAccountIdHydration = createReaction(getUsers);
 
   //
   // Lifecycle
   //
 
-  onMount(async () => {
-    const fetchedUserSummariesResult = await cmd<UserSummary[]>(
-      Commands.GetUserSummaries,
-    );
+  reactWithAccountIdHydration(() => data.general.store.accountId);
 
-    setUserSummaries(fetchedUserSummariesResult.data || []);
-  });
+  //
+  // Functions
+  //
+
+  async function getUsers(): Promise<void> {
+    const usersResult = await cmd<User[]>(Commands.GetUsers, {
+      accountId: data.general.store.accountId,
+    });
+
+    setUsers(usersResult.data || []);
+  }
 
   //
   // Event Handlers
   //
 
   async function onClickGoogleOAuth(): Promise<void> {
-    await createGoogleOAuth();
+    await auth.createGoogleOAuth();
   }
 
-  async function onClickUserSummary(userSummaryId: number): Promise<void> {
-    await createGoogleOAuth(userSummaryId);
+  async function onClickUserSummary(authId: number): Promise<void> {
+    await auth.createGoogleOAuth(authId);
   }
 
   return (
     <div>
       <h1>{localeActions.text(TranslationKey.SplashWelcome)}</h1>
       <div>
-        {!isAuthStateInitializing() && !activeUser() && (
+        {auth.store.isInitialized && !auth.store.auth && (
           <div>
             <button onClick={onClickGoogleOAuth}>
               <Icon icon={faGoogle} />
             </button>
-            {userSummaries()
-              .filter(
-                (userSummary) =>
-                  userSummary.provider === AuthenticationProvider.Google,
-              )
-              .map((userSummary) => (
-                <button onClick={() => onClickUserSummary(userSummary.id)}>
-                  <img alt="user avatar" src={userSummary.avatar} />
-                  {userSummary.firstName} {userSummary.lastName}
-                </button>
-              ))}
+            {users().map((userSummary) => (
+              <button onClick={() => onClickUserSummary(userSummary.authId)}>
+                <img alt="user avatar" src={userSummary.avatar} />
+                {userSummary.firstName} {userSummary.lastName}
+              </button>
+            ))}
           </div>
         )}
-        {isAuthStateInitializing() && !activeUser() && (
-          <div>Initializing...</div>
-        )}
+        {!auth.store.isInitialized && <div>Initializing...</div>}
       </div>
     </div>
   );

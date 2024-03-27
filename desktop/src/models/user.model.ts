@@ -1,22 +1,30 @@
 // Local Imports
-import { AuthenticationProvider } from "@services/auth/index.types";
+import { ApiBaseDataModel, BaseDataModel } from "@models/api.model";
+import { Auth } from "@models/auth.model";
+import { AuthAccount } from "@models/auth-account.model";
 
-export interface UserSummary {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
+export interface ApiUser extends ApiBaseDataModel {
+  auth_id: number;
+  first_name: string;
+  last_name: string;
+  age: number;
+  locale?: string;
   avatar?: string;
-  provider: AuthenticationProvider;
-  locale: string;
+  is_onboarded: boolean;
 }
 
-export interface User extends UserSummary {
+export interface User extends BaseDataModel {
+  authId: number;
+  firstName: string;
+  lastName: string;
   age: number;
-  password?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string;
+  locale?: string;
+  avatar?: string;
+  isOnboarded: boolean;
+}
+
+export interface AuthenticatedUser {
+  user: User;
+  auth: Auth;
+  authAccount: AuthAccount;
 }

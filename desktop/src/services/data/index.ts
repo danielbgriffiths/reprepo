@@ -3,5 +3,5 @@ export { useData } from "./context/use-context";
 export type {
   DataBindings,
   DataProviderProps,
-  ArtistProfileStore,
+  RepositoryStore,
 } from "./index.types";

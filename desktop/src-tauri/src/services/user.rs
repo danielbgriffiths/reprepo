@@ -11,6 +11,7 @@ use crate::state::AppState;
 use crate::schema::user;
 use crate::schema::auth_account;
 use crate::services::auth::select_auth_core;
+use crate::services::auth_account::select_auth_account;
 
 pub fn select_account_users(app_state: &State<AppState>, target_account_id: &i32) -> QueryResult<Vec<User>> {
     let db_connection = &mut app_state.pool.get().unwrap();
@@ -26,7 +27,7 @@ pub fn select_account_users(app_state: &State<AppState>, target_account_id: &i32
         .load::<User>(db_connection)
 }
 
-pub fn select_authenticated_user(app_state: &State<AppState>, target_user_id: &i32) -> QueryResult<AuthenticatedUser> {
+pub fn select_authenticated_user(app_state: &State<AppState>, target_user_id: &i32, account_id: &i32) -> QueryResult<AuthenticatedUser> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     let result: User = user::table
@@ -38,6 +39,7 @@ pub fn select_authenticated_user(app_state: &State<AppState>, target_user_id: &i
     Ok(AuthenticatedUser {
         user: result,
         auth: select_auth_core(&app_state, &auth_id)?,
+        auth_account: select_auth_account(&app_state, &account_id, &auth_id)?
     })
 }
 

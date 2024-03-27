@@ -1,12 +1,12 @@
 export enum Commands {
   CreateGoogleOAuth = "create_google_oauth",
-  GetUserSummaries = "get_user_summaries",
+  GetUsers = "get_users",
   GetEnv = "get_env",
-  GetAuthenticatedUserSummary = "get_authenticated_user_summary",
+  GetAuthenticatedUser = "get_authenticated_user",
   Logout = "logout",
-  GetArtistProfiles = "get_artist_profiles",
-  UpdateUser = "update user",
-  CreateArtistProfile = "create_artist_profile",
+  GetRepositories = "get_artist_profiles",
+  UpdateUser = "update_user",
+  CreateRepository = "create_artist_profile",
 }
 
 export interface InvokeResult<T> {

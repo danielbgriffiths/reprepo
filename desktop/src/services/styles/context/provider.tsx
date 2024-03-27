@@ -20,7 +20,7 @@ export function StyleProvider(props: StyleProviderProps) {
   //
 
   const stronghold = useStronghold();
-  const [activeUser] = useAuth();
+  const auth = useAuth();
 
   //
   // State
@@ -35,14 +35,14 @@ export function StyleProvider(props: StyleProviderProps) {
   //
 
   createEffect(() => {
-    if (!activeUser()) {
+    if (!auth.store.auth) {
       setActiveTheme(StyleThemeName.Light);
       return;
     }
 
     const themeName = stronghold.readWithParse(
       StrongholdKeys.ActiveTheme,
-      activeUser()!.id,
+      auth.store.user!.id,
     ) as unknown as StyleThemeName;
 
     if (!themeName) return;
@@ -56,11 +56,11 @@ export function StyleProvider(props: StyleProviderProps) {
       setActiveTheme: async (themeName: StyleThemeName) => {
         setActiveTheme(themeName);
 
-        if (!activeUser()) return;
+        if (!auth.store.auth) return;
 
         await stronghold.insertWithParse(
           StrongholdKeys.ActiveTheme,
-          { key: activeUser()!.id, value: themeName },
+          { key: auth.store.user!.id, value: themeName },
           {
             save: true,
           },

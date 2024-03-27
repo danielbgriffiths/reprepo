@@ -6,5 +6,5 @@ import { AuthContext } from "./create-context";
 import { AuthBindings } from "../index.types";
 
 export function useAuth(): AuthBindings {
-  return useContext(AuthContext);
+  return useContext(AuthContext)!;
 }

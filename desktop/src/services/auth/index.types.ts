@@ -1,21 +1,23 @@
-import { Accessor, JSXElement } from "solid-js";
+// Third Party Imports
+import { JSXElement } from "solid-js";
 
-import { UserSummary } from "@/models";
+// Local Imports
+import { Auth, AuthenticatedUser, User, AuthAccount } from "@/models";
 
-export type AuthBindings = [
-  Accessor<UserSummary | undefined>,
-  {
-    setActiveUser: (user?: UserSummary) => void;
-  },
-];
+export interface AuthStore {
+  auth?: Auth;
+  user?: User;
+  authAccount?: AuthAccount;
+  isInitialized: boolean;
+}
+
+export type AuthBindings = {
+  store: AuthStore;
+  setAuth: (_authenticatedUser?: AuthenticatedUser) => void;
+  createAuthFromStronghold: () => Promise<void>;
+  createGoogleOAuth: (_existingAuthId?: number) => Promise<void>;
+};
 
 export interface AuthProviderProps {
   children: JSXElement;
-}
-
-export enum AuthenticationProvider {
-  Google = "Google",
-  Instagram = "Instagram",
-  Pinterest = "Pinterest",
-  Email = "Email",
 }

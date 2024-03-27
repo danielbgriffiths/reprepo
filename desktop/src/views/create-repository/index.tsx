@@ -8,22 +8,22 @@ import { Commands } from "@services/commands";
 import { useNotifications } from "@services/notifications";
 import { useAuth } from "@services/auth";
 
-export default function CreateArtistProfile() {
+export default function CreateRepository() {
   //
   // Hooks
   //
 
   const data = useData();
   const [_, notificationActions] = useNotifications();
-  const [activeUser] = useAuth();
+  const auth = useAuth();
 
   //
   // Event Handlers
   //
 
   async function onClickSubmit(_event: MouseEvent): Promise<void> {
-    const createArtistProfileResult = await cmd<number>(
-      Commands.CreateArtistProfile,
+    const createRepositoryResult = await cmd<number>(
+      Commands.CreateRepository,
       {
         field: "Field",
         specialization: "Specialization",
@@ -31,9 +31,9 @@ export default function CreateArtistProfile() {
       },
     );
 
-    if (createArtistProfileResult.error) {
+    if (createRepositoryResult.error) {
       notificationActions.addNotification({
-        message: createArtistProfileResult.error.message,
+        message: createRepositoryResult.error.message,
         type: "error",
         duration: -1,
         isRemovableByClick: true,
@@ -42,21 +42,19 @@ export default function CreateArtistProfile() {
     }
 
     notificationActions.addNotification({
-      message: `${activeUser()!.firstName}, your artist profile has been created!`,
+      message: `${auth.store.user!.firstName}, your artist profile has been created!`,
       type: "success",
       duration: 5000,
       isRemovableByClick: false,
     });
 
-    await data.artistProfile.setActiveArtistProfile(
-      createArtistProfileResult.data!,
-    );
+    await data.repository.setActiveRepository(createRepositoryResult.data!);
   }
 
   return (
     <Styled.Container>
       <form>
-        <h1>CreateArtistProfile</h1>
+        <h1>CreateRepository</h1>
         <label>
           Field
           <select>

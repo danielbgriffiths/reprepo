@@ -8,7 +8,7 @@ import Icon from "solid-fa";
 import { useData } from "@services/data";
 import { useNavigate } from "@solidjs/router";
 
-export default function ArtistProfiles() {
+export default function Repositories() {
   //
   // Hooks
   //
@@ -20,27 +20,27 @@ export default function ArtistProfiles() {
   // Event Handlers
   //
 
-  async function onClickArtistProfile(id: number): Promise<void> {
-    await data.artistProfile.setActiveArtistProfile(id);
+  async function onClickRepository(id: number): Promise<void> {
+    await data.repository.setActiveRepository(id);
     // TODO: Should navigate to dashboard becuase of Auth component createEffect
   }
 
-  function onClickCreateArtistProfile(_event: MouseEvent): void {
-    navigate("/auth/artist-profiles/create");
+  function onClickCreateRepository(_event: MouseEvent): void {
+    navigate("/auth/repositories/create");
   }
 
   return (
     <Styled.Container>
       <For
-        each={data.artistProfile.store.artistProfiles || []}
+        each={data.repository.store.repositories || []}
         fallback={
-          <Styled.FirstArtistProfileButton onClick={onClickCreateArtistProfile}>
+          <Styled.FirstRepositoryButton onClick={onClickCreateRepository}>
             <Icon icon={faPlus} />
-          </Styled.FirstArtistProfileButton>
+          </Styled.FirstRepositoryButton>
         }
       >
         {(item) => (
-          <div onClick={() => onClickArtistProfile(item.id)}>
+          <div onClick={() => onClickRepository(item.id)}>
             <h3>{item.field}</h3>
             <p>{item.specialization}</p>
           </div>
@@ -52,5 +52,5 @@ export default function ArtistProfiles() {
 
 const Styled = {
   Container: styled.div``,
-  FirstArtistProfileButton: styled.button``,
+  FirstRepositoryButton: styled.button``,
 };
