@@ -43,12 +43,26 @@ export default function Views(props: ViewsProps) {
     strongholdInitReaction(() => stronghold.isInitialized());
   }
 
-  createEffect(() => {
-    if (!auth.store.isInitialized) return;
-    navigate("/auth/dashboard", { replace: true });
+  createEffect(async () => {
+    if (!auth.store.auth) {
+      return navigate("/", { replace: true });
+    }
+
+    if (!auth.store.user?.isOnboarded) {
+      return navigate("/auth/onboarding", { replace: true });
+    }
+
+    if (data.repository.store.activeRepository) {
+      return navigate(
+        `/auth/repositories/${data.repository.store.activeRepository.id}`,
+        { replace: true },
+      );
+    }
+
+    return navigate("/auth/repositories", { replace: true });
   });
 
-  //
+  //a
   // Functions
   //
 

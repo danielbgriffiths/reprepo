@@ -22,9 +22,9 @@ use crate::models::auth_account::{CreateAuthAccount, PartialCreateAuthAccount};
 use crate::models::commands::{CommandErrorType, CommandError, CommandResponse};
 use crate::models::user::{CreateUser, PartialCreateUser};
 use crate::services::account::{create_account_if_not_exists};
-use crate::services::auth::{select_auth_core, create_auth, select_auth_fields_from_auth};
-use crate::services::auth_account::{create_auth_account, remove_auth_account_tokens, select_auth_fields_from_account};
-use crate::services::user::create_user;
+use crate::services::auth::{select_auth_core, create_auth_if_not_exists_by_email, select_auth_fields_from_auth};
+use crate::services::auth_account::{create_auth_account_if_not_exists, remove_auth_account_tokens, select_auth_fields_from_account};
+use crate::services::user::create_user_if_not_exists;
 
 fn get_google_oauth_client() -> Client<
     BasicErrorResponse,
@@ -104,7 +104,7 @@ fn create_oauth_redirect_listener() -> (AuthorizationCode, CsrfToken) {
     (code, state)
 }
 
-fn create_account_auth_user_records(
+fn create_or_find_account_auth_user_records(
     app_state: &State<AppState>,
     target_account_id: &Option<i32>,
     new_auth: CreateAuth,
@@ -115,14 +115,14 @@ fn create_account_auth_user_records(
 
     db_connection.transaction(|db_connection| {
         let account_id = create_account_if_not_exists(db_connection, &target_account_id).unwrap();
-        let auth_id = create_auth(db_connection, &new_auth).unwrap();
-        let _auth_account_id_result = create_auth_account(db_connection, &CreateAuthAccount {
+        let auth_id = create_auth_if_not_exists_by_email(db_connection, &new_auth).unwrap();
+        let _auth_account_id_result = create_auth_account_if_not_exists(db_connection, &CreateAuthAccount {
             auth_id: &auth_id,
             account_id: &account_id,
             access_token: partial_new_auth_account.access_token,
             refresh_token: partial_new_auth_account.refresh_token
         });
-        let _user_id_result = create_user(db_connection, &CreateUser {
+        let _user_id_result = create_user_if_not_exists(db_connection, &CreateUser {
             auth_id: &auth_id,
             first_name: &partial_new_user.first_name,
             last_name: &partial_new_user.last_name,
@@ -134,7 +134,7 @@ fn create_account_auth_user_records(
 }
 
 #[tauri::command]
-pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> CommandResponse::<String> {
+pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> CommandResponse::<(String, i32)> {
     let google_oauth_client = get_google_oauth_client();
 
     let (pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -153,7 +153,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
         .url();
 
     if !webbrowser::open(&authorize_url.to_string()).is_ok() {
-        return CommandResponse::<String> {
+        return CommandResponse::<(String, i32)> {
             data: None,
             error: Some(CommandError {
                 message: "Unable to open web browser".to_string(),
@@ -191,7 +191,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                         let auth_core_result = select_auth_core(&app_state, &existing_auth_id.unwrap());
                         let auth_core = auth_core_result.unwrap();
                         if auth_core.email != user_info_token_body.email {
-                            return CommandResponse::<String> {
+                            return CommandResponse::<(String, i32)> {
                                 data: None,
                                 error: Some(CommandError {
                                     message: format!(
@@ -207,7 +207,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
 
                     let auth_creation_result: Result<(i32, i32), Error> = match existing_auth_id {
                         Some(auth_id) => Ok((auth_id, existing_account_id.unwrap())),
-                        None => create_account_auth_user_records(
+                        None => create_or_find_account_auth_user_records(
                             &app_state,
                             &existing_account_id,
                             CreateAuth {
@@ -249,11 +249,11 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                                     );
 
                                     match token_result {
-                                        Ok(token) => CommandResponse::<String> {
-                                            data: Some(token),
+                                        Ok(token) => CommandResponse::<(String, i32)> {
+                                            data: Some((token, account_id)),
                                             error: None,
                                         },
-                                        Err(e) => CommandResponse::<String> {
+                                        Err(e) => CommandResponse::<(String, i32)> {
                                             data: None,
                                             error: Some(CommandError {
                                                 message: format!("Error encoding token: {}", e),
@@ -262,7 +262,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                                         }
                                     }
                                 },
-                                Err(e) => CommandResponse::<String> {
+                                Err(e) => CommandResponse::<(String, i32)> {
                                     data: None,
                                     error: Some(CommandError {
                                         message: format!("Error getting created auth information: {}", e),
@@ -271,7 +271,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                                 }
                             }
                         },
-                        Err(e) => CommandResponse::<String> {
+                        Err(e) => CommandResponse::<(String, i32)> {
                             data: None,
                             error: Some(CommandError {
                                 message: format!("Error creating or getting auth information: {}", e),
@@ -280,7 +280,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                         }
                     }
                 },
-                Err(e) => CommandResponse::<String> {
+                Err(e) => CommandResponse::<(String, i32)> {
                     data: None,
                     error: Some(CommandError {
                         message: format!("Error parsing user info response JSON: {}", e),
@@ -289,7 +289,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                 }
             }
         },
-        Err(e) => CommandResponse::<String> {
+        Err(e) => CommandResponse::<(String, i32)> {
             data: None,
             error: Some(CommandError {
                 message: format!("Error fetching user info response: {}", e),

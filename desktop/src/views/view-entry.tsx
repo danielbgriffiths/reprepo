@@ -16,7 +16,6 @@ const CreateConnect = lazy(() => import("@views/create-connect"));
 const Onboarding = lazy(() => import("@views/onboarding"));
 const CreateRepository = lazy(() => import("@views/create-repository"));
 const Catch = lazy(() => import("@views/catch"));
-const Auth = lazy(() => import("@views/auth"));
 const Repositories = lazy(() => import("@views/repositories"));
 
 export function ViewEntry() {
@@ -25,18 +24,19 @@ export function ViewEntry() {
       <StyleProvider>
         <Router root={Views}>
           <Route path="/" component={Splash} />
-          <Route path="/auth" component={Auth}>
-            <Route path="/onboarding" component={Onboarding} />
-            <Route path="/repositories" component={Repositories} />
-            <Route path="/repositories/create" component={CreateRepository} />
-            <Route path="/repositories/:id" component={Dashboard}>
-              <Route path="/records" component={Records}>
-                <Route path="/create" component={CreateRecord} />
-                <Route path="/:id" component={Record} />
-              </Route>
+          <Route path="/auth/onboarding" component={Onboarding} />
+          <Route path="/auth/repositories" component={Repositories} />
+          <Route
+            path="/auth/repositories/create"
+            component={CreateRepository}
+          />
+          <Route path="/auth/repositories/:id" component={Dashboard}>
+            <Route path="/records" component={Records}>
+              <Route path="/create" component={CreateRecord} />
+              <Route path="/:id" component={Record} />
             </Route>
-            <Route path="/create-connect" component={CreateConnect} />
           </Route>
+          <Route path="/auth/create-connect" component={CreateConnect} />
           <Route path="*404" component={Catch} />
         </Router>
       </StyleProvider>

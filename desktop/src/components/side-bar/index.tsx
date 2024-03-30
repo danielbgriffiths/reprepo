@@ -13,7 +13,6 @@ import { Commands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
-import { useNavigate } from "@solidjs/router";
 import { useNotifications } from "@services/notifications";
 import { useData } from "@services/data";
 
@@ -26,7 +25,6 @@ export function SideBar(_props: SideBarProps) {
 
   const auth = useAuth();
   const stronghold = useStronghold();
-  const navigate = useNavigate();
   const [_, notificationActions] = useNotifications();
   const data = useData();
 
@@ -52,13 +50,13 @@ export function SideBar(_props: SideBarProps) {
 
     auth.setAuth(undefined);
     await stronghold.remove(StrongholdKeys.AuthedSignature, { save: true });
+
     notificationActions.addNotification({
       message: "Successfully logged out",
       type: "info",
       duration: 2000,
       isRemovableByClick: true,
     });
-    navigate("/", { replace: true });
   }
 
   return (
@@ -89,7 +87,7 @@ export function SideBar(_props: SideBarProps) {
       <Styled.AvatarContainer>
         <Styled.Avatar
           alt="avatar"
-          src={auth.store.user!.avatar || "/avatar.png"}
+          src={auth.store.user?.avatar || "/avatar.png"}
         />
         <Styled.SecondaryLinkTo onClick={onClickLogout}>
           Logout

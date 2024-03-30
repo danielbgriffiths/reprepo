@@ -28,3 +28,10 @@ export interface AuthenticatedUser {
   auth: Auth;
   authAccount: AuthAccount;
 }
+
+export interface UserOnboardingPartial {
+  locale: string;
+  age: number;
+  avatar?: string;
+  isOnboarded: boolean;
+}

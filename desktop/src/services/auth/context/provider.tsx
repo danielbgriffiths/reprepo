@@ -4,12 +4,13 @@ import { createStore } from "solid-js/store";
 // Local Imports
 import { AuthContext } from "./create-context";
 import { AuthBindings, AuthProviderProps, AuthStore } from "../index.types";
-import { AuthenticatedUser } from "@/models";
+import { AuthenticatedUser, User } from "@/models";
 import { cmd } from "@services/commands/index.utils.ts";
 import { Commands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config.ts";
 import { useNotifications } from "@services/notifications";
 import { useStronghold } from "@services/stronghold";
+import { DataBindings } from "@services/data";
 
 export function AuthProvider(props: AuthProviderProps) {
   //
@@ -34,25 +35,38 @@ export function AuthProvider(props: AuthProviderProps) {
   // Functions
   //
 
-  function setAuth(
-    authenticatedUser?: AuthenticatedUser,
-    isNotInitialized?: boolean,
-  ): void {
+  function updateUser(partialUser: Partial<User>): void {
+    setAuthStore(
+      (prev: AuthStore): AuthStore => ({
+        ...prev,
+        user: {
+          ...prev.user!,
+          ...partialUser,
+        },
+      }),
+    );
+  }
+
+  function setAuth(authenticatedUser?: AuthenticatedUser): void {
     setAuthStore((prev) => {
       return {
         ...prev,
         ...(authenticatedUser || {}),
-        isInitialized: !isNotInitialized,
+        isInitialized: true,
       };
     });
   }
 
-  async function createGoogleOAuth(existingAuthId?: number): Promise<void> {
-    const accountId = await stronghold.read(StrongholdKeys.AccountId);
-
-    const authedSignatureResult = await cmd<string>(
+  async function createGoogleOAuth(
+    dataStore: DataBindings,
+    existingAuthId?: number,
+  ): Promise<void> {
+    const authedSignatureResult = await cmd<[string, number]>(
       Commands.CreateGoogleOAuth,
-      { existingAuthId, existingAccountId: accountId },
+      {
+        existingAuthId,
+        existingAccountId: dataStore.general.store.accountId,
+      },
     );
 
     if (authedSignatureResult.error) {
@@ -65,13 +79,15 @@ export function AuthProvider(props: AuthProviderProps) {
       return;
     }
 
-    await storeAuthedSignature(authedSignatureResult.data!);
+    await dataStore.general.storeAccountId(authedSignatureResult.data![1]);
+
+    await storeAuthedSignature(authedSignatureResult.data![0]);
 
     const authenticatedUserResult = await cmd<AuthenticatedUser>(
       Commands.GetAuthenticatedUser,
       {
-        authedSignature: authedSignatureResult.data!,
-        accountId,
+        authedSignature: authedSignatureResult.data![0],
+        accountId: authedSignatureResult.data![1],
       },
     );
 
@@ -97,7 +113,7 @@ export function AuthProvider(props: AuthProviderProps) {
     );
 
     if (!authedSignature) {
-      setAuth(undefined, true);
+      setAuth(undefined);
       return;
     }
 
@@ -105,7 +121,7 @@ export function AuthProvider(props: AuthProviderProps) {
       Commands.GetAuthenticatedUser,
       {
         authedSignature,
-        accountId,
+        accountId: Number(accountId),
       },
     );
 
@@ -136,6 +152,7 @@ export function AuthProvider(props: AuthProviderProps) {
   const authBindings: AuthBindings = {
     store: authStore,
     setAuth,
+    updateUser,
     createGoogleOAuth,
     createAuthFromStronghold,
   };

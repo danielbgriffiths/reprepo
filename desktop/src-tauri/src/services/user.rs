@@ -43,7 +43,17 @@ pub fn select_authenticated_user(app_state: &State<AppState>, target_user_id: &i
     })
 }
 
-pub fn create_user(db_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, new_user: &CreateUser) -> QueryResult<i32> {
+pub fn create_user_if_not_exists(db_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, new_user: &CreateUser) -> QueryResult<i32> {
+    let user_id = user::table
+        .filter(user::auth_id.eq(new_user.auth_id))
+        .select(user::id)
+        .first::<i32>(db_connection)
+        .optional()?;
+
+    if let Some(id) = user_id {
+        return Ok(id);
+    }
+
     diesel::insert_into(user::table)
         .values(new_user)
         .returning(user::id)

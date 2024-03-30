@@ -1,21 +1,19 @@
 // Third Party Imports
 import { styled } from "solid-styled-components";
-import {
-  createEffect,
-  createMemo,
-  createSignal,
-  Match,
-  Switch,
-} from "solid-js";
+import { createEffect, createSignal, Match, Switch } from "solid-js";
 
 // Local Imports
 import { cmd } from "@services/commands/index.utils";
 import { Commands } from "@services/commands";
-import { SupportedLocale } from "@services/locale";
-import { LOCALE_KEYS, LOCALE_MAP } from "@services/locale/index.config";
+import { LOCALE_KEYS } from "@services/locale/index.config";
 import { useNotifications } from "@services/notifications";
 import { useAuth } from "@services/auth";
 import { useNavigate } from "@solidjs/router";
+import LocaleForm from "@views/onboarding/locale-form.tsx";
+import AgeForm from "@views/onboarding/age-form.tsx";
+import AvatarForm from "@views/onboarding/avatar-form.tsx";
+import { UserOnboardingPartial } from "@/models";
+import { SupportedLocale } from "@services/locale";
 
 export default function Onboarding() {
   //
@@ -31,30 +29,25 @@ export default function Onboarding() {
   //
 
   const [step, setStep] = createSignal<number>(0);
-  const [age, setAge] = createSignal<number>(0);
-  const [locale, setLocale] = createSignal<SupportedLocale>(
-    SupportedLocale.EnglishUS,
-  );
-  const [avatar, setAvatar] = createSignal<string | undefined>(undefined);
-
-  const isAgeValid = createMemo<boolean>(() => age() > 0);
-  const isLocaleValid = createMemo<boolean>(() =>
-    LOCALE_KEYS.includes(locale()),
-  );
-  const isAvatarValid = createMemo<boolean>(() => true);
+  const [values, setValues] = createSignal<UserOnboardingPartial>({
+    locale: LOCALE_KEYS[0],
+    age: 0,
+    avatar: undefined,
+    isOnboarded: false,
+  });
 
   //
   // Lifecycle
   //
 
   createEffect(async () => {
-    if (step() !== 3) return;
-
-    const updateUserResult = await cmd<boolean>(Commands.UpdateUser, {
-      age: age(),
-      locale: locale(),
-      avatar: avatar(),
-    });
+    const updateUserResult = await cmd<UserOnboardingPartial>(
+      Commands.UpdateUser,
+      {
+        ...values(),
+        userId: auth.store.user!.id,
+      },
+    );
 
     if (updateUserResult.error) {
       return notificationActions.addNotification({
@@ -65,12 +58,30 @@ export default function Onboarding() {
       });
     }
 
+    auth.updateUser(updateUserResult.data!);
+
+    let message!: string;
+
+    switch (step()) {
+      case 1:
+        message = `Locale is saved, ${auth.store.user!.firstName}!`;
+        break;
+      case 2:
+        message = `Age is saved, ${auth.store.user!.firstName}!`;
+        break;
+      case 3:
+        message = `Good job onboarding, ${auth.store.user!.firstName}!`;
+        break;
+    }
+
     notificationActions.addNotification({
       type: "success",
-      message: `Good job onboarding, ${auth.store.user!.firstName}!`,
-      duration: 5000,
-      isRemovableByClick: false,
+      message: message,
+      duration: step() !== 3 ? 2000 : 5000,
+      isRemovableByClick: step() !== 3,
     });
+
+    if (step() === 3) return;
 
     navigate("/auth/repositories");
   });
@@ -79,106 +90,32 @@ export default function Onboarding() {
   // Event Handlers
   //
 
-  function onClickNext() {
-    setStep((prev) => prev + 1);
-  }
-
-  function onClickPrevious() {
-    setStep((prev) => prev - 1);
-  }
-
-  function onInputAge(event: Event) {
-    const target = event.target as HTMLInputElement;
-    setAge(parseInt(target.value));
-  }
-
-  function onSelectLocale(event: Event) {
-    const target = event.target as HTMLSelectElement;
-    setLocale(target.value as SupportedLocale);
-  }
-
-  function onChangeAvatar(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-
-    if (file) {
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        setAvatar(event.target?.result as string);
-      };
-
-      reader.readAsDataURL(file);
-    }
+  function onSubmit(key: "locale" | "age" | "avatar", value: any): void {
+    setValues((prev) => ({ ...prev, isOnboarded: step() === 3, [key]: value }));
+    setStep(step() + 1);
   }
 
   return (
     <Styled.Container>
       <Switch>
         <Match when={step() === 0}>
-          <form>
-            <label>
-              Locale
-              <select onSelect={onSelectLocale} value={locale()}>
-                {Object.entries(LOCALE_MAP).map((entry) => (
-                  <option value={entry[0]}>{entry[1]}</option>
-                ))}
-              </select>
-            </label>
-            <button
-              type="submit"
-              disabled={isLocaleValid()}
-              onClick={onClickNext}
-            >
-              Next
-            </button>
-          </form>
+          <LocaleForm
+            defaultValue={auth.store.user?.locale ?? SupportedLocale.EnglishUS}
+            onSubmit={(value) => onSubmit("locale", value)}
+          />
         </Match>
         <Match when={step() === 1}>
-          <form>
-            <label>
-              Age
-              <input
-                name="age"
-                type="number"
-                required={true}
-                value={age()}
-                onInput={onInputAge}
-              />
-            </label>
-            <div>
-              <button type="button" onClick={onClickPrevious}>
-                Previous
-              </button>
-              <button
-                type="submit"
-                disabled={!isAgeValid()}
-                onClick={onClickNext}
-              >
-                Next
-              </button>
-            </div>
-          </form>
+          <AgeForm
+            defaultValue={auth.store.user?.age ?? 18}
+            onSubmit={(value) => onSubmit("age", value)}
+            onBack={() => setStep(0)}
+          />
         </Match>
         <Match when={step() === 2}>
-          <form>
-            <label>
-              Avatar
-              <input name="avatar" type="file" onChange={onChangeAvatar} />
-            </label>
-            <div>
-              <button type="button" onClick={onClickPrevious}>
-                Previous
-              </button>
-              <button
-                type="submit"
-                disabled={isAvatarValid()}
-                onClick={onClickNext}
-              >
-                Create Repos
-              </button>
-            </div>
-          </form>
+          <AvatarForm
+            onSubmit={(value) => onSubmit("avatar", value)}
+            onBack={() => setStep(1)}
+          />
         </Match>
       </Switch>
     </Styled.Container>

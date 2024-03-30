@@ -1,7 +1,7 @@
 // Third Party Imports
 import Icon from "solid-fa";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
-import { createReaction, createSignal } from "solid-js";
+import { createReaction, createSignal, Show } from "solid-js";
 
 // Local Imports
 import { Commands } from "@services/commands";
@@ -55,32 +55,32 @@ export default function Splash() {
   //
 
   async function onClickGoogleOAuth(): Promise<void> {
-    await auth.createGoogleOAuth();
+    await auth.createGoogleOAuth(data);
   }
 
   async function onClickUserSummary(authId: number): Promise<void> {
-    await auth.createGoogleOAuth(authId);
+    await auth.createGoogleOAuth(data, authId);
   }
 
   return (
     <div>
       <h1>{localeActions.text(TranslationKey.SplashWelcome)}</h1>
-      <div>
-        {auth.store.isInitialized && !auth.store.auth && (
-          <div>
-            <button onClick={onClickGoogleOAuth}>
-              <Icon icon={faGoogle} />
+      <Show
+        when={auth.store.isInitialized}
+        fallback={<div>Initializing...</div>}
+      >
+        <div>
+          <button onClick={onClickGoogleOAuth}>
+            <Icon icon={faGoogle} />
+          </button>
+          {users().map((userSummary) => (
+            <button onClick={() => onClickUserSummary(userSummary.authId)}>
+              <img alt="user avatar" src={userSummary.avatar} />
+              {userSummary.firstName} {userSummary.lastName}
             </button>
-            {users().map((userSummary) => (
-              <button onClick={() => onClickUserSummary(userSummary.authId)}>
-                <img alt="user avatar" src={userSummary.avatar} />
-                {userSummary.firstName} {userSummary.lastName}
-              </button>
-            ))}
-          </div>
-        )}
-        {!auth.store.isInitialized && <div>Initializing...</div>}
-      </div>
+          ))}
+        </div>
+      </Show>
     </div>
   );
 }

@@ -35,7 +35,18 @@ pub fn remove_auth_account_tokens(app_state: &State<AppState>, target_account_id
         .get_result::<i32>(db_connection)
 }
 
-pub fn create_auth_account(db_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, new_auth_account: &CreateAuthAccount) -> QueryResult<i32> {
+pub fn create_auth_account_if_not_exists(db_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, new_auth_account: &CreateAuthAccount) -> QueryResult<i32> {
+    let auth_account_id = auth_account::table
+        .filter(auth_account::account_id.eq(new_auth_account.account_id))
+        .filter(auth_account::auth_id.eq(new_auth_account.auth_id))
+        .select(auth_account::id)
+        .first::<i32>(db_connection)
+        .optional()?;
+
+    if let Some(id) = auth_account_id {
+        return Ok(id);
+    }
+
     insert_into(auth_account::table)
         .values(new_auth_account)
         .returning(auth_account::id)

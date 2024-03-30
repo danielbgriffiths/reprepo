@@ -17,17 +17,21 @@
     "@fortawesome/free-brands-svg-icons": "^6.5.1",
     "@fortawesome/pro-light-svg-icons": "^6.5.1",
     "@fortawesome/sharp-light-svg-icons": "^6.5.1",
+    "@modular-forms/solid": "^0.20.0",
     "@solidjs/router": "^0.13.0",
     "@tauri-apps/api": "^1",
+    "animejs": "^3.2.2",
     "i18next": "^23.10.1",
     "solid-fa": "^0.2.0",
     "solid-js": "^1.7.8",
     "solid-styled-components": "^0.28.5",
-    "tauri-plugin-stronghold-api": "github:tauri-apps/tauri-plugin-stronghold#v1"
+    "tauri-plugin-stronghold-api": "github:tauri-apps/tauri-plugin-stronghold#v1",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@formatjs/cli": "^6.2.7",
     "@tauri-apps/cli": "^1",
+    "@types/animejs": "^3.1.12",
     "@types/node": "^20.11.27",
     "sass": "^1.71.1",
     "typescript": "^5.0.2",
