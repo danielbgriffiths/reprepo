@@ -10,15 +10,17 @@ pub mod commands;
 pub mod state;
 pub mod services;
 
-use std::error::Error;
 // External Usages
 use tauri::{App, LogicalSize, Manager};
+use std::error::Error;
 
 // Local Usages
 use crate::layout::menu::create_menu;
-use crate::commands::user::{get_users, get_authenticated_user};
+use crate::commands::user::{get_users, get_authenticated_user, update_user_onboarding};
 use crate::commands::utilities::get_env;
 use crate::commands::auth::{create_google_oauth, logout};
+use crate::commands::file::{upload_file, delete_file};
+use crate::commands::repository::{get_repositories, create_repository};
 use crate::database::connection::get_connection_pool;
 use crate::services::stronghold::create_stronghold_plugin;
 use crate::state::{AppState};
@@ -44,11 +46,23 @@ fn main() {
         .manage(AppState { pool: get_connection_pool() })
         .invoke_handler(
             tauri::generate_handler![
+                // Users
                 get_users,
                 get_authenticated_user,
+                update_user_onboarding,
+
+                // Auth
                 create_google_oauth,
                 logout,
-                get_env
+
+                // General
+                get_env,
+                upload_file,
+                delete_file,
+
+                // Repositories
+                get_repositories,
+                create_repository
             ]
         )
         .setup(setup_window_constraints)

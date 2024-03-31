@@ -9,10 +9,10 @@ import { LOCALE_KEYS } from "@services/locale/index.config";
 import { useNotifications } from "@services/notifications";
 import { useAuth } from "@services/auth";
 import { useNavigate } from "@solidjs/router";
-import LocaleForm from "@views/onboarding/locale-form.tsx";
-import AgeForm from "@views/onboarding/age-form.tsx";
-import AvatarForm from "@views/onboarding/avatar-form.tsx";
-import { UserOnboardingPartial } from "@/models";
+import LocaleForm from "@views/onboarding/locale-form";
+import AgeForm from "@views/onboarding/age-form";
+import AvatarForm from "@views/onboarding/avatar-form";
+import { User, UserOnboardingPartial } from "@/models";
 import { SupportedLocale } from "@services/locale";
 
 export default function Onboarding() {
@@ -41,13 +41,10 @@ export default function Onboarding() {
   //
 
   createEffect(async () => {
-    const updateUserResult = await cmd<UserOnboardingPartial>(
-      Commands.UpdateUser,
-      {
-        ...values(),
-        userId: auth.store.user!.id,
-      },
-    );
+    const updateUserResult = await cmd<User>(Commands.UpdateUser, {
+      userChanges: values(),
+      userId: auth.store.user!.id,
+    });
 
     if (updateUserResult.error) {
       return notificationActions.addNotification({
@@ -113,6 +110,7 @@ export default function Onboarding() {
         </Match>
         <Match when={step() === 2}>
           <AvatarForm
+            defaultValue={auth.store.user?.avatar}
             onSubmit={(value) => onSubmit("avatar", value)}
             onBack={() => setStep(1)}
           />

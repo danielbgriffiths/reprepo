@@ -4,9 +4,11 @@ export enum Commands {
   GetEnv = "get_env",
   GetAuthenticatedUser = "get_authenticated_user",
   Logout = "logout",
-  GetRepositories = "get_artist_profiles",
+  GetRepositories = "get_repositories",
   UpdateUser = "update_user",
-  CreateRepository = "create_artist_profile",
+  CreateRepository = "create_repository",
+  UploadFile = "upload_file",
+  DeleteFile = "delete_file",
 }
 
 export interface InvokeResult<T> {

@@ -6,7 +6,7 @@ use diesel;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
 
 // Local Usages
-use crate::models::user::{AuthenticatedUser, CreateUser, UpdateUser, User};
+use crate::models::user::{AuthenticatedUser, CreateUser, PartialOnboardingUser, User};
 use crate::state::AppState;
 use crate::schema::user;
 use crate::schema::auth_account;
@@ -60,11 +60,20 @@ pub fn create_user_if_not_exists(db_connection: &mut PooledConnection<Connection
         .get_result::<i32>(db_connection)
 }
 
-pub fn update_user(app_state: &State<AppState>, user_id: &i32, user_changes: &UpdateUser) -> QueryResult<i32> {
+pub fn update_user_onboarding_partial(app_state: &State<AppState>, user_id: &i32, user_onboarding_changes: &PartialOnboardingUser) -> QueryResult<User> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     diesel::update(user::table.find(user_id))
-        .set(user_changes)
-        .returning(user::id)
-        .get_result::<i32>(db_connection)
+        .set(user_onboarding_changes)
+        .returning(User::as_select())
+        .get_result::<User>(db_connection)
+}
+
+pub fn select_user(app_state: &State<AppState>, user_id: &i32) -> QueryResult<User> {
+    let db_connection = &mut app_state.pool.get().unwrap();
+
+    user::table
+        .find(&user_id)
+        .select(User::as_select())
+        .get_result::<User>(db_connection)
 }

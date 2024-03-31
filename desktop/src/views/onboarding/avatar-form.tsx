@@ -4,22 +4,33 @@ import {
   FieldElementProps,
 } from "@modular-forms/solid";
 import anime from "animejs/lib/anime.es.js";
-import { onMount, createSignal, Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
+import Icon from "solid-fa";
+import { faTrash } from "@fortawesome/pro-light-svg-icons";
+
+import { cmd } from "@services/commands/index.utils";
+import { Commands } from "@services/commands";
+import { useNotifications } from "@services/notifications";
 
 type AvatarForm = {
   avatar: File;
 };
 
 export interface AvatarFormProps {
+  defaultValue: string | undefined;
   onBack: () => void;
-  onSubmit: (avatar: File) => void;
+  onSubmit: (avatar: string | undefined) => void;
 }
 
 export default function AvatarForm(props: AvatarFormProps) {
   let formRef: HTMLFormElement | undefined = undefined;
 
+  const [_, notificationActions] = useNotifications();
+
   const [avatarForm, { Form, Field }] = createForm<AvatarForm>();
-  const [filePreview, setFilePreview] = createSignal<string>();
+  const [fileURI, setFileURI] = createSignal<string | undefined>(
+    props.defaultValue,
+  );
 
   onMount(() => {
     if (!formRef) return;
@@ -32,7 +43,7 @@ export default function AvatarForm(props: AvatarFormProps) {
     });
   });
 
-  function onSubmit(values: AvatarForm): void {
+  function onSubmit(): void {
     if (!formRef) return;
 
     anime({
@@ -41,7 +52,7 @@ export default function AvatarForm(props: AvatarFormProps) {
       opacity: [1, 0],
       duration: 300,
       complete: () => {
-        props.onSubmit(values.avatar);
+        props.onSubmit(fileURI());
       },
     });
   }
@@ -55,7 +66,12 @@ export default function AvatarForm(props: AvatarFormProps) {
       opacity: [1, 0],
       duration: 300,
       complete: () => {
-        props.onBack();
+        if (!fileURI() || fileURI() === props.defaultValue) return;
+
+        cmd<boolean>(Commands.DeleteFile, { uri: fileURI() }).then(() => {
+          setFileURI(undefined);
+          props.onBack();
+        });
       },
     });
   }
@@ -70,8 +86,29 @@ export default function AvatarForm(props: AvatarFormProps) {
       if (file) {
         const reader = new FileReader();
 
-        reader.onload = (event) => {
-          setFilePreview(event.target?.result as string);
+        reader.onload = async (fileReaderEvent) => {
+          const uploadFileResult = await cmd<string>(Commands.UploadFile, {
+            base64: fileReaderEvent.target?.result as string,
+            fileName: "avatar",
+          });
+
+          if (uploadFileResult.error) {
+            return notificationActions.addNotification({
+              type: "error",
+              message: uploadFileResult.error.message,
+              duration: -1,
+              isRemovableByClick: true,
+            });
+          }
+
+          notificationActions.addNotification({
+            type: "success",
+            message: "Avatar Uploaded!",
+            duration: 2000,
+            isRemovableByClick: true,
+          });
+
+          setFileURI(fileReaderEvent.target?.result as string);
         };
 
         reader.readAsDataURL(file);
@@ -81,23 +118,60 @@ export default function AvatarForm(props: AvatarFormProps) {
     };
   }
 
+  async function onDelete(): Promise<void> {
+    const deleteFileResult = await cmd<boolean>(Commands.DeleteFile, {
+      uri: fileURI(),
+    });
+
+    if (deleteFileResult.error) {
+      return notificationActions.addNotification({
+        type: "error",
+        message: deleteFileResult.error.message,
+        duration: -1,
+        isRemovableByClick: true,
+      });
+    }
+
+    notificationActions.addNotification({
+      type: "success",
+      message: "Avatar Deleted!",
+      duration: 2000,
+      isRemovableByClick: true,
+    });
+
+    setFileURI(undefined);
+  }
+
   return (
     <Form ref={formRef} onSubmit={onSubmit}>
       <Field name="avatar" type="File">
         {(field, props) => (
           <>
             <label for={field.name}>Avatar</label>
-            <input
-              {...props}
-              onChange={onChangeWrapped(props.onChange)}
-              id={field.name}
-              type="file"
-              aria-invalid={!!field.error}
-              aria-errormessage={`${props.name}-error`}
-            />
-            {field.error && <div id={`${props.name}-error`}>{field.error}</div>}
-            <Show when={filePreview()}>
-              <img alt="avatar preview" src={filePreview()} />
+            <Show
+              when={!fileURI()}
+              fallback={
+                <div>
+                  <button type="button" onClick={onDelete}>
+                    <Icon icon={faTrash} />
+                  </button>
+                  <img alt="avatar preview" src={fileURI()} />
+                </div>
+              }
+            >
+              <>
+                <input
+                  {...props}
+                  onChange={onChangeWrapped(props.onChange)}
+                  id={field.name}
+                  type="file"
+                  aria-invalid={!!field.error}
+                  aria-errormessage={`${props.name}-error`}
+                />
+                {field.error && (
+                  <div id={`${props.name}-error`}>{field.error}</div>
+                )}
+              </>
             </Show>
           </>
         )}

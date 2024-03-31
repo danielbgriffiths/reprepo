@@ -60,3 +60,12 @@ pub struct AuthenticatedUser {
     pub auth: AuthCore,
     pub auth_account: AuthAccount,
 }
+
+#[derive(Debug, Insertable, AsChangeset, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::user)]
+pub struct PartialOnboardingUser {
+    pub age: Option<i32>,
+    pub avatar: Option<String>,
+    pub locale: String,
+    pub is_onboarded: bool
+}

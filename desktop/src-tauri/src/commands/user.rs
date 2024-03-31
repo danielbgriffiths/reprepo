@@ -6,10 +6,10 @@ use crate::models::commands::{CommandError, CommandErrorType, CommandResponse};
 
 
 // Local Usages
-use crate::models::user::{AuthenticatedUser, User};
+use crate::models::user::{AuthenticatedUser, User, PartialOnboardingUser};
 use crate::models::auth::{AuthedSignatureClaims};
 use crate::state::{AppState};
-use crate::services::user::{select_account_users, select_authenticated_user};
+use crate::services::user::{select_account_users, select_authenticated_user, update_user_onboarding_partial};
 
 #[tauri::command]
 pub fn get_users(app_state: State<AppState>, account_id: Option<i32>) -> CommandResponse::<Vec<User>> {
@@ -106,6 +106,23 @@ pub fn get_authenticated_user(app_state: State<AppState>, authed_signature: Opti
             error: Some(CommandError {
                 message: format!("Error decoding token: {}", e),
                 error_type: Some(CommandErrorType::External)
+            })
+        }
+    }
+}
+
+#[tauri::command]
+pub fn update_user_onboarding(app_state: State<AppState>, user_id: i32, user_changes: PartialOnboardingUser) -> CommandResponse::<User> {
+    match update_user_onboarding_partial(&app_state, &user_id, &user_changes) {
+        Ok(user) => CommandResponse::<User> {
+            data: Some(user),
+            error: None
+        },
+        Err(e) => CommandResponse::<User> {
+            data: None,
+            error: Some(CommandError {
+                message: format!("Unable get fetch updated user. {}", e),
+                error_type: Some(CommandErrorType::Database)
             })
         }
     }
