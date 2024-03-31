@@ -1,3 +1,4 @@
+// Third Party Imports
 import {
   createForm,
   FieldElement,
@@ -8,9 +9,10 @@ import { createSignal, onMount, Show } from "solid-js";
 import Icon from "solid-fa";
 import { faTrash } from "@fortawesome/pro-light-svg-icons";
 
-import { cmd } from "@services/commands/index.utils";
-import { Commands } from "@services/commands";
+// local Imports
+import { fileCommands } from "@services/commands";
 import { useNotifications } from "@services/notifications";
+import { NotificationKey } from "@services/notifications/index.types.ts";
 
 type AvatarForm = {
   avatar: File;
@@ -25,12 +27,24 @@ export interface AvatarFormProps {
 export default function AvatarForm(props: AvatarFormProps) {
   let formRef: HTMLFormElement | undefined = undefined;
 
-  const [_, notificationActions] = useNotifications();
+  //
+  // Hooks
+  //
+
+  const notifications = useNotifications();
+
+  //
+  // State
+  //
 
   const [avatarForm, { Form, Field }] = createForm<AvatarForm>();
   const [fileURI, setFileURI] = createSignal<string | undefined>(
     props.defaultValue,
   );
+
+  //
+  // Lifecylce
+  //
 
   onMount(() => {
     if (!formRef) return;
@@ -42,6 +56,10 @@ export default function AvatarForm(props: AvatarFormProps) {
       duration: 300,
     });
   });
+
+  //
+  // Functions
+  //
 
   function onSubmit(): void {
     if (!formRef) return;
@@ -68,7 +86,7 @@ export default function AvatarForm(props: AvatarFormProps) {
       complete: () => {
         if (!fileURI() || fileURI() === props.defaultValue) return;
 
-        cmd<boolean>(Commands.DeleteFile, { uri: fileURI() }).then(() => {
+        fileCommands.deleteFile({ uri: fileURI() }).then(() => {
           setFileURI(undefined);
           props.onBack();
         });
@@ -87,28 +105,18 @@ export default function AvatarForm(props: AvatarFormProps) {
         const reader = new FileReader();
 
         reader.onload = async (fileReaderEvent) => {
-          const uploadFileResult = await cmd<string>(Commands.UploadFile, {
+          const uploadedFileURI = await fileCommands.uploadFile({
             base64: fileReaderEvent.target?.result as string,
             fileName: "avatar",
           });
 
-          if (uploadFileResult.error) {
-            return notificationActions.addNotification({
-              type: "error",
-              message: uploadFileResult.error.message,
-              duration: -1,
-              isRemovableByClick: true,
-            });
+          if (!uploadedFileURI) {
+            return notifications.register(NotificationKey.AvatarUploadError);
           }
 
-          notificationActions.addNotification({
-            type: "success",
-            message: "Avatar Uploaded!",
-            duration: 2000,
-            isRemovableByClick: true,
-          });
+          notifications.register(NotificationKey.AvatarUploadSuccess);
 
-          setFileURI(fileReaderEvent.target?.result as string);
+          setFileURI(uploadedFileURI);
         };
 
         reader.readAsDataURL(file);
@@ -119,25 +127,15 @@ export default function AvatarForm(props: AvatarFormProps) {
   }
 
   async function onDelete(): Promise<void> {
-    const deleteFileResult = await cmd<boolean>(Commands.DeleteFile, {
+    const isDeleted = await fileCommands.deleteFile({
       uri: fileURI(),
     });
 
-    if (deleteFileResult.error) {
-      return notificationActions.addNotification({
-        type: "error",
-        message: deleteFileResult.error.message,
-        duration: -1,
-        isRemovableByClick: true,
-      });
+    if (!isDeleted) {
+      return notifications.register(NotificationKey.AvatarDeleteError);
     }
 
-    notificationActions.addNotification({
-      type: "success",
-      message: "Avatar Deleted!",
-      duration: 2000,
-      isRemovableByClick: true,
-    });
+    notifications.register(NotificationKey.AvatarDeleteSuccess);
 
     setFileURI(undefined);
   }

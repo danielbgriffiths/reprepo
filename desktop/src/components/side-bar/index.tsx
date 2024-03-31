@@ -2,19 +2,19 @@
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
 import {
+  faGrid2Plus,
   faGridHorizontal,
   faNetworkWired,
-  faGrid2Plus,
 } from "@fortawesome/pro-light-svg-icons";
 
 // Local Imports
-import { cmd } from "@services/commands/index.utils";
-import { Commands } from "@services/commands";
+import { authCommands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
 import { useNotifications } from "@services/notifications";
 import { useData } from "@services/data";
+import { NotificationKey } from "@services/notifications/index.types.ts";
 
 export interface SideBarProps {}
 
@@ -25,7 +25,7 @@ export function SideBar(_props: SideBarProps) {
 
   const auth = useAuth();
   const stronghold = useStronghold();
-  const [_, notificationActions] = useNotifications();
+  const notifications = useNotifications();
   const data = useData();
 
   //
@@ -33,30 +33,20 @@ export function SideBar(_props: SideBarProps) {
   //
 
   async function onClickLogout(): Promise<void> {
-    const logoutResult = await cmd<boolean>(Commands.Logout, {
+    const isLoggedOut = await authCommands.logout({
       authId: auth.store.auth!.id,
       accountId: data.general.store.accountId,
     });
 
-    if (logoutResult.error) {
-      notificationActions.addNotification({
-        message: <span>{logoutResult.error.message}</span>,
-        type: "error",
-        duration: 5000,
-        isRemovableByClick: true,
-      });
-      return;
+    if (!isLoggedOut) {
+      return notifications.register(NotificationKey.LogoutError);
     }
 
     auth.setAuth(undefined);
+
     await stronghold.remove(StrongholdKeys.AuthedSignature, { save: true });
 
-    notificationActions.addNotification({
-      message: "Successfully logged out",
-      type: "info",
-      duration: 2000,
-      isRemovableByClick: true,
-    });
+    notifications.register(NotificationKey.Logout);
   }
 
   return (

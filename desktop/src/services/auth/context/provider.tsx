@@ -5,12 +5,12 @@ import { createStore } from "solid-js/store";
 import { AuthContext } from "./create-context";
 import { AuthBindings, AuthProviderProps, AuthStore } from "../index.types";
 import { AuthenticatedUser, User } from "@/models";
-import { cmd } from "@services/commands/index.utils.ts";
-import { Commands } from "@services/commands";
-import { StrongholdKeys } from "@services/stronghold/index.config.ts";
-import { useNotifications } from "@services/notifications";
+import { authCommands, userCommands } from "@services/commands";
+import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useStronghold } from "@services/stronghold";
 import { DataBindings } from "@services/data";
+import { NotificationKey } from "@services/notifications/index.types";
+import { useNotifications } from "@services/notifications";
 
 export function AuthProvider(props: AuthProviderProps) {
   //
@@ -18,7 +18,7 @@ export function AuthProvider(props: AuthProviderProps) {
   //
 
   const stronghold = useStronghold();
-  const [_, notificationActions] = useNotifications();
+  const notifications = useNotifications();
 
   //
   // State
@@ -61,48 +61,30 @@ export function AuthProvider(props: AuthProviderProps) {
     dataStore: DataBindings,
     existingAuthId?: number,
   ): Promise<void> {
-    const authedSignatureResult = await cmd<[string, number]>(
-      Commands.CreateGoogleOAuth,
-      {
-        existingAuthId,
-        existingAccountId: dataStore.general.store.accountId,
-      },
-    );
+    const authedSignature = await authCommands.createGoogleOAuth({
+      existingAuthId,
+      existingAccountId: dataStore.general.store.accountId,
+    });
 
-    if (authedSignatureResult.error) {
-      notificationActions.addNotification({
-        message: <span>{authedSignatureResult.error.message}</span>,
-        type: "error",
-        duration: 5000,
-        isRemovableByClick: true,
-      });
-      return;
+    if (!authedSignature) {
+      return notifications.register(NotificationKey.AuthSignatureError);
     }
 
-    await dataStore.general.storeAccountId(authedSignatureResult.data![1]);
+    await dataStore.general.storeAccountId(authedSignature[1]);
 
-    await storeAuthedSignature(authedSignatureResult.data![0]);
+    await storeAuthedSignature(authedSignature[0]);
 
-    const authenticatedUserResult = await cmd<AuthenticatedUser>(
-      Commands.GetAuthenticatedUser,
-      {
-        authedSignature: authedSignatureResult.data![0],
-        accountId: authedSignatureResult.data![1],
-      },
-    );
+    const authenticatedUser = await userCommands.getAuthenticatedUser({
+      authedSignature: authedSignature[0],
+      accountId: authedSignature[1],
+    });
 
-    if (authenticatedUserResult.error) {
+    if (!authenticatedUser) {
       await removeAuthedSignature();
-      notificationActions.addNotification({
-        message: <span>{authenticatedUserResult.error.message}</span>,
-        type: "error",
-        duration: 5000,
-        isRemovableByClick: true,
-      });
-      return;
+      return notifications.register(NotificationKey.AuthenticatedUserError);
     }
 
-    setAuth(authenticatedUserResult.data);
+    setAuth(authenticatedUser);
   }
 
   async function createAuthFromStronghold(): Promise<void> {
@@ -113,30 +95,20 @@ export function AuthProvider(props: AuthProviderProps) {
     );
 
     if (!authedSignature) {
-      setAuth(undefined);
-      return;
+      return setAuth(undefined);
     }
 
-    const authenticatedUserResult = await cmd<AuthenticatedUser>(
-      Commands.GetAuthenticatedUser,
-      {
-        authedSignature,
-        accountId: Number(accountId),
-      },
-    );
+    const authenticatedUser = await userCommands.getAuthenticatedUser({
+      authedSignature,
+      accountId: Number(accountId),
+    });
 
-    if (authenticatedUserResult.error) {
-      notificationActions.addNotification({
-        message: <span>{authenticatedUserResult.error.message}</span>,
-        type: "error",
-        duration: 5000,
-        isRemovableByClick: true,
-      });
+    if (!authenticatedUser) {
       await removeAuthedSignature();
-      return;
+      return notifications.register(NotificationKey.AuthenticatedUserError);
     }
 
-    setAuth(authenticatedUserResult.data);
+    setAuth(authenticatedUser);
   }
 
   async function storeAuthedSignature(authedSignature: string): Promise<void> {
@@ -148,6 +120,10 @@ export function AuthProvider(props: AuthProviderProps) {
   async function removeAuthedSignature(): Promise<void> {
     await stronghold.remove(StrongholdKeys.AuthedSignature, { save: true });
   }
+
+  //
+  // Lifecycle
+  //
 
   const authBindings: AuthBindings = {
     store: authStore,

@@ -2,7 +2,6 @@
 use tauri::{State};
 use std::env;
 use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
-use crate::models::commands::{CommandError, CommandErrorType, CommandResponse};
 
 
 // Local Usages
@@ -10,51 +9,32 @@ use crate::models::user::{AuthenticatedUser, User, PartialOnboardingUser};
 use crate::models::auth::{AuthedSignatureClaims};
 use crate::state::{AppState};
 use crate::services::user::{select_account_users, select_authenticated_user, update_user_onboarding_partial};
+use crate::libs::error::LocalError;
 
 #[tauri::command]
-pub fn get_users(app_state: State<AppState>, account_id: Option<i32>) -> CommandResponse::<Vec<User>> {
+pub fn get_users(app_state: State<AppState>, account_id: Option<i32>) -> Result::<Vec<User>, LocalError> {
     if !account_id.is_some() {
-        return CommandResponse::<Vec<User>> {
-            data: Some(Vec::new()),
-            error: None
-        }
+        return Ok(Vec::new())
     }
 
     match select_account_users(&app_state, &account_id.unwrap()) {
-        Ok(users) => CommandResponse::<Vec<User>> {
-            data: Some(users),
-            error: None
-        },
-        Err(e) => CommandResponse::<Vec<User>> {
-            data: Some(Vec::new()),
-            error: Some(CommandError {
-                message: format!("Error selecting account users: {}", e),
-                error_type: Some(CommandErrorType::Database)
-            })
-        }
+        Ok(users) => Ok(users),
+        Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
     }
 }
 
 #[tauri::command]
-pub fn get_authenticated_user(app_state: State<AppState>, authed_signature: Option<String>, account_id: Option<i32>) -> CommandResponse::<AuthenticatedUser> {
+pub fn get_authenticated_user(
+    app_state: State<AppState>,
+    authed_signature: Option<String>,
+    account_id: Option<i32>
+) -> Result::<AuthenticatedUser, LocalError> {
     if !account_id.is_some() {
-        return CommandResponse::<AuthenticatedUser> {
-            data: None,
-            error: Some(CommandError {
-                message: "No account id provided".to_string(),
-                error_type: Some(CommandErrorType::Process)
-            })
-        }
+        return Err(LocalError::ProcessError { message: "No account id provided".to_string() })
     }
 
     if !authed_signature.is_some() {
-        return CommandResponse::<AuthenticatedUser> {
-            data: None,
-            error: Some(CommandError {
-                message: "No auth signature provided".to_string(),
-                error_type: Some(CommandErrorType::Process)
-            })
-        }
+        return Err(LocalError::ProcessError { message: "No auth signature provided".to_string() })
     }
 
     let authed_signature_secret_env = env::var("AUTHED_SIGNATURE_SECRET")
@@ -72,58 +52,32 @@ pub fn get_authenticated_user(app_state: State<AppState>, authed_signature: Opti
                 Ok(authenticated_user) => {
                     if authed_signature.claims.email == authenticated_user.auth.email &&
                         authed_signature.claims.account_id == authenticated_user.auth_account.account_id {
-                        return CommandResponse::<AuthenticatedUser> {
-                            data: Some(authenticated_user),
-                            error: None
-                        }
+                        return Ok(authenticated_user)
                     }
 
-                    return CommandResponse::<AuthenticatedUser> {
-                        data: None,
-                        error: Some(CommandError {
-                            message: format!(
-                                "Token data did not match stored data:\nclaims.email={},user.email={}\nclaims.acount_id={},user.account_id={}",
-                                authed_signature.claims.email,
-                                authenticated_user.auth.email,
-                                authed_signature.claims.account_id,
-                                authenticated_user.auth_account.account_id
-                            ),
-                            error_type: Some(CommandErrorType::Process)
-                        })
-                    }
-                },
-                Err(e) => CommandResponse::<AuthenticatedUser> {
-                    data: None,
-                    error: Some(CommandError {
-                        message: format!("Error selecting authenticated user: {}", e),
-                        error_type: Some(CommandErrorType::Database)
+                    return Err(LocalError::ProcessError {
+                        message: format!(
+                            "stored/token mismatch: {}/{}",
+                            authed_signature.claims.email,
+                            authenticated_user.auth.email
+                        )
                     })
-                }
+                },
+                Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
             }
         },
-        Err(e) => CommandResponse::<AuthenticatedUser> {
-            data: None,
-            error: Some(CommandError {
-                message: format!("Error decoding token: {}", e),
-                error_type: Some(CommandErrorType::External)
-            })
-        }
+        Err(e) => Err(LocalError::ExternalError { message: e.to_string() })
     }
 }
 
 #[tauri::command]
-pub fn update_user_onboarding(app_state: State<AppState>, user_id: i32, user_changes: PartialOnboardingUser) -> CommandResponse::<User> {
+pub fn update_user_onboarding(
+    app_state: State<AppState>,
+    user_id: i32,
+    user_changes: PartialOnboardingUser
+) -> Result::<User, LocalError> {
     match update_user_onboarding_partial(&app_state, &user_id, &user_changes) {
-        Ok(user) => CommandResponse::<User> {
-            data: Some(user),
-            error: None
-        },
-        Err(e) => CommandResponse::<User> {
-            data: None,
-            error: Some(CommandError {
-                message: format!("Unable get fetch updated user. {}", e),
-                error_type: Some(CommandErrorType::Database)
-            })
-        }
+        Ok(user) => Ok(user),
+        Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
     }
 }

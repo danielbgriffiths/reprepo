@@ -1,12 +1,11 @@
-import { Accessor, JSXElement } from "solid-js";
+// Third Party Imports
+import { JSXElement } from "solid-js";
 
-export type NotificationsBindings = [
-  Accessor<Notification[]>,
-  {
-    addNotification: (notification: Notification) => void;
-    removeNotification: (notification: Notification) => void;
-  },
-];
+export type NotificationsBindings = {
+  store: NotificationStore;
+  register: (key: NotificationKey, overrides?: Partial<Notification>) => void;
+  deregister: (uid: number) => void;
+};
 
 export interface NotificationsProviderProps {
   children: JSXElement;
@@ -18,4 +17,23 @@ export interface Notification {
   type: "info" | "error" | "success" | "warning" | "alert" | "default";
   duration: number;
   isRemovableByClick: boolean;
+}
+
+export interface NotificationStore {
+  notifications: Notification[];
+}
+
+export enum NotificationKey {
+  Logout,
+  LogoutError,
+  AvatarUploadError,
+  AvatarUploadSuccess,
+  AvatarDeleteError,
+  AvatarDeleteSuccess,
+  CreateRepositoryError,
+  CreateRepositorySuccess,
+  AuthenticatedUserError,
+  AuthSignatureError,
+  UpdateUserOnboardingError,
+  UpdateUserOnboardingSuccess,
 }

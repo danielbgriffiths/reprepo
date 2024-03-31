@@ -10,14 +10,12 @@ import {
   StrongholdProviderProps,
 } from "../index.types";
 import {
-  MISSING_VARIABLES_ERROR,
   NOT_INITIALIZED_ERROR,
   NO_STORE_ERROR,
   StrongholdKeys,
 } from "../index.config";
 import { StrongholdContext } from "./create-context";
-import { Commands } from "@services/commands";
-import { cmd } from "@services/commands/index.utils";
+import { generalCommands } from "@services/commands";
 
 export function StrongholdProvider(props: StrongholdProviderProps) {
   //
@@ -33,35 +31,28 @@ export function StrongholdProvider(props: StrongholdProviderProps) {
   //
 
   onMount(async () => {
-    const vaultFileNameResult = await cmd<string>(Commands.GetEnv, {
+    const vaultFileName = await generalCommands.getEnv({
       name: "VAULT_FILE_NAME",
     });
-    const vaultKeyResult = await cmd<string>(Commands.GetEnv, {
+    const vaultKey = await generalCommands.getEnv({
       name: "VAULT_KEY",
     });
-    const vaultClientNameResult = await cmd<string>(Commands.GetEnv, {
+    const vaultClientName = await generalCommands.getEnv({
       name: "VAULT_CLIENT_NAME",
     });
 
-    if (
-      vaultFileNameResult.error ||
-      vaultKeyResult.error ||
-      vaultClientNameResult.error
-    ) {
-      throw new Error(MISSING_VARIABLES_ERROR);
-    }
+    if (!vaultFileName || !vaultKey || !vaultClientName) return;
 
     const _stronghold = await Stronghold.load(
-      `${await appDataDir()}/${vaultFileNameResult.data}`,
-      vaultKeyResult.data!,
+      `${await appDataDir()}/${vaultFileName}`,
+      vaultKey,
     );
 
     let _client!: Client;
-
     try {
-      _client = await _stronghold.loadClient(vaultClientNameResult.data!);
+      _client = await _stronghold.loadClient(vaultClientName);
     } catch {
-      _client = await _stronghold.createClient(vaultClientNameResult.data!);
+      _client = await _stronghold.createClient(vaultClientName);
     }
 
     setStronghold(_stronghold);

@@ -17,9 +17,9 @@ use webbrowser;
 
 // Local Usages
 use crate::state::AppState;
+use crate::libs::error::LocalError;
 use crate::models::auth::{GoogleOAuthUserTokenBody, AuthedSignatureClaims, OauthProvider, AllAuthFields, CreateAuth};
 use crate::models::auth_account::{CreateAuthAccount, PartialCreateAuthAccount};
-use crate::models::commands::{CommandErrorType, CommandError, CommandResponse};
 use crate::models::user::{CreateUser, PartialCreateUser};
 use crate::services::account::{create_account_if_not_exists};
 use crate::services::auth::{select_auth_core, create_auth_if_not_exists_by_email, select_auth_fields_from_auth};
@@ -134,7 +134,7 @@ fn create_or_find_account_auth_user_records(
 }
 
 #[tauri::command]
-pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> CommandResponse::<(String, i32)> {
+pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> Result::<(String, i32), LocalError> {
     let google_oauth_client = get_google_oauth_client();
 
     let (pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -153,13 +153,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
         .url();
 
     if !webbrowser::open(&authorize_url.to_string()).is_ok() {
-        return CommandResponse::<(String, i32)> {
-            data: None,
-            error: Some(CommandError {
-                message: "Unable to open web browser".to_string(),
-                error_type: Some(CommandErrorType::Process),
-            })
-        }
+        return Err(LocalError::ProcessError { message: "Unable to open web browser".to_string() })
     }
 
     let (code, _csrf_state) = create_oauth_redirect_listener();
@@ -191,17 +185,9 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                         let auth_core_result = select_auth_core(&app_state, &existing_auth_id.unwrap());
                         let auth_core = auth_core_result.unwrap();
                         if auth_core.email != user_info_token_body.email {
-                            return CommandResponse::<(String, i32)> {
-                                data: None,
-                                error: Some(CommandError {
-                                    message: format!(
-                                        "Existing auth core does not match token. Existing: {}, Token: {}",
-                                        auth_core.email,
-                                        user_info_token_body.email
-                                    ),
-                                    error_type: Some(CommandErrorType::Process)
-                                })
-                            }
+                            return Err(LocalError::ProcessError {
+                                message: format!("auth/token mismatch. {}/{}", auth_core.email, user_info_token_body.email)
+                            })
                         }
                     }
 
@@ -249,74 +235,29 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
                                     );
 
                                     match token_result {
-                                        Ok(token) => CommandResponse::<(String, i32)> {
-                                            data: Some((token, account_id)),
-                                            error: None,
-                                        },
-                                        Err(e) => CommandResponse::<(String, i32)> {
-                                            data: None,
-                                            error: Some(CommandError {
-                                                message: format!("Error encoding token: {}", e),
-                                                error_type: Some(CommandErrorType::Process)
-                                            })
-                                        }
+                                        Ok(token) => Ok((token, account_id)),
+                                        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
                                     }
                                 },
-                                Err(e) => CommandResponse::<(String, i32)> {
-                                    data: None,
-                                    error: Some(CommandError {
-                                        message: format!("Error getting created auth information: {}", e),
-                                        error_type: Some(CommandErrorType::Database)
-                                    })
-                                }
+                                Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
                             }
                         },
-                        Err(e) => CommandResponse::<(String, i32)> {
-                            data: None,
-                            error: Some(CommandError {
-                                message: format!("Error creating or getting auth information: {}", e),
-                                error_type: Some(CommandErrorType::Database)
-                            })
-                        }
+                        Err(e) => Err(LocalError::DatabaseError { message: e.to_string()  })
                     }
                 },
-                Err(e) => CommandResponse::<(String, i32)> {
-                    data: None,
-                    error: Some(CommandError {
-                        message: format!("Error parsing user info response JSON: {}", e),
-                        error_type: Some(CommandErrorType::External)
-                    })
-                }
+                Err(e) => Err(LocalError::ExternalError { message: e.to_string() })
             }
         },
-        Err(e) => CommandResponse::<(String, i32)> {
-            data: None,
-            error: Some(CommandError {
-                message: format!("Error fetching user info response: {}", e),
-                error_type: Some(CommandErrorType::Process)
-            })
-        }
+        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
     }
 }
 
-fn select_all_auth_fields(app_state: &State<AppState>, target_account_id: &i32, target_auth_id: &i32) -> Result<AllAuthFields, CommandResponse::<bool>> {
+fn select_all_auth_fields(app_state: &State<AppState>, target_account_id: &i32, target_auth_id: &i32) -> Result<AllAuthFields, LocalError> {
     Ok(AllAuthFields {
         auth_fields_from_auth_account: select_auth_fields_from_account(app_state, target_account_id, target_auth_id)
-            .map_err(|e| CommandResponse::<bool> {
-                data: None,
-                error: Some(CommandError {
-                    message: format!("Error fetching auth fields from auth account: {}", e),
-                    error_type: Some(CommandErrorType::Database)
-                })
-            })?,
+            .map_err(|e| LocalError::DatabaseError { message: e.to_string() })?,
         auth_fields_from_auth: select_auth_fields_from_auth(app_state, target_auth_id)
-            .map_err(|e| CommandResponse::<bool> {
-                data: None,
-                error: Some(CommandError {
-                    message: format!("Error fetching auth fields from auth: {}", e),
-                    error_type: Some(CommandErrorType::Database)
-                })
-            })?,
+            .map_err(|e| LocalError::DatabaseError { message: e.to_string() })?,
     })
 }
 
@@ -336,12 +277,9 @@ fn logout_google_oauth(
     account_id: &i32,
     auth_id: &i32,
     auth_fields: &AllAuthFields
-) -> CommandResponse::<bool> {
+) -> Result::<bool, LocalError> {
     if !has_access_tokens(&auth_fields) {
-        return CommandResponse::<bool> {
-            data: Some(true),
-            error: None
-        }
+        return Ok(true)
     }
 
     match get_standard_revocable_token(&auth_fields) {
@@ -354,67 +292,25 @@ fn logout_google_oauth(
             match revoke_response_result {
                 Ok(_revoke_response) => {
                     match remove_auth_account_tokens(&app_state, &account_id, &auth_id) {
-                        Ok(_auth_account_id) => CommandResponse::<bool> {
-                            error: None,
-                            data: Some(true)
-                        },
-                        Err(_e) => CommandResponse::<bool> {
-                            error: Some(CommandError {
-                                message: "Unable to update auth account data".to_string(),
-                                error_type: Some(CommandErrorType::Database)
-                            }),
-                            data: None
-                        }
+                        Ok(_auth_account_id) => Ok(true),
+                        Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
                     }
                 },
-                Err(_e) => CommandResponse::<bool> {
-                    error: Some(CommandError {
-                        message: "Unable revoke oauth token".to_string(),
-                        error_type: Some(CommandErrorType::External)
-                    }),
-                    data: None
-                }
+                Err(e) => Err(LocalError::ExternalError { message: e.to_string() })
             }
         },
-        None => CommandResponse::<bool> {
-            error: Some(CommandError {
-                message: "Unable to get revocable token".to_string(),
-                error_type: Some(CommandErrorType::Process)
-            }),
-            data: None
-        },
+        None => Err(LocalError::ProcessError { message: "Unable to get revocable token".to_string() }),
     }
 }
 
 #[tauri::command]
-pub fn logout(app_state: State<AppState>, account_id: i32, auth_id: i32) -> CommandResponse::<bool> {
-    match select_all_auth_fields(&app_state, &account_id, &auth_id) {
-        Ok(all_auth_fields) => {
-            match all_auth_fields.auth_fields_from_auth.provider {
-                OauthProvider::Email => CommandResponse::<bool> {
-                    error: Some(CommandError {
-                        message: "Email auth is not configured".to_string(),
-                        error_type: Some(CommandErrorType::Unavailable)
-                    }),
-                    data: None
-                },
-                OauthProvider::Google => logout_google_oauth(app_state, &account_id, &auth_id, &all_auth_fields),
-                OauthProvider::Pinterest => CommandResponse::<bool> {
-                    error: Some(CommandError {
-                        message: "Pinterest OAuth is not configured".to_string(),
-                        error_type: Some(CommandErrorType::Unavailable)
-                    }),
-                    data: None
-                },
-                OauthProvider::Instagram => CommandResponse::<bool> {
-                    error: Some(CommandError {
-                        message: "Instagram OAuth is not configured".to_string(),
-                        error_type: Some(CommandErrorType::Unavailable)
-                    }),
-                    data: None
-                }
-            }
-        },
-        Err(e) => e
+pub fn logout(app_state: State<AppState>, account_id: i32, auth_id: i32) -> Result::<bool, LocalError> {
+    let all_auth_fields = select_all_auth_fields(&app_state, &account_id, &auth_id)?;
+
+    match all_auth_fields.auth_fields_from_auth.provider {
+        OauthProvider::Email => Err(LocalError::UnavailableError { message: "Email auth is not configured".to_string() }),
+        OauthProvider::Google => logout_google_oauth(app_state, &account_id, &auth_id, &all_auth_fields),
+        OauthProvider::Pinterest => Err(LocalError::UnavailableError { message: "Pinterest auth is not configured".to_string() }),
+        OauthProvider::Instagram => Err(LocalError::UnavailableError { message: "Instagram auth is not configured".to_string() }),
     }
 }

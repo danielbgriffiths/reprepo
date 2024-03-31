@@ -9,6 +9,7 @@ pub mod layout;
 pub mod commands;
 pub mod state;
 pub mod services;
+mod libs;
 
 // External Usages
 use tauri::{App, LogicalSize, Manager};

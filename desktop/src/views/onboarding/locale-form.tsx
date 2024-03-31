@@ -1,7 +1,9 @@
+// Third Party Imports
 import { createForm, required, setValue } from "@modular-forms/solid";
 import anime from "animejs/lib/anime.es.js";
 import { onMount } from "solid-js";
 
+// Local Imports
 import { LOCALE_MAP } from "@services/locale/index.config";
 
 type LocaleForm = {

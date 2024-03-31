@@ -3,8 +3,7 @@ import { styled } from "solid-styled-components";
 import { createEffect, createSignal, Match, Switch } from "solid-js";
 
 // Local Imports
-import { cmd } from "@services/commands/index.utils";
-import { Commands } from "@services/commands";
+import { userCommands } from "@services/commands";
 import { LOCALE_KEYS } from "@services/locale/index.config";
 import { useNotifications } from "@services/notifications";
 import { useAuth } from "@services/auth";
@@ -12,15 +11,16 @@ import { useNavigate } from "@solidjs/router";
 import LocaleForm from "@views/onboarding/locale-form";
 import AgeForm from "@views/onboarding/age-form";
 import AvatarForm from "@views/onboarding/avatar-form";
-import { User, UserOnboardingPartial } from "@/models";
+import { UserOnboardingPartial } from "@/models";
 import { SupportedLocale } from "@services/locale";
+import { NotificationKey } from "@services/notifications/index.types";
 
 export default function Onboarding() {
   //
   // Hooks
   //
 
-  const [_, notificationActions] = useNotifications();
+  const notifications = useNotifications();
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -41,24 +41,18 @@ export default function Onboarding() {
   //
 
   createEffect(async () => {
-    const updateUserResult = await cmd<User>(Commands.UpdateUser, {
+    const updatedUser = await userCommands.updateUserOnboarding({
       userChanges: values(),
       userId: auth.store.user!.id,
     });
 
-    if (updateUserResult.error) {
-      return notificationActions.addNotification({
-        type: "error",
-        message: updateUserResult.error.message,
-        duration: -1,
-        isRemovableByClick: true,
-      });
+    if (!updatedUser) {
+      return notifications.register(NotificationKey.UpdateUserOnboardingError);
     }
 
-    auth.updateUser(updateUserResult.data!);
+    auth.updateUser(updatedUser);
 
     let message!: string;
-
     switch (step()) {
       case 1:
         message = `Locale is saved, ${auth.store.user!.firstName}!`;
@@ -71,8 +65,7 @@ export default function Onboarding() {
         break;
     }
 
-    notificationActions.addNotification({
-      type: "success",
+    notifications.register(NotificationKey.UpdateUserOnboardingSuccess, {
       message: message,
       duration: step() !== 3 ? 2000 : 5000,
       isRemovableByClick: step() !== 3,

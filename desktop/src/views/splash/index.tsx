@@ -4,10 +4,9 @@ import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { createReaction, createSignal, Show } from "solid-js";
 
 // Local Imports
-import { Commands } from "@services/commands";
+import { userCommands } from "@services/commands";
 import { User } from "@/models";
 import { useAuth } from "@services/auth";
-import { cmd } from "@services/commands/index.utils";
 import { useLocale } from "@services/locale";
 import { TranslationKey } from "@services/locale/index.types";
 import { useData } from "@services/data";
@@ -43,11 +42,13 @@ export default function Splash() {
   //
 
   async function getUsers(): Promise<void> {
-    const usersResult = await cmd<User[]>(Commands.GetUsers, {
+    const users = await userCommands.getUsers({
       accountId: data.general.store.accountId,
     });
 
-    setUsers(usersResult.data || []);
+    if (!users) return;
+
+    setUsers(users || []);
   }
 
   //

@@ -1,8 +1,9 @@
 // External Imports
 use diesel::prelude::*;
+use serde;
 
 
-#[derive(Debug, Queryable, Selectable)]
+#[derive(Debug, Queryable, Selectable, serde::Serialize, serde::Deserialize)]
 #[diesel(table_name = crate::schema::repository)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Repository {
@@ -19,14 +20,14 @@ pub struct Repository {
     pub deleted_at: Option<chrono::NaiveDateTime>,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, serde::Serialize, serde::Deserialize)]
 #[diesel(table_name = crate::schema::repository)]
-pub struct CreateRepository<'a> {
-    pub user_id: &'a i32,
-    pub name: &'a String,
-    pub field: &'a String,
-    pub specialization: &'a String,
-    pub is_private: &'a bool,
-    pub avatar: &'a String,
-    pub start_date: &'a chrono::NaiveDateTime,
+pub struct CreateRepository {
+    pub user_id: i32,
+    pub name: String,
+    pub field: String,
+    pub specialization: String,
+    pub is_private: bool,
+    pub avatar: String,
+    pub start_date: chrono::NaiveDateTime,
 }

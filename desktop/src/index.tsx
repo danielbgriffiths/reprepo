@@ -8,9 +8,9 @@ import { StrongholdProvider } from "@services/stronghold";
 import { AuthProvider } from "@services/auth";
 import { NotificationsProvider } from "@services/notifications";
 import { ViewEntry } from "@views/view-entry";
+import { LocaleProvider } from "@services/locale";
 
 import "@services/styles/_main.scss";
-import { LocaleProvider } from "@services/locale";
 
 const ELEMENT_ID = "root";
 

@@ -8,11 +8,11 @@ export function ToastBar(_props: ToastBarProps) {
   // Hooks
   //
 
-  const [notifications] = useNotifications();
+  const notifications = useNotifications();
 
   return (
     <>
-      {notifications().map((notification) => (
+      {notifications.store.notifications.map((notification) => (
         <div class="toast">
           <div class="alert alert-info">{notification.message}</div>
         </div>

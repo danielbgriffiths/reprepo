@@ -14,8 +14,7 @@ import { Repository } from "@/models";
 import { useStronghold } from "@services/stronghold";
 import { useAuth } from "@services/auth";
 import { StrongholdKeys } from "@services/stronghold/index.config";
-import { cmd } from "@services/commands/index.utils";
-import { Commands } from "@services/commands";
+import { repositoryCommands } from "@services/commands";
 
 export function DataProvider(props: DataProviderProps) {
   //
@@ -98,15 +97,11 @@ export function DataProvider(props: DataProviderProps) {
       return;
     }
 
-    const repositoriesResult = await cmd<Repository[]>(
-      Commands.GetRepositories,
-      { userId: auth.store.user!.id },
-    );
+    const repositories = await repositoryCommands.getRepositories({
+      userId: auth.store.user!.id,
+    });
 
-    if (repositoriesResult.error) {
-      console.error(repositoriesResult.error);
-      return;
-    }
+    if (!repositories) return;
 
     const activeRepositoryId = await stronghold.readWithParse(
       StrongholdKeys.ActiveRepository,
@@ -115,10 +110,10 @@ export function DataProvider(props: DataProviderProps) {
 
     if (!activeRepositoryId) return;
 
-    setRepositoryStore("repositories", repositoriesResult.data!);
+    setRepositoryStore("repositories", repositories);
     setRepositoryStore(
       "activeRepository",
-      repositoriesResult.data!.find(
+      repositories.find(
         (repository) => repository.id === Number(activeRepositoryId),
       ),
     );

@@ -3,10 +3,10 @@ import { styled } from "solid-styled-components";
 
 // Local Imports
 import { useData } from "@services/data";
-import { cmd } from "@services/commands/index.utils";
-import { Commands } from "@services/commands";
+import { repositoryCommands } from "@services/commands";
 import { useNotifications } from "@services/notifications";
 import { useAuth } from "@services/auth";
+import { NotificationKey } from "@services/notifications/index.types.ts";
 
 export default function CreateRepository() {
   //
@@ -14,7 +14,7 @@ export default function CreateRepository() {
   //
 
   const data = useData();
-  const [_, notificationActions] = useNotifications();
+  const notifications = useNotifications();
   const auth = useAuth();
 
   //
@@ -22,33 +22,25 @@ export default function CreateRepository() {
   //
 
   async function onClickSubmit(_event: MouseEvent): Promise<void> {
-    const createRepositoryResult = await cmd<number>(
-      Commands.CreateRepository,
-      {
-        field: "Field",
-        specialization: "Specialization",
-        private: true,
-      },
-    );
-
-    if (createRepositoryResult.error) {
-      notificationActions.addNotification({
-        message: createRepositoryResult.error.message,
-        type: "error",
-        duration: -1,
-        isRemovableByClick: true,
-      });
-      return;
-    }
-
-    notificationActions.addNotification({
-      message: `${auth.store.user!.firstName}, your artist profile has been created!`,
-      type: "success",
-      duration: 5000,
-      isRemovableByClick: false,
+    const repository = await repositoryCommands.createRepository({
+      field: "Field",
+      specialization: "Specialization",
+      private: true,
     });
 
-    await data.repository.setActiveRepository(createRepositoryResult.data!);
+    if (!repository) {
+      return notifications.register(NotificationKey.CreateRepositoryError, {
+        message: `Error creating repository for ${auth.store.user!.firstName}`,
+      });
+    }
+
+    notifications.register(NotificationKey.CreateRepositorySuccess, {
+      message: `${auth.store.user!.firstName}, your artist profile has been created!`,
+    });
+
+    // TODO: With new flow this is not the next action.
+    //  We should route to repository or something like that
+    await data.repository.setActiveRepository(repository);
   }
 
   return (

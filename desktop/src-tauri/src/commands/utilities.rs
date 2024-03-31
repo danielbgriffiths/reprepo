@@ -1,18 +1,10 @@
-use crate::models::commands::{CommandError, CommandErrorType, CommandResponse};
+// Local Usages
+use crate::libs::error::LocalError;
 
 #[tauri::command]
-pub fn get_env(name: &str) -> CommandResponse<String> {
+pub fn get_env(name: &str) -> Result<String, LocalError> {
     match std::env::var(String::from(name)) {
-        Ok(env_var) => CommandResponse {
-            data: Some(env_var),
-            error: None
-        },
-        Err(e) => CommandResponse {
-            data: None,
-            error: Some(CommandError {
-                message: format!("Error getting env var: {}", e),
-                error_type: Some(CommandErrorType::Process),
-            })
-        },
+        Ok(env_var) => Ok(env_var),
+        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
     }
 }

@@ -5,20 +5,20 @@ use rusoto_core::{HttpClient, Region};
 use rusoto_credential::{DefaultCredentialsProvider};
 use rusoto_s3::{PutObjectRequest, S3Client, S3, DeleteObjectRequest, StreamingBody};
 
+fn get_bytes_from_base64(base64_data: &String) -> Result<StreamingBody, String> {
+    match general_purpose::STANDARD.decode(base64_data.split(',').last().unwrap())  {
+        Ok(decoded_bytes) => Ok(decoded_bytes.into()),
+        Err(e) => Err(e.to_string())
+    }
+}
+
 pub async fn upload_file_to_s3(base64_data: &String, file_name: String) -> Result<String, String> {
     let aws_s3_bucket = env::var("AWS_S3_BUCKET")
         .expect("Missing the AWS_S3_BUCKET environment variable.");
     let aws_s3_region = env::var("AWS_S3_REGION")
         .expect("Missing the AWS_S3_REGION environment variable.");
 
-    let streaming_bytes: Option<StreamingBody> = match general_purpose::STANDARD.decode(base64_data.split(',').last().unwrap())  {
-        Ok(decoded_bytes) => Some(decoded_bytes.into()),
-        Err(_e) => None
-    };
-
-    if !streaming_bytes.is_some() {
-        return Err("Unable to decode base64 string".to_string())
-    }
+    let streaming_bytes: StreamingBody = get_bytes_from_base64(base64_data)?;
 
     let region = Region::Custom {
         name: aws_s3_region.to_owned(),
@@ -34,7 +34,7 @@ pub async fn upload_file_to_s3(base64_data: &String, file_name: String) -> Resul
     let put_request = PutObjectRequest {
         bucket: aws_s3_bucket.to_string(),
         key: file_name.clone(),
-        body: streaming_bytes,
+        body: Some(streaming_bytes),
         ..Default::default()
     };
 

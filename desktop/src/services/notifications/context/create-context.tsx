@@ -2,12 +2,12 @@
 import { createContext } from "solid-js";
 
 // Local Imports
-import { NotificationsBindings } from "../index.types";
+import { NotificationKey, NotificationsBindings } from "../index.types";
 
-export const NotificationsContext = createContext<NotificationsBindings>([
-  () => [],
-  {
-    addNotification: () => {},
-    removeNotification: () => {},
+export const NotificationsContext = createContext<NotificationsBindings>({
+  store: {
+    notifications: [],
   },
-]);
+  register: (_key: NotificationKey) => undefined,
+  deregister: (_uid: number) => undefined,
+});

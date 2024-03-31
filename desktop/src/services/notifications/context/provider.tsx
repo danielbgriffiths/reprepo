@@ -1,55 +1,68 @@
 // Third Party Imports
-import { createSignal } from "solid-js";
+import { createStore } from "solid-js/store";
 
 // Local Imports
 import { NotificationsContext } from "./create-context";
 import {
   NotificationsBindings,
   NotificationsProviderProps,
+  NotificationStore,
+  NotificationKey,
   Notification,
 } from "../index.types";
+import { NOTIFICATION_MAP } from "@services/notifications/index.config.ts";
 
 export function NotificationsProvider(props: NotificationsProviderProps) {
   //
   // State
   //
 
-  const [notifications, setNotifications] = createSignal<Notification[]>([]);
+  const [store, setStore] = createStore<NotificationStore>({
+    notifications: [],
+  });
 
   //
   // Functions
   //
 
-  function addNotification(notification: Notification): void {
+  function register(
+    key: NotificationKey,
+    overrides?: Partial<Notification>,
+  ): void {
     const notificationUid: number = Date.now();
 
-    const nextNotification = { ...notification, uid: notificationUid };
+    const nextNotification: Notification = {
+      ...(NOTIFICATION_MAP[key] ?? {}),
+      ...overrides,
+      uid: notificationUid,
+    };
 
-    setNotifications((previousNotifications) => [
-      ...previousNotifications,
-      nextNotification,
-    ]);
+    setStore((prevStore) => ({
+      notifications: [...prevStore.notifications, nextNotification],
+    }));
 
     setTimeout(() => {
-      removeNotification(nextNotification);
-    }, notification.duration);
+      deregister(nextNotification.uid!);
+    }, nextNotification.duration);
   }
 
-  function removeNotification(notification: Notification): void {
-    setNotifications((previousNotifications) =>
-      previousNotifications.filter(
-        (previousNotification) => previousNotification.uid !== notification.uid,
+  function deregister(uid: number): void {
+    setStore((prevStore) => ({
+      notifications: prevStore.notifications.filter(
+        (previousNotification) => previousNotification.uid !== uid,
       ),
-    );
+    }));
   }
 
-  const notificationsBindings: NotificationsBindings = [
-    notifications,
-    {
-      addNotification,
-      removeNotification,
-    },
-  ];
+  //
+  // Lifecycle
+  //
+
+  const notificationsBindings: NotificationsBindings = {
+    store,
+    register,
+    deregister,
+  };
 
   return (
     <NotificationsContext.Provider value={notificationsBindings}>
