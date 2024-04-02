@@ -1,10 +1,11 @@
 // Third Party Imports
 import i18next from "i18next";
-import { createSignal } from "solid-js";
+import { createStore } from "solid-js/store";
 
 // Local Imports
 import { LocaleContext } from "./create-context";
 import {
+  LocaleStore,
   LocaleBindings,
   LocaleProviderProps,
   SupportedLocale,
@@ -17,26 +18,28 @@ export function LocaleProvider(props: LocaleProviderProps) {
   // State
   //
 
-  const [activeLocale, setActiveLocale] = createSignal<SupportedLocale>(
-    SupportedLocale.EnglishUS,
-  );
+  const [store, setStore] = createStore<LocaleStore>({
+    locale: SupportedLocale.EnglishUS,
+  });
 
-  const localeBindings: LocaleBindings = [
-    activeLocale,
-    {
-      setActiveLocale: (locale: SupportedLocale) => {
-        i18next.changeLanguage(locale).catch(console.error);
-        setActiveLocale(locale);
-      },
-      text: (key: TranslationKey, args?: Record<string, any>) => {
-        return i18next.t(key, args) as string;
-      },
+  //
+  // Lifecycle
+  //
+
+  const localeBindings: LocaleBindings = {
+    store,
+    setActiveLocale: (locale: SupportedLocale) => {
+      i18next.changeLanguage(locale).catch(console.error);
+      setStore("locale", locale);
     },
-  ];
+    text: (key: TranslationKey, args?: Record<string, any>) => {
+      return i18next.t(key, args) as string;
+    },
+  };
 
   i18next
     .init({
-      lng: activeLocale(),
+      lng: store.locale,
       fallbackLng: SupportedLocale.EnglishUS,
       debug: true,
       resources: {

@@ -1,8 +1,6 @@
 // Third Party Imports
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
-import { createMemo, Show } from "solid-js";
-import { useLocation } from "@solidjs/router";
 import { faGlobe, faPaintbrushPencil } from "@fortawesome/pro-light-svg-icons";
 
 // Local Imports
@@ -11,7 +9,6 @@ import { LOCALE_KEYS, LOCALE_MAP } from "@services/locale/index.config";
 import { SupportedLocale, useLocale } from "@services/locale";
 import { StyleThemeName } from "@services/styles/index.types";
 import { useAuth } from "@services/auth";
-import { useData } from "@services/data";
 
 export interface TopBarProps {}
 
@@ -20,87 +17,47 @@ export function TopBar(_props: TopBarProps) {
   // Hooks
   //
 
-  const location = useLocation();
   const auth = useAuth();
-  const [activeLocale, localActions] = useLocale();
+  const locale = useLocale();
   const [activeTheme, styleActions] = useStyle();
-  const data = useData();
-
-  //
-  // State
-  //
-
-  const pathname = createMemo<string>(() => location.pathname);
 
   //
   // Event Handlers
   //
 
-  function onClickLocale(locale: SupportedLocale): void {
-    localActions.setActiveLocale(locale);
+  function onClickLocale(nextLocale: SupportedLocale): void {
+    locale.setActiveLocale(nextLocale);
   }
 
   async function onClickTheme(themeName: StyleThemeName): Promise<void> {
     await styleActions.setActiveTheme(themeName);
   }
 
-  async function onClickRepository(repositoryId: number): Promise<void> {
-    await data.repository.setActiveRepository(repositoryId);
-  }
-
   function onScopeSearchInput(_event: Event): void {}
 
   return (
-    <Styled.Container>
+    <Styled.Container isLoggedIn={!auth.store.auth}>
       <Styled.ScopeSearchContainer>
         <Styled.ScopeSearchInput onInput={onScopeSearchInput} />
       </Styled.ScopeSearchContainer>
 
       <Styled.ConfigContainer>
         <Styled.ConfigList>
-          <Show when={auth.store.auth && pathname() !== "/repositories"}>
-            <Styled.ConfigListItem>
-              <Styled.ConfigDetailMenu>
-                <Styled.ConfigDetailMenuSummary>
-                  <Icon icon={faGlobe} /> {activeLocale()}
-                </Styled.ConfigDetailMenuSummary>
-                <Styled.ConfigDetailMenuList>
-                  {(data.repository.store.repositories || []).map(
-                    (repository) => (
-                      <Styled.ConfigDetailMenuListItem
-                        isActive={
-                          repository.id ===
-                          data.repository.store.activeRepository?.id
-                        }
-                      >
-                        <Styled.ConfigDetailMenuTrigger
-                          onClick={() => onClickRepository(repository.id)}
-                        >
-                          {repository.field} {repository.specialization}
-                        </Styled.ConfigDetailMenuTrigger>
-                      </Styled.ConfigDetailMenuListItem>
-                    ),
-                  )}
-                </Styled.ConfigDetailMenuList>
-              </Styled.ConfigDetailMenu>
-            </Styled.ConfigListItem>
-          </Show>
-
           {/* Locale Menu */}
           <Styled.ConfigListItem>
             <Styled.ConfigDetailMenu>
               <Styled.ConfigDetailMenuSummary>
-                <Icon icon={faGlobe} /> {activeLocale()}
+                <Icon icon={faGlobe} /> {locale.store.locale}
               </Styled.ConfigDetailMenuSummary>
               <Styled.ConfigDetailMenuList>
-                {LOCALE_KEYS.map((locale) => (
+                {LOCALE_KEYS.map((localeKey) => (
                   <Styled.ConfigDetailMenuListItem
-                    isActive={locale === activeLocale()}
+                    isActive={localeKey === locale.store.locale}
                   >
                     <Styled.ConfigDetailMenuTrigger
-                      onClick={() => onClickLocale(locale)}
+                      onClick={() => onClickLocale(localeKey)}
                     >
-                      {LOCALE_MAP[locale]}
+                      {LOCALE_MAP[localeKey]}
                     </Styled.ConfigDetailMenuTrigger>
                   </Styled.ConfigDetailMenuListItem>
                 ))}
@@ -136,7 +93,9 @@ export function TopBar(_props: TopBarProps) {
 }
 
 const Styled = {
-  Container: styled.div``,
+  Container: styled.div<{ isLoggedIn: boolean }>`
+    opacity: ${({ isLoggedIn }) => (!isLoggedIn ? `0.5` : 1)};
+  `,
   ScopeSearchContainer: styled.div``,
   ScopeSearchInput: styled.input``,
   ConfigContainer: styled.div``,

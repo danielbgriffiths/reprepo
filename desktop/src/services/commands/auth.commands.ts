@@ -14,11 +14,11 @@ export async function createGoogleOAuth(
       args,
     );
 
-    console.info("createGoogleOAuth: ", result);
+    console.info("auth.commands: createGoogleOAuth: ", result);
 
     return result;
   } catch (e) {
-    console.error("createGoogleOAuth: ", e);
+    console.error("auth.commands: createGoogleOAuth: ", e);
 
     return undefined;
   }
@@ -28,11 +28,11 @@ export async function logout(args: InvokeArgs): Promise<boolean | undefined> {
   try {
     const result = await invoke<boolean>(Commands.Logout, args);
 
-    console.info("logout: ", result);
+    console.info("auth.commands: logout: ", result);
 
     return result;
   } catch (e) {
-    console.error("logout: ", e);
+    console.error("auth.commands: logout: ", e);
 
     return undefined;
   }

@@ -1,13 +1,11 @@
 // Third Party Imports
-import { Accessor, JSXElement } from "solid-js";
+import { JSXElement } from "solid-js";
 
-export type LocaleBindings = [
-  Accessor<SupportedLocale>,
-  {
-    setActiveLocale: (nextLocale: SupportedLocale) => void;
-    text: (key: TranslationKey, args?: Record<string, any>) => string;
-  },
-];
+export type LocaleBindings = {
+  store: LocaleStore;
+  setActiveLocale: (nextLocale: SupportedLocale) => void;
+  text: (key: TranslationKey, args?: Record<string, any>) => string;
+};
 
 export interface LocaleProviderProps {
   children: JSXElement;
@@ -19,4 +17,8 @@ export enum SupportedLocale {
 
 export enum TranslationKey {
   SplashWelcome = "splash.welcome",
+}
+
+export interface LocaleStore {
+  locale: SupportedLocale;
 }

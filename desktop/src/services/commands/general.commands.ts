@@ -9,7 +9,7 @@ export async function getEnv(args: InvokeArgs): Promise<string | undefined> {
   try {
     const result = await invoke<string>(Commands.GetEnv, args);
 
-    console.info("getEnv: ", result);
+    console.info("general.commands: getEnv: ", result);
 
     return result;
   } catch (e) {

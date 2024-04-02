@@ -24,6 +24,7 @@ export default function LocaleForm(props: LocaleFormProps) {
     if (!formRef) return;
 
     if (props.defaultValue) {
+      console.log("setting default value to:", props.defaultValue);
       setValue(localeForm, "locale", props.defaultValue);
     }
 

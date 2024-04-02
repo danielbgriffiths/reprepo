@@ -9,7 +9,6 @@ import { User } from "@/models";
 import { useAuth } from "@services/auth";
 import { useLocale } from "@services/locale";
 import { TranslationKey } from "@services/locale/index.types";
-import { useData } from "@services/data";
 
 /**
  * The splash view component
@@ -20,8 +19,7 @@ export default function Splash() {
   //
 
   const auth = useAuth();
-  const [_, localeActions] = useLocale();
-  const data = useData();
+  const locale = useLocale();
 
   //
   // State
@@ -35,7 +33,7 @@ export default function Splash() {
   // Lifecycle
   //
 
-  reactWithAccountIdHydration(() => data.general.store.accountId);
+  reactWithAccountIdHydration(() => auth.store.localAccountId);
 
   //
   // Functions
@@ -43,7 +41,7 @@ export default function Splash() {
 
   async function getUsers(): Promise<void> {
     const users = await userCommands.getUsers({
-      accountId: data.general.store.accountId,
+      accountId: auth.store.localAccountId,
     });
 
     if (!users) return;
@@ -56,16 +54,16 @@ export default function Splash() {
   //
 
   async function onClickGoogleOAuth(): Promise<void> {
-    await auth.createGoogleOAuth(data);
+    await auth.createGoogleOAuth();
   }
 
   async function onClickUserSummary(authId: number): Promise<void> {
-    await auth.createGoogleOAuth(data, authId);
+    await auth.createGoogleOAuth(authId);
   }
 
   return (
     <div>
-      <h1>{localeActions.text(TranslationKey.SplashWelcome)}</h1>
+      <h1>{locale.text(TranslationKey.SplashWelcome)}</h1>
       <Show
         when={auth.store.isInitialized}
         fallback={<div>Initializing...</div>}

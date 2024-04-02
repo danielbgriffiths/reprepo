@@ -2,18 +2,16 @@
 import { styled } from "solid-styled-components";
 
 // Local Imports
-import { useData } from "@services/data";
 import { repositoryCommands } from "@services/commands";
 import { useNotifications } from "@services/notifications";
 import { useAuth } from "@services/auth";
-import { NotificationKey } from "@services/notifications/index.types.ts";
+import { NotificationKey } from "@services/notifications/index.types";
 
 export default function CreateRepository() {
   //
   // Hooks
   //
 
-  const data = useData();
   const notifications = useNotifications();
   const auth = useAuth();
 
@@ -38,9 +36,7 @@ export default function CreateRepository() {
       message: `${auth.store.user!.firstName}, your artist profile has been created!`,
     });
 
-    // TODO: With new flow this is not the next action.
-    //  We should route to repository or something like that
-    await data.repository.setActiveRepository(repository);
+    await auth.setActiveRepositoryId(repository);
   }
 
   return (

@@ -4,7 +4,7 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 
 // Local Imports
 import { Commands } from "@services/commands/index.types";
-import { Repository } from "@/models";
+import { ApiRepository, Repository } from "@/models";
 
 export async function createRepository(
   args: InvokeArgs,
@@ -12,11 +12,11 @@ export async function createRepository(
   try {
     const result = await invoke<number>(Commands.CreateRepository, args);
 
-    console.info("createRepository: ", result);
+    console.info("repository.commands: createRepository: ", result);
 
     return result;
   } catch (e) {
-    console.error("createRepository: ", e);
+    console.error("repository.commands: createRepository: ", e);
 
     return undefined;
   }
@@ -26,13 +26,30 @@ export async function getRepositories(
   args: InvokeArgs,
 ): Promise<Repository[] | undefined> {
   try {
-    const result = await invoke<Repository[]>(Commands.GetRepositories, args);
+    const result = await invoke<ApiRepository[]>(
+      Commands.GetRepositories,
+      args,
+    );
 
-    console.info("getRepositories: ", result);
+    console.info("repository.commands: getRepositories: ", result);
 
-    return result;
+    return result.map(
+      (repository): Repository => ({
+        id: repository.id,
+        name: repository.name,
+        userId: repository.user_id,
+        field: repository.field,
+        specialization: repository.specialization,
+        isPrivate: repository.is_private,
+        avatar: repository.avatar,
+        startDate: repository.start_date,
+        createdAt: repository.created_at,
+        updatedAt: repository.updated_at,
+        deletedAt: repository.deleted_at,
+      }),
+    );
   } catch (e) {
-    console.error("getRepositories: ", e);
+    console.error("repository.commands: getRepositories: ", e);
 
     return undefined;
   }

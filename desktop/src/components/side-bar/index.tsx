@@ -2,6 +2,7 @@
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
 import {
+  faCalendar,
   faGrid2Plus,
   faGridHorizontal,
   faNetworkWired,
@@ -13,7 +14,6 @@ import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
 import { useNotifications } from "@services/notifications";
-import { useData } from "@services/data";
 import { NotificationKey } from "@services/notifications/index.types.ts";
 
 export interface SideBarProps {}
@@ -26,19 +26,18 @@ export function SideBar(_props: SideBarProps) {
   const auth = useAuth();
   const stronghold = useStronghold();
   const notifications = useNotifications();
-  const data = useData();
 
   //
   // Event Handlers
   //
 
   async function onClickLogout(): Promise<void> {
-    const isLoggedOut = await authCommands.logout({
+    const isLogoutSuccessful = await authCommands.logout({
       authId: auth.store.auth!.id,
-      accountId: data.general.store.accountId,
+      accountId: auth.store.localAccountId,
     });
 
-    if (!isLoggedOut) {
+    if (!isLogoutSuccessful) {
       return notifications.register(NotificationKey.LogoutError);
     }
 
@@ -57,7 +56,21 @@ export function SideBar(_props: SideBarProps) {
 
       <Styled.List>
         {[
-          { name: "Overview", path: "/overview", icon: faGridHorizontal },
+          {
+            name: "Classical Piano",
+            path: `/repositories/1`,
+            icon: faGridHorizontal,
+          },
+          {
+            name: "Jazz Piano",
+            path: `/repositories/2`,
+            icon: faGridHorizontal,
+          },
+          {
+            name: "Ballet",
+            path: `/repositories/3`,
+            icon: faGridHorizontal,
+          },
           { name: "Connect", path: "/add-record", icon: faNetworkWired },
           {
             name: "Create Record",
@@ -65,6 +78,7 @@ export function SideBar(_props: SideBarProps) {
             icon: faNetworkWired,
           },
           { name: "Addons", path: "/addons", icon: faGrid2Plus },
+          { name: "Calendar", path: "/calendar", icon: faCalendar },
         ].map((item) => (
           <Styled.ListItem>
             <Styled.LinkTo href={item.path}>

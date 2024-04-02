@@ -8,7 +8,6 @@ import { AuthenticatedUser, User } from "@/models";
 import { authCommands, userCommands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useStronghold } from "@services/stronghold";
-import { DataBindings } from "@services/data";
 import { NotificationKey } from "@services/notifications/index.types";
 import { useNotifications } from "@services/notifications";
 
@@ -29,6 +28,8 @@ export function AuthProvider(props: AuthProviderProps) {
     auth: undefined,
     user: undefined,
     authAccount: undefined,
+    localAccountId: undefined,
+    activeRepositoryId: undefined,
   });
 
   //
@@ -47,30 +48,65 @@ export function AuthProvider(props: AuthProviderProps) {
     );
   }
 
-  function setAuth(authenticatedUser?: AuthenticatedUser): void {
-    setAuthStore((prev) => {
-      return {
-        ...prev,
-        ...(authenticatedUser || {}),
-        isInitialized: true,
-      };
-    });
+  async function setActiveRepositoryId(
+    activeRepositoryId: number,
+  ): Promise<void> {
+    setAuthStore("activeRepositoryId", activeRepositoryId);
+
+    await stronghold.insertWithParse(
+      StrongholdKeys.ActiveRepository,
+      {
+        key: authStore.user!.id,
+        value: activeRepositoryId.toString(),
+      },
+      { save: true },
+    );
   }
 
-  async function createGoogleOAuth(
-    dataStore: DataBindings,
-    existingAuthId?: number,
-  ): Promise<void> {
+  async function hydrateLocalAccountId(): Promise<void> {
+    const savedAccountId = await stronghold.read(StrongholdKeys.AccountId);
+
+    if (!savedAccountId) return;
+
+    setAuthStore("localAccountId", Number(savedAccountId));
+  }
+
+  async function storeLocalAccountId(accountId?: number): Promise<void> {
+    if (!accountId) {
+      return await stronghold.remove(StrongholdKeys.AccountId, { save: true });
+    }
+
+    await stronghold.insert(StrongholdKeys.AccountId, String(accountId), {
+      save: true,
+    });
+
+    const savedAccountId = await stronghold.read(StrongholdKeys.AccountId);
+
+    setAuthStore(
+      "localAccountId",
+      savedAccountId ? Number(savedAccountId) : undefined,
+    );
+  }
+
+  function setAuth(authenticatedUser?: AuthenticatedUser): void {
+    setAuthStore((prev) => ({
+      ...prev,
+      ...(authenticatedUser || {}),
+      isInitialized: true,
+    }));
+  }
+
+  async function createGoogleOAuth(existingAuthId?: number): Promise<void> {
     const authedSignature = await authCommands.createGoogleOAuth({
       existingAuthId,
-      existingAccountId: dataStore.general.store.accountId,
+      existingAccountId: authStore.localAccountId,
     });
 
     if (!authedSignature) {
       return notifications.register(NotificationKey.AuthSignatureError);
     }
 
-    await dataStore.general.storeAccountId(authedSignature[1]);
+    await storeLocalAccountId(authedSignature[1]);
 
     await storeAuthedSignature(authedSignature[0]);
 
@@ -127,6 +163,8 @@ export function AuthProvider(props: AuthProviderProps) {
 
   const authBindings: AuthBindings = {
     store: authStore,
+    setActiveRepositoryId,
+    hydrateLocalAccountId,
     setAuth,
     updateUser,
     createGoogleOAuth,

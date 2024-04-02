@@ -5,7 +5,6 @@ import { lazy } from "solid-js";
 // Local Imports
 import Views from "@views/index";
 import { StyleProvider } from "@services/styles";
-import { DataProvider } from "@services/data";
 
 const Splash = lazy(() => import("@views/splash"));
 const Dashboard = lazy(() => import("@views/dashboard"));
@@ -20,26 +19,21 @@ const Repositories = lazy(() => import("@views/repositories"));
 
 export function ViewEntry() {
   return (
-    <DataProvider>
-      <StyleProvider>
-        <Router root={Views}>
-          <Route path="/" component={Splash} />
-          <Route path="/auth/onboarding" component={Onboarding} />
-          <Route path="/auth/repositories" component={Repositories} />
-          <Route
-            path="/auth/repositories/create"
-            component={CreateRepository}
-          />
-          <Route path="/auth/repositories/:id" component={Dashboard}>
-            <Route path="/records" component={Records}>
-              <Route path="/create" component={CreateRecord} />
-              <Route path="/:id" component={Record} />
-            </Route>
+    <StyleProvider>
+      <Router root={Views}>
+        <Route path="/" component={Splash} />
+        <Route path="/auth/onboarding" component={Onboarding} />
+        <Route path="/auth/repositories" component={Repositories} />
+        <Route path="/auth/repositories/create" component={CreateRepository} />
+        <Route path="/auth/repositories/:id" component={Dashboard}>
+          <Route path="/records" component={Records}>
+            <Route path="/create" component={CreateRecord} />
+            <Route path="/:id" component={Record} />
           </Route>
-          <Route path="/auth/create-connect" component={CreateConnect} />
-          <Route path="*404" component={Catch} />
-        </Router>
-      </StyleProvider>
-    </DataProvider>
+        </Route>
+        <Route path="/auth/create-connect" component={CreateConnect} />
+        <Route path="*404" component={Catch} />
+      </Router>
+    </StyleProvider>
   );
 }

@@ -8,10 +8,10 @@ import {
   TranslationKey,
 } from "../index.types";
 
-export const LocaleContext = createContext<LocaleBindings>([
-  () => SupportedLocale.EnglishUS,
-  {
-    setActiveLocale: (_locale: SupportedLocale) => {},
-    text: (_key: TranslationKey, _args?: Record<string, any>) => "",
+export const LocaleContext = createContext<LocaleBindings>({
+  store: {
+    locale: SupportedLocale.EnglishUS,
   },
-]);
+  setActiveLocale: (_locale: SupportedLocale) => {},
+  text: (_key: TranslationKey, _args?: Record<string, any>) => "",
+});

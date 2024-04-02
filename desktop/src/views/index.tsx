@@ -7,7 +7,6 @@ import { styled } from "solid-styled-components";
 import { SideBar } from "@components/side-bar";
 import { TopBar } from "@components/top-bar";
 import { ToastBar } from "@components/toast-bar";
-import { useData } from "@services/data";
 import { useStronghold } from "@services/stronghold";
 import { useAuth } from "@services/auth";
 
@@ -18,7 +17,6 @@ export default function Views(props: ViewsProps) {
   // Hooks
   //
 
-  const data = useData();
   const stronghold = useStronghold();
   const auth = useAuth();
   const navigate = useNavigate();
@@ -35,8 +33,8 @@ export default function Views(props: ViewsProps) {
   //
 
   if (stronghold.isInitialized()) {
-    data.general
-      .hydrateAccountId()
+    auth
+      .hydrateLocalAccountId()
       .then(auth.createAuthFromStronghold)
       .catch(console.error);
   } else {
@@ -52,11 +50,10 @@ export default function Views(props: ViewsProps) {
       return navigate("/auth/onboarding", { replace: true });
     }
 
-    if (data.repository.store.activeRepository) {
-      return navigate(
-        `/auth/repositories/${data.repository.store.activeRepository.id}`,
-        { replace: true },
-      );
+    if (auth.store.activeRepositoryId) {
+      return navigate(`/auth/repositories/${auth.store.activeRepositoryId}`, {
+        replace: true,
+      });
     }
 
     return navigate("/auth/repositories", { replace: true });
@@ -67,7 +64,7 @@ export default function Views(props: ViewsProps) {
   //
 
   async function hydrateFromStronghold(): Promise<void> {
-    await data.general.hydrateAccountId();
+    await auth.hydrateLocalAccountId();
     await auth.createAuthFromStronghold();
   }
 

@@ -1,27 +1,34 @@
 // Third Party Imports
 import { styled } from "solid-styled-components";
-import { For } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { faPlus } from "@fortawesome/pro-light-svg-icons";
 import Icon from "solid-fa";
 
 // Local Imports
-import { useData } from "@services/data";
 import { useNavigate } from "@solidjs/router";
+import { useAuth } from "@services/auth";
+import { Repository } from "@/models";
 
 export default function Repositories() {
   //
   // Hooks
   //
 
-  const data = useData();
+  const auth = useAuth();
   const navigate = useNavigate();
+
+  //
+  // State
+  //
+
+  const [repositories] = createSignal<Repository[]>([]);
 
   //
   // Event Handlers
   //
 
   async function onClickRepository(id: number): Promise<void> {
-    await data.repository.setActiveRepository(id);
+    await auth.setActiveRepositoryId(id);
     // TODO: Should navigate to dashboard becuase of Auth component createEffect
   }
 
@@ -32,7 +39,7 @@ export default function Repositories() {
   return (
     <Styled.Container>
       <For
-        each={data.repository.store.repositories || []}
+        each={repositories() || []}
         fallback={
           <Styled.FirstRepositoryButton onClick={onClickCreateRepository}>
             <Icon icon={faPlus} />

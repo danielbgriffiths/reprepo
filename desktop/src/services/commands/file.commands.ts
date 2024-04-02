@@ -11,11 +11,11 @@ export async function deleteFile(
   try {
     const result = await invoke<boolean>(Commands.DeleteFile, args);
 
-    console.info("deleteFile: ", result);
+    console.info("file.commands: deleteFile: ", result);
 
     return result;
   } catch (e) {
-    console.error("deleteFile: ", e);
+    console.error("file.commands: deleteFile: ", e);
 
     return undefined;
   }
@@ -27,11 +27,11 @@ export async function uploadFile(
   try {
     const result = await invoke<string>(Commands.UploadFile, args);
 
-    console.info("uploadFile: ", result);
+    console.info("file.commands: uploadFile: ", result);
 
     return result;
   } catch (e) {
-    console.error("uploadFile: ", e);
+    console.error("file.commands: uploadFile: ", e);
 
     return undefined;
   }

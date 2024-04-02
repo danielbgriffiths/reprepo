@@ -14,6 +14,7 @@ use diesel::{Connection};
 use tauri::State;
 use jsonwebtoken::{encode, Header, EncodingKey};
 use webbrowser;
+use crate::libs;
 
 // Local Usages
 use crate::state::AppState;
@@ -127,7 +128,7 @@ fn create_or_find_account_auth_user_records(
             first_name: &partial_new_user.first_name,
             last_name: &partial_new_user.last_name,
             avatar: &partial_new_user.avatar,
-            locale: &partial_new_user.locale,
+            locale: &libs::locale::find_valid_locale(&partial_new_user.locale),
         });
         Ok((auth_id, account_id))
     })

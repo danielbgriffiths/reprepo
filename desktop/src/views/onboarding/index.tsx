@@ -1,6 +1,6 @@
 // Third Party Imports
 import { styled } from "solid-styled-components";
-import { createEffect, createSignal, Match, Switch } from "solid-js";
+import { createEffect, createSignal, Match, Switch, on } from "solid-js";
 
 // Local Imports
 import { userCommands } from "@services/commands";
@@ -30,8 +30,8 @@ export default function Onboarding() {
 
   const [step, setStep] = createSignal<number>(0);
   const [values, setValues] = createSignal<UserOnboardingPartial>({
-    locale: LOCALE_KEYS[0],
-    age: 0,
+    locale: auth.store.user!.locale ?? LOCALE_KEYS[0],
+    age: auth.store.user!.age ?? 18,
     avatar: undefined,
     isOnboarded: false,
   });
@@ -40,41 +40,52 @@ export default function Onboarding() {
   // Lifecycle
   //
 
-  createEffect(async () => {
-    const updatedUser = await userCommands.updateUserOnboarding({
-      userChanges: values(),
-      userId: auth.store.user!.id,
-    });
+  createEffect(
+    on(step, async (nextStep) => {
+      if (nextStep === 0) return;
 
-    if (!updatedUser) {
-      return notifications.register(NotificationKey.UpdateUserOnboardingError);
-    }
+      const args = {
+        userChanges: {
+          ...values(),
+          is_onboarded: values().isOnboarded,
+        },
+        userId: auth.store.user!.id,
+      };
 
-    auth.updateUser(updatedUser);
+      const updatedUser = await userCommands.updateUserOnboarding(args);
 
-    let message!: string;
-    switch (step()) {
-      case 1:
-        message = `Locale is saved, ${auth.store.user!.firstName}!`;
-        break;
-      case 2:
-        message = `Age is saved, ${auth.store.user!.firstName}!`;
-        break;
-      case 3:
-        message = `Good job onboarding, ${auth.store.user!.firstName}!`;
-        break;
-    }
+      if (!updatedUser) {
+        return notifications.register(
+          NotificationKey.UpdateUserOnboardingError,
+        );
+      }
 
-    notifications.register(NotificationKey.UpdateUserOnboardingSuccess, {
-      message: message,
-      duration: step() !== 3 ? 2000 : 5000,
-      isRemovableByClick: step() !== 3,
-    });
+      auth.updateUser(updatedUser);
 
-    if (step() === 3) return;
+      let message!: string;
+      switch (nextStep) {
+        case 1:
+          message = `Locale is saved, ${auth.store.user!.firstName}!`;
+          break;
+        case 2:
+          message = `Age is saved, ${auth.store.user!.firstName}!`;
+          break;
+        case 3:
+          message = `Good job onboarding, ${auth.store.user!.firstName}!`;
+          break;
+      }
 
-    navigate("/auth/repositories");
-  });
+      notifications.register(NotificationKey.UpdateUserOnboardingSuccess, {
+        message: message,
+        duration: nextStep !== 3 ? 2000 : 5000,
+        isRemovableByClick: step() !== 3,
+      });
+
+      if (nextStep !== 3) return;
+
+      navigate("/auth/repositories");
+    }),
+  );
 
   //
   // Event Handlers
