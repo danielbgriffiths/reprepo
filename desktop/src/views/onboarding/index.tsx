@@ -92,7 +92,7 @@ export default function Onboarding() {
   //
 
   function onSubmit(key: "locale" | "age" | "avatar", value: any): void {
-    setValues((prev) => ({ ...prev, isOnboarded: step() === 3, [key]: value }));
+    setValues((prev) => ({ ...prev, isOnboarded: step() === 2, [key]: value }));
     setStep(step() + 1);
   }
 
