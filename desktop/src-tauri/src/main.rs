@@ -21,7 +21,9 @@ use crate::commands::user::{get_users, get_authenticated_user, update_user_onboa
 use crate::commands::utilities::get_env;
 use crate::commands::auth::{create_google_oauth, logout};
 use crate::commands::file::{upload_file, delete_file};
-use crate::commands::repository::{get_repositories, create_repository};
+use crate::commands::repository::{get_repositories, create_repository, get_repository};
+use crate::commands::record::{get_records, create_record};
+use crate::commands::commit::{get_commits, create_commit};
 use crate::database::connection::get_connection_pool;
 use crate::services::stronghold::create_stronghold_plugin;
 use crate::state::{AppState};
@@ -47,7 +49,7 @@ fn main() {
         .manage(AppState { pool: get_connection_pool() })
         .invoke_handler(
             tauri::generate_handler![
-                // Users
+                // User
                 get_users,
                 get_authenticated_user,
                 update_user_onboarding,
@@ -58,12 +60,23 @@ fn main() {
 
                 // General
                 get_env,
+
+                // File
                 upload_file,
                 delete_file,
 
-                // Repositories
+                // Repository
                 get_repositories,
-                create_repository
+                create_repository,
+                get_repository,
+
+                // Record
+                get_records,
+                create_record,
+
+                // Commit
+                get_commits,
+                create_commit,
             ]
         )
         .setup(setup_window_constraints)

@@ -49,6 +49,39 @@ diesel::table! {
 }
 
 diesel::table! {
+    commit (id) {
+        id -> Int4,
+        record_id -> Int4,
+        #[max_length = 5000]
+        notes -> Varchar,
+        #[max_length = 50]
+        category -> Varchar,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    record (id) {
+        id -> Int4,
+        repository_id -> Int4,
+        parent_id -> Nullable<Int4>,
+        #[max_length = 50]
+        name -> Varchar,
+        #[max_length = 50]
+        author -> Varchar,
+        authored_at -> Nullable<Timestamp>,
+        started_at -> Nullable<Timestamp>,
+        #[max_length = 50]
+        category -> Varchar,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
     repository (id) {
         id -> Int4,
         user_id -> Int4,
@@ -90,6 +123,8 @@ diesel::table! {
 
 diesel::joinable!(auth_account -> account (account_id));
 diesel::joinable!(auth_account -> auth (auth_id));
+diesel::joinable!(commit -> record (record_id));
+diesel::joinable!(record -> repository (repository_id));
 diesel::joinable!(repository -> user (user_id));
 diesel::joinable!(user -> auth (auth_id));
 
@@ -97,6 +132,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     account,
     auth,
     auth_account,
+    commit,
+    record,
     repository,
     user,
 );

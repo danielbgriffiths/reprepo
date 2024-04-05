@@ -54,3 +54,31 @@ export async function getRepositories(
     return undefined;
   }
 }
+
+export async function getRepository(
+  args: InvokeArgs,
+): Promise<Repository | undefined> {
+  try {
+    const result = await invoke<ApiRepository>(Commands.GetRepository, args);
+
+    console.info("repository.commands: getRepositories: ", result);
+
+    return {
+      id: result.id,
+      name: result.name,
+      userId: result.user_id,
+      field: result.field,
+      specialization: result.specialization,
+      isPrivate: result.is_private,
+      avatar: result.avatar,
+      startDate: result.start_date,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at,
+      deletedAt: result.deleted_at,
+    };
+  } catch (e) {
+    console.error("repository.commands: getRepositories: ", e);
+
+    return undefined;
+  }
+}

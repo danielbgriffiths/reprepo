@@ -9,7 +9,7 @@ use crate::models::repository::{Repository, CreateRepository};
 use crate::schema::repository;
 use crate::state::AppState;
 
-pub fn select_user_repositories(app_state: &State<AppState>, target_user_id: &i32) -> QueryResult<Vec<Repository>> {
+pub fn select_repositories(app_state: &State<AppState>, target_user_id: &i32) -> QueryResult<Vec<Repository>> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     repository::table
@@ -25,4 +25,13 @@ pub fn create_repository(app_state: &State<AppState>, new_repository: &CreateRep
         .values(new_repository)
         .returning(repository::id)
         .get_result::<i32>(db_connection)
+}
+
+pub fn get_repository(app_state: &State<AppState>, target_repository_id: &i32) -> QueryResult<Repository> {
+    let db_connection = &mut app_state.pool.get().unwrap();
+
+    repository::table
+        .find(target_repository_id)
+        .select(Repository::as_select())
+        .get_result::<Repository>(db_connection)
 }

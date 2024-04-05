@@ -16,6 +16,11 @@ export enum Commands {
   DeleteFile = "delete_file",
 
   // Repository
+  GetRepository = "get_repository",
   GetRepositories = "get_repositories",
   CreateRepository = "create_repository",
+
+  // Record
+  GetRecords = "get_records",
+  CreateRecord = "create_record",
 }

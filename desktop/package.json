@@ -26,6 +26,7 @@
     "solid-js": "^1.7.8",
     "solid-styled-components": "^0.28.5",
     "tauri-plugin-stronghold-api": "github:tauri-apps/tauri-plugin-stronghold#v1",
+    "valibot": "^0.30.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
