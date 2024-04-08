@@ -1,73 +1,97 @@
-import { Notification, NotificationKey } from "./index.types";
+import { Toast, ToastKey } from "./index.types";
 
-export const NOTIFICATION_MAP: { [K in NotificationKey]: Notification } = {
-  [NotificationKey.Logout]: {
+export const TOAST_MAP: { [K in ToastKey]: Toast } = {
+  [ToastKey.Logout]: {
+    priority: "high",
+    title: "Authentication Logout",
     message: "Successfully logged out",
     type: "info",
     duration: 2000,
     isRemovableByClick: true,
   },
-  [NotificationKey.LogoutError]: {
+  [ToastKey.LogoutError]: {
+    priority: "high",
+    title: "Authentication Logout",
     message: "Failed to logout",
     type: "error",
     duration: 5000,
     isRemovableByClick: true,
   },
-  [NotificationKey.AvatarUploadError]: {
+  [ToastKey.AvatarUploadError]: {
+    priority: "low",
+    title: "Media Upload",
     type: "error",
     message: "Error uploading avatar.",
     duration: -1,
     isRemovableByClick: true,
   },
-  [NotificationKey.AvatarUploadSuccess]: {
+  [ToastKey.AvatarUploadSuccess]: {
+    priority: "low",
+    title: "Media Upload",
     type: "success",
     message: "Avatar Uploaded!",
     duration: 2000,
     isRemovableByClick: true,
   },
-  [NotificationKey.AvatarDeleteError]: {
+  [ToastKey.AvatarDeleteError]: {
+    priority: "low",
+    title: "Media Delete",
     type: "error",
     message: "Error deleting avatar.",
     duration: -1,
     isRemovableByClick: true,
   },
-  [NotificationKey.AvatarDeleteSuccess]: {
+  [ToastKey.AvatarDeleteSuccess]: {
+    priority: "low",
+    title: "Media Delete",
     type: "success",
     message: "Avatar Deleted!",
     duration: 2000,
     isRemovableByClick: true,
   },
-  [NotificationKey.CreateRepositoryError]: {
+  [ToastKey.CreateRepositoryError]: {
+    priority: "high",
+    title: "Repository",
     message: "Error creating repository.",
     type: "error",
     duration: -1,
     isRemovableByClick: true,
   },
-  [NotificationKey.CreateRepositorySuccess]: {
+  [ToastKey.CreateRepositorySuccess]: {
+    priority: "high",
+    title: "Repository",
     message: `Repository created!`,
     type: "success",
     duration: 5000,
     isRemovableByClick: false,
   },
-  [NotificationKey.AuthenticatedUserError]: {
+  [ToastKey.AuthenticatedUserError]: {
+    priority: "low",
+    title: "Authentication Flow",
     message: "Error getting authenticated user.",
     type: "error",
     duration: 5000,
     isRemovableByClick: true,
   },
-  [NotificationKey.AuthSignatureError]: {
+  [ToastKey.AuthSignatureError]: {
+    priority: "low",
+    title: "Authentication Flow",
     message: "Error creating auth signature.",
     type: "error",
     duration: 5000,
     isRemovableByClick: true,
   },
-  [NotificationKey.UpdateUserOnboardingError]: {
+  [ToastKey.UpdateUserOnboardingError]: {
+    priority: "low",
+    title: "User Flow",
     type: "error",
     message: "Error onboarding user",
     duration: -1,
     isRemovableByClick: true,
   },
-  [NotificationKey.UpdateUserOnboardingSuccess]: {
+  [ToastKey.UpdateUserOnboardingSuccess]: {
+    priority: "low",
+    title: "User Flow",
     type: "success",
     message: "Success onboarding user",
     duration: 2000,

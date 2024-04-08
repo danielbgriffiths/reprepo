@@ -1,7 +1,15 @@
 // Third Party Imports
-import { StyleThemeName, StyleTheme } from "@services/styles/index.types.ts";
+import { DefaultTheme } from "solid-styled-components";
 
-export const DEFAULT_THEME: StyleTheme = {
+// Local Imports
+import { StyleThemeName } from "@services/styles/index.types";
+import {
+  BodyTextVariant,
+  HeadingTextVariant,
+  TypographyType,
+} from "@services/styles/components/text";
+
+export const DEFAULT_THEME: DefaultTheme = {
   colors: {
     primary: {
       main: "#5a7c65",
@@ -44,15 +52,98 @@ export const DEFAULT_THEME: StyleTheme = {
   animation: {
     duration: "0.2s",
   },
-  text: {
-    button: "uppercase",
-  },
   border: {
     size: "1px",
   },
+  typography: {
+    [TypographyType.Heading]: {
+      [HeadingTextVariant.SuperTitle]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "61px",
+        fontWeight: "300",
+        lineHeight: "normal",
+        letterSpacing: "-0.5px",
+      },
+      [HeadingTextVariant.Title]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "24px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "0px",
+      },
+      [HeadingTextVariant.ExpressiveTitle]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "20px",
+        fontWeight: "500",
+        lineHeight: "normal",
+        letterSpacing: "0.15px",
+      },
+      [HeadingTextVariant.SubTitle]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "16px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "0.15px",
+      },
+      [HeadingTextVariant.ExpressiveSubTitle]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "14px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "0.1px",
+      },
+    },
+    [TypographyType.Body]: {
+      [BodyTextVariant.ExpressiveText]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "16px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "0.5px",
+      },
+      [BodyTextVariant.Text]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "14px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "0.25px",
+      },
+      [BodyTextVariant.ButtonText]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "14px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "1.25px",
+      },
+      [BodyTextVariant.CaptionText]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "12px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "0.4px",
+      },
+      [BodyTextVariant.OverlineText]: {
+        fontFamily:
+          '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+        fontSize: "10px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "1.5px",
+      },
+    },
+  },
 };
 
-export const THEMES_MAP: Record<StyleThemeName, StyleTheme> = {
+export const THEMES_MAP: Record<StyleThemeName, DefaultTheme> = {
   [StyleThemeName.Light]: DEFAULT_THEME,
   [StyleThemeName.Dark]: {
     ...DEFAULT_THEME,

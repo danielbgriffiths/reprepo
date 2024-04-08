@@ -6,6 +6,10 @@ interface DecisionAnalyticsProps {
 }
 
 export function DecisionAnalytics(_props: DecisionAnalyticsProps) {
+  // Repository usage over time
+  // Decision distribution across categories
+  // Per date commits
+
   return (
     <section>
       <h2>Decision Analytics</h2>

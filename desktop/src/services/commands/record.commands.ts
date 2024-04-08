@@ -34,6 +34,12 @@ export async function getRecords(
       (record): Record => ({
         id: record.id,
         repositoryId: record.repository_id,
+        parentId: record.parent_id,
+        name: record.name,
+        author: record.author,
+        category: record.category,
+        authoredAt: record.authored_at,
+        startedAt: record.started_at,
         createdAt: record.created_at,
         updatedAt: record.updated_at,
         deletedAt: record.deleted_at,

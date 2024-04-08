@@ -1,14 +1,21 @@
 // Third Party Imports
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
-import { faGlobe, faPaintbrushPencil } from "@fortawesome/pro-light-svg-icons";
+import {
+  faCheck,
+  faChevronDown,
+  faGlobe,
+  faPaintbrushPencil,
+} from "@fortawesome/pro-light-svg-icons";
+import { DropdownMenu, TextField } from "@kobalte/core";
 
 // Local Imports
-import { THEME_NAMES, useStyle } from "@services/styles";
+import { BodyTextVariant, Text, THEME_NAMES, useStyle } from "@services/styles";
 import { LOCALE_KEYS, LOCALE_MAP } from "@services/locale/index.config";
 import { SupportedLocale, useLocale } from "@services/locale";
 import { StyleThemeName } from "@services/styles/index.types";
 import { useAuth } from "@services/auth";
+import { For } from "solid-js";
 
 export interface TopBarProps {}
 
@@ -19,7 +26,7 @@ export function TopBar(_props: TopBarProps) {
 
   const auth = useAuth();
   const locale = useLocale();
-  const [activeTheme, styleActions] = useStyle();
+  const style = useStyle();
 
   //
   // Event Handlers
@@ -30,7 +37,8 @@ export function TopBar(_props: TopBarProps) {
   }
 
   async function onClickTheme(themeName: StyleThemeName): Promise<void> {
-    await styleActions.setActiveTheme(themeName);
+    console.log("store: ", style.store.activeTheme);
+    await style.setActiveTheme(themeName);
   }
 
   function onScopeSearchInput(_event: Event): void {}
@@ -38,55 +46,74 @@ export function TopBar(_props: TopBarProps) {
   return (
     <Styled.Container isLoggedIn={!auth.store.auth}>
       <Styled.ScopeSearchContainer>
-        <Styled.ScopeSearchInput onInput={onScopeSearchInput} />
+        <TextField.Root>
+          <TextField.Input onChange={onScopeSearchInput} />
+          <TextField.Description>
+            Search repositories with search schema
+          </TextField.Description>
+        </TextField.Root>
       </Styled.ScopeSearchContainer>
 
       <Styled.ConfigContainer>
-        <Styled.ConfigList>
-          {/* Locale Menu */}
-          <Styled.ConfigListItem>
-            <Styled.ConfigDetailMenu>
-              <Styled.ConfigDetailMenuSummary>
-                <Icon icon={faGlobe} /> {locale.store.locale}
-              </Styled.ConfigDetailMenuSummary>
-              <Styled.ConfigDetailMenuList>
-                {LOCALE_KEYS.map((localeKey) => (
-                  <Styled.ConfigDetailMenuListItem
-                    isActive={localeKey === locale.store.locale}
+        {/* Start Locale Menu */}
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Text variant={BodyTextVariant.ButtonText}>
+              <Icon icon={faGlobe} />
+            </Text>
+            <DropdownMenu.Icon>
+              <Icon icon={faChevronDown} />
+            </DropdownMenu.Icon>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content>
+              <For each={LOCALE_KEYS}>
+                {(localeKey) => (
+                  <DropdownMenu.CheckboxItem
+                    checked={localeKey === locale.store.locale}
+                    onChange={() => onClickLocale(localeKey)}
                   >
-                    <Styled.ConfigDetailMenuTrigger
-                      onClick={() => onClickLocale(localeKey)}
-                    >
-                      {LOCALE_MAP[localeKey]}
-                    </Styled.ConfigDetailMenuTrigger>
-                  </Styled.ConfigDetailMenuListItem>
-                ))}
-              </Styled.ConfigDetailMenuList>
-            </Styled.ConfigDetailMenu>
-          </Styled.ConfigListItem>
+                    <DropdownMenu.ItemIndicator>
+                      <Icon icon={faCheck} />
+                    </DropdownMenu.ItemIndicator>
+                    {LOCALE_MAP[localeKey]}
+                  </DropdownMenu.CheckboxItem>
+                )}
+              </For>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+        {/* End Locale Menu */}
 
-          {/* Theme Menu */}
-          <Styled.ConfigListItem>
-            <Styled.ConfigDetailMenu>
-              <Styled.ConfigDetailMenuSummary>
-                <Icon icon={faPaintbrushPencil} />
-              </Styled.ConfigDetailMenuSummary>
-              <Styled.ConfigDetailMenuList>
-                {THEME_NAMES.map((themeName) => (
-                  <Styled.ConfigDetailMenuListItem
-                    isActive={themeName === activeTheme()}
+        {/* Start Theme Menu */}
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Text variant={BodyTextVariant.ButtonText}>
+              <Icon icon={faPaintbrushPencil} />
+            </Text>
+            <DropdownMenu.Icon>
+              <Icon icon={faChevronDown} />
+            </DropdownMenu.Icon>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content>
+              <For each={THEME_NAMES}>
+                {(themeName) => (
+                  <DropdownMenu.CheckboxItem
+                    checked={themeName === style.store.activeTheme}
+                    onChange={() => onClickTheme(themeName)}
                   >
-                    <Styled.ConfigDetailMenuTrigger
-                      onClick={() => onClickTheme(themeName)}
-                    >
-                      {themeName}
-                    </Styled.ConfigDetailMenuTrigger>
-                  </Styled.ConfigDetailMenuListItem>
-                ))}
-              </Styled.ConfigDetailMenuList>
-            </Styled.ConfigDetailMenu>
-          </Styled.ConfigListItem>
-        </Styled.ConfigList>
+                    <DropdownMenu.ItemIndicator>
+                      <Icon icon={faCheck} />
+                    </DropdownMenu.ItemIndicator>
+                    {themeName}
+                  </DropdownMenu.CheckboxItem>
+                )}
+              </For>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+        {/* End Theme Menu */}
       </Styled.ConfigContainer>
     </Styled.Container>
   );
@@ -99,11 +126,4 @@ const Styled = {
   ScopeSearchContainer: styled.div``,
   ScopeSearchInput: styled.input``,
   ConfigContainer: styled.div``,
-  ConfigList: styled.ul``,
-  ConfigListItem: styled.li``,
-  ConfigDetailMenu: styled.details``,
-  ConfigDetailMenuSummary: styled.summary``,
-  ConfigDetailMenuList: styled.ul``,
-  ConfigDetailMenuListItem: styled.li<{ isActive: boolean }>``,
-  ConfigDetailMenuTrigger: styled.a``,
 };

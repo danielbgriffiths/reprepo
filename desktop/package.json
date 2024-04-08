@@ -17,6 +17,7 @@
     "@fortawesome/free-brands-svg-icons": "^6.5.1",
     "@fortawesome/pro-light-svg-icons": "^6.5.1",
     "@fortawesome/sharp-light-svg-icons": "^6.5.1",
+    "@kobalte/core": "^0.12.6",
     "@modular-forms/solid": "^0.20.0",
     "@solidjs/router": "^0.13.0",
     "@tauri-apps/api": "^1",

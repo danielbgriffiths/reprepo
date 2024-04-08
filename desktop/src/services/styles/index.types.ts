@@ -1,12 +1,12 @@
 // Third Party Imports
-import { Accessor, JSXElement } from "solid-js";
+import { JSXElement } from "solid-js";
 
-export type StyleBindings = [
-  Accessor<StyleThemeName>,
-  {
-    setActiveTheme: (themeName: StyleThemeName) => Promise<void>;
-  },
-];
+export type StyleBindings = {
+  store: {
+    activeTheme: StyleThemeName;
+  };
+  setActiveTheme: (_themeName: StyleThemeName) => Promise<void>;
+};
 
 export interface StyleProviderProps {
   children: JSXElement;
@@ -17,4 +17,6 @@ export enum StyleThemeName {
   Dark = "Dark",
 }
 
-export type StyleTheme = Record<string, any>;
+export interface StyleStore {
+  activeTheme: StyleThemeName;
+}

@@ -4,9 +4,9 @@ import { createContext } from "solid-js";
 // Local Imports
 import { StyleBindings, StyleThemeName } from "../index.types";
 
-export const StyleContext = createContext<StyleBindings>([
-  () => {},
-  {
-    setActiveTheme: async (_themeName: StyleThemeName) => {},
+export const StyleContext = createContext<StyleBindings>({
+  store: {
+    activeTheme: StyleThemeName.Light,
   },
-] as StyleBindings);
+  setActiveTheme: async (_themeName: StyleThemeName) => {},
+});

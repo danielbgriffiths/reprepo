@@ -8,8 +8,7 @@ import { AuthenticatedUser, User } from "@/models";
 import { authCommands, userCommands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useStronghold } from "@services/stronghold";
-import { NotificationKey } from "@services/notifications/index.types";
-import { useNotifications } from "@services/notifications";
+import { useToast, ToastKey } from "@services/toast";
 
 export function AuthProvider(props: AuthProviderProps) {
   //
@@ -17,7 +16,7 @@ export function AuthProvider(props: AuthProviderProps) {
   //
 
   const stronghold = useStronghold();
-  const notifications = useNotifications();
+  const toasts = useToast();
 
   //
   // State
@@ -103,7 +102,7 @@ export function AuthProvider(props: AuthProviderProps) {
     });
 
     if (!authedSignature) {
-      return notifications.register(NotificationKey.AuthSignatureError);
+      return toasts.register(ToastKey.AuthSignatureError);
     }
 
     await storeLocalAccountId(authedSignature[1]);
@@ -117,7 +116,7 @@ export function AuthProvider(props: AuthProviderProps) {
 
     if (!authenticatedUser) {
       await removeAuthedSignature();
-      return notifications.register(NotificationKey.AuthenticatedUserError);
+      return toasts.register(ToastKey.AuthenticatedUserError);
     }
 
     setAuth(authenticatedUser);
@@ -141,7 +140,7 @@ export function AuthProvider(props: AuthProviderProps) {
 
     if (!authenticatedUser) {
       await removeAuthedSignature();
-      return notifications.register(NotificationKey.AuthenticatedUserError);
+      return toasts.register(ToastKey.AuthenticatedUserError);
     }
 
     setAuth(authenticatedUser);

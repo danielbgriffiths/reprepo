@@ -9,6 +9,7 @@ import { RecordsTable } from "./records-table";
 import { useAuth } from "@services/auth";
 import { repositoryCommands, recordCommands } from "@services/commands";
 import { Repository, Record } from "@/models";
+import { PageContainer } from "@services/styles";
 
 export default function Dashboard() {
   //
@@ -34,17 +35,16 @@ export default function Dashboard() {
   });
 
   return (
-    <Styled.Container>
+    <PageContainer>
       <Header repository={repository()} records={records()} />
       <Styled.DashboardBodySection>
         <DecisionAnalytics records={records()} />
         <RecordsTable records={records()} />
       </Styled.DashboardBodySection>
-    </Styled.Container>
+    </PageContainer>
   );
 }
 
 export const Styled = {
-  Container: styled.div``,
   DashboardBodySection: styled.div``,
 };

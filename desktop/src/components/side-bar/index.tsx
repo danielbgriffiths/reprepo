@@ -1,20 +1,14 @@
 // Third Party Imports
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
-import {
-  faCalendar,
-  faGrid2Plus,
-  faGridHorizontal,
-  faNetworkWired,
-} from "@fortawesome/pro-light-svg-icons";
+import { DropdownMenu, Image } from "@kobalte/core";
 
 // Local Imports
 import { authCommands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
-import { useNotifications } from "@services/notifications";
-import { NotificationKey } from "@services/notifications/index.types.ts";
+import { useToast, ToastKey } from "@services/toast";
 
 export interface SideBarProps {}
 
@@ -25,7 +19,7 @@ export function SideBar(_props: SideBarProps) {
 
   const auth = useAuth();
   const stronghold = useStronghold();
-  const notifications = useNotifications();
+  const toast = useToast();
 
   //
   // Event Handlers
@@ -38,65 +32,52 @@ export function SideBar(_props: SideBarProps) {
     });
 
     if (!isLogoutSuccessful) {
-      return notifications.register(NotificationKey.LogoutError);
+      return toast.register(ToastKey.LogoutError);
     }
 
     auth.setAuth(undefined);
 
     await stronghold.remove(StrongholdKeys.AuthedSignature, { save: true });
 
-    notifications.register(NotificationKey.Logout);
+    toast.register(ToastKey.Logout);
   }
 
   return (
     <Styled.Container>
-      <Styled.LogoContainer>
-        <Styled.Logo alt="logo" src="/logo.png" />
-      </Styled.LogoContainer>
+      <Image.Root fallbackDelay={600}>
+        <Image.Img src="/logo.png" alt="logo" />
+        <Image.Fallback>NS</Image.Fallback>
+      </Image.Root>
 
       <Styled.List>
-        {[
-          {
-            name: "Classical Piano",
-            path: `/repositories/1`,
-            icon: faGridHorizontal,
-          },
-          {
-            name: "Jazz Piano",
-            path: `/repositories/2`,
-            icon: faGridHorizontal,
-          },
-          {
-            name: "Ballet",
-            path: `/repositories/3`,
-            icon: faGridHorizontal,
-          },
-          { name: "Connect", path: "/add-record", icon: faNetworkWired },
-          {
-            name: "Create Record",
-            path: "/create-record",
-            icon: faNetworkWired,
-          },
-          { name: "Addons", path: "/addons", icon: faGrid2Plus },
-          { name: "Calendar", path: "/calendar", icon: faCalendar },
-        ].map((item) => (
+        {config.navItems.map((item) => (
           <Styled.ListItem>
-            <Styled.LinkTo href={item.path}>
+            <Link variant={LinkVariant.NavItem} href={item.path}>
               <Styled.ListItemIcon icon={item.icon} />
-            </Styled.LinkTo>
+              {item.name}
+            </Link>
           </Styled.ListItem>
         ))}
       </Styled.List>
 
-      <Styled.AvatarContainer>
-        <Styled.Avatar
-          alt="avatar"
-          src={auth.store.user?.avatar || "/avatar.png"}
-        />
-        <Styled.SecondaryLinkTo onClick={onClickLogout}>
-          Logout
-        </Styled.SecondaryLinkTo>
-      </Styled.AvatarContainer>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          <Image.Root fallbackDelay={600}>
+            <Image.Img
+              src={auth.store.user?.avatar}
+              alt={`${auth.store.user?.firstName} settings menu`}
+            />
+            <Image.Fallback>NS</Image.Fallback>
+          </Image.Root>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content>
+            <DropdownMenu.Item onClick={onClickLogout}>
+              Logout <div class="dropdown-menu__item-right-slot">⌘+K</div>
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
     </Styled.Container>
   );
 }

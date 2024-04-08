@@ -4,9 +4,8 @@ import { SubmitEvent } from "@modular-forms/solid";
 
 // Local Imports
 import { repositoryCommands } from "@services/commands";
-import { useNotifications } from "@services/notifications";
+import { useToast, ToastKey } from "@services/toast";
 import { useAuth } from "@services/auth";
-import { NotificationKey } from "@services/notifications/index.types";
 import { CreateRepositoryForm } from "./create-repository-form";
 import { ICreateRepositorySchema } from "./create-repository-form/schema";
 
@@ -15,7 +14,7 @@ export default function CreateRepository() {
   // Hooks
   //
 
-  const notifications = useNotifications();
+  const toast = useToast();
   const auth = useAuth();
 
   //
@@ -29,12 +28,12 @@ export default function CreateRepository() {
     const repository = await repositoryCommands.createRepository(values);
 
     if (!repository) {
-      return notifications.register(NotificationKey.CreateRepositoryError, {
+      return toast.register(ToastKey.CreateRepositoryError, {
         message: `Error creating repository for ${auth.store.user!.firstName}`,
       });
     }
 
-    notifications.register(NotificationKey.CreateRepositorySuccess, {
+    toast.register(ToastKey.CreateRepositorySuccess, {
       message: `${auth.store.user!.firstName}, your artist profile has been created!`,
     });
 

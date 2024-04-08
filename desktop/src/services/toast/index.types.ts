@@ -1,29 +1,24 @@
 // Third Party Imports
 import { JSXElement } from "solid-js";
 
-export type NotificationsBindings = {
-  store: NotificationStore;
-  register: (key: NotificationKey, overrides?: Partial<Notification>) => void;
-  deregister: (uid: number) => void;
+export type ToastBindings = {
+  register: (key: ToastKey, overrides?: Partial<Toast>) => void;
 };
 
-export interface NotificationsProviderProps {
+export interface ToastProviderProps {
   children: JSXElement;
 }
 
-export interface Notification {
-  uid?: number;
+export interface Toast {
+  title: string;
   message: JSXElement;
   type: "info" | "error" | "success" | "warning" | "alert" | "default";
+  priority: "high" | "low";
   duration: number;
   isRemovableByClick: boolean;
 }
 
-export interface NotificationStore {
-  notifications: Notification[];
-}
-
-export enum NotificationKey {
+export enum ToastKey {
   Logout,
   LogoutError,
   AvatarUploadError,

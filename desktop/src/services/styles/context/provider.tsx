@@ -1,6 +1,7 @@
 // Third Party Imports
-import { createEffect, createSignal } from "solid-js";
+import { createEffect } from "solid-js";
 import { ThemeProvider } from "solid-styled-components";
+import { createStore } from "solid-js/store";
 
 // Local Imports
 import { StyleContext } from "./create-context";
@@ -8,6 +9,7 @@ import {
   StyleBindings,
   StyleProviderProps,
   StyleThemeName,
+  StyleStore,
 } from "../index.types";
 import { useStronghold } from "@services/stronghold";
 import { StrongholdKeys } from "@services/stronghold/index.config";
@@ -26,9 +28,9 @@ export function StyleProvider(props: StyleProviderProps) {
   // State
   //
 
-  const [activeTheme, setActiveTheme] = createSignal<StyleThemeName>(
-    StyleThemeName.Light,
-  );
+  const [store, setStore] = createStore<StyleStore>({
+    activeTheme: StyleThemeName.Light,
+  });
 
   //
   // Lifecycle
@@ -36,7 +38,7 @@ export function StyleProvider(props: StyleProviderProps) {
 
   createEffect(() => {
     if (!auth.store.auth) {
-      setActiveTheme(StyleThemeName.Light);
+      setStore("activeTheme", StyleThemeName.Light);
       return;
     }
 
@@ -47,30 +49,28 @@ export function StyleProvider(props: StyleProviderProps) {
 
     if (!themeName) return;
 
-    setActiveTheme(themeName);
+    setStore("activeTheme", themeName);
   });
 
-  const styleBindings: StyleBindings = [
-    activeTheme,
-    {
-      setActiveTheme: async (themeName: StyleThemeName) => {
-        setActiveTheme(themeName);
+  const styleBindings: StyleBindings = {
+    store,
+    setActiveTheme: async (themeName: StyleThemeName) => {
+      setStore("activeTheme", themeName);
 
-        if (!auth.store.auth) return;
+      if (!auth.store.auth) return;
 
-        await stronghold.insertWithParse(
-          StrongholdKeys.ActiveTheme,
-          { key: auth.store.user!.id, value: themeName },
-          {
-            save: true,
-          },
-        );
-      },
+      await stronghold.insertWithParse(
+        StrongholdKeys.ActiveTheme,
+        { key: auth.store.user!.id, value: themeName },
+        {
+          save: true,
+        },
+      );
     },
-  ];
+  };
 
   return (
-    <ThemeProvider theme={THEMES_MAP[activeTheme()]}>
+    <ThemeProvider theme={THEMES_MAP[store.activeTheme]}>
       <StyleContext.Provider value={styleBindings}>
         {props.children}
       </StyleContext.Provider>

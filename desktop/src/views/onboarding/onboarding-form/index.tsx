@@ -1,49 +1,45 @@
 // Third Party Imports
-import {
-  createForm,
-  getValue,
-  SubmitEvent,
-  valiForm,
-} from "@modular-forms/solid";
+import { createForm, SubmitEvent, valiForm } from "@modular-forms/solid";
 import { styled } from "solid-styled-components";
 
 // Local Imports
-import { FIELD_OPTIONS, SPECIALIZATION_OPTIONS } from "./config";
-import { CreateRepositorySchema, ICreateRepositorySchema } from "./schema";
+import { LOCALE_OPTIONS } from "./config";
+import { IOnboardingSchema, OnboardingSchema } from "./schema";
 import { Select } from "@components/form/components/select";
-import { Switch } from "@components/form/components/switch";
+import { NumberField } from "@components/form/components/number-field";
+import { FileUpload } from "@components/form/components/file-upload";
 import {
-  Button,
   ButtonVariant,
   HeadingTextVariant,
   Title,
+  Button,
 } from "@services/styles";
 
-export interface CreateRepositoryFormProps {
-  onSubmit: (values: ICreateRepositorySchema, event: SubmitEvent) => void;
+export interface OnboardingFormProps {
+  defaultValues: IOnboardingSchema;
+  onSubmit: (values: IOnboardingSchema, event: SubmitEvent) => void;
 }
 
-export function CreateRepositoryForm(props: CreateRepositoryFormProps) {
+export function OnboardingForm(props: OnboardingFormProps) {
   //
   // State
   //
 
-  const [createRepositoryForm, { Form, Field }] =
-    createForm<ICreateRepositorySchema>({
-      validate: valiForm(CreateRepositorySchema),
-    });
+  const [_, { Form, Field }] = createForm<IOnboardingSchema>({
+    validate: valiForm(OnboardingSchema),
+  });
 
   return (
     <Form onSubmit={props.onSubmit}>
       <Title variant={HeadingTextVariant.SubTitle}>Create Repository</Title>
-      <Field name="field" type="string">
+      <Field name="locale" type="string">
         {(fieldStore, fieldElementProps) => (
           <Select
-            label="Field"
-            options={FIELD_OPTIONS}
+            label="Locale"
+            options={LOCALE_OPTIONS}
             name={fieldStore.name}
-            placeholder="Field"
-            value={undefined}
+            placeholder="Locale"
+            value={props.defaultValues.locale}
             required={true}
             disabled={false}
             ref={fieldElementProps.ref}
@@ -54,34 +50,30 @@ export function CreateRepositoryForm(props: CreateRepositoryFormProps) {
           />
         )}
       </Field>
-      <Field name="specialization" type="string">
+      <Field name="age" type="number">
         {(fieldStore, fieldElementProps) => (
-          <Select
-            label="Specialization"
+          <NumberField
+            label="Age"
             name={fieldStore.name}
-            placeholder="Specialization"
-            value={undefined}
+            placeholder="Age"
+            value={props.defaultValues.age}
             required={true}
-            disabled={!getValue(createRepositoryForm, "field")}
+            disabled={false}
             ref={fieldElementProps.ref}
             onInput={fieldElementProps.onInput}
             onChange={fieldElementProps.onChange}
             onBlur={fieldElementProps.onBlur}
             error={fieldStore.error}
-            options={
-              SPECIALIZATION_OPTIONS.get(
-                getValue(createRepositoryForm, "field"),
-              ) ?? []
-            }
           />
         )}
       </Field>
-      <Field name="isPrivate" type="boolean">
+      <Field name="avatar" type="string">
         {(fieldStore, fieldElementProps) => (
-          <Switch
-            label="Private Repository"
+          <FileUpload
+            label="Avatar"
             name={fieldStore.name}
-            checked={false}
+            placeholder="Avatar"
+            value={props.defaultValues.avatar}
             required={false}
             disabled={false}
             ref={fieldElementProps.ref}
@@ -89,12 +81,16 @@ export function CreateRepositoryForm(props: CreateRepositoryFormProps) {
             onChange={fieldElementProps.onChange}
             onBlur={fieldElementProps.onBlur}
             error={fieldStore.error}
+            onUpload={() => {}}
+            onDelete={() => {}}
+            onDeleteFail={() => {}}
+            onUploadFail={() => {}}
           />
         )}
       </Field>
       <FormActions>
         <Button type="submit" variant={ButtonVariant.Primary}>
-          Create Repository
+          Complete Onboarding
         </Button>
       </FormActions>
     </Form>

@@ -6,9 +6,9 @@ import { styled } from "solid-styled-components";
 // Local Imports
 import { SideBar } from "@components/side-bar";
 import { TopBar } from "@components/top-bar";
-import { ToastBar } from "@components/toast-bar";
 import { useStronghold } from "@services/stronghold";
 import { useAuth } from "@services/auth";
+import { ToastProvider } from "@services/toast";
 
 export interface ViewsProps extends RouteSectionProps {}
 
@@ -69,14 +69,13 @@ export default function Views(props: ViewsProps) {
   }
 
   return (
-    <>
+    <ToastProvider>
       <SideBar />
       <Styled.Container>
         <TopBar />
         <Styled.Content>{c()}</Styled.Content>
       </Styled.Container>
-      <ToastBar />
-    </>
+    </ToastProvider>
   );
 }
 

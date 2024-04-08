@@ -9,6 +9,14 @@ import { User } from "@/models";
 import { useAuth } from "@services/auth";
 import { useLocale } from "@services/locale";
 import { TranslationKey } from "@services/locale/index.types";
+import {
+  HeadingTextVariant,
+  Title,
+  Button,
+  ButtonVariant,
+  PageContainer,
+  PageContainerVariant,
+} from "@services/styles";
 
 /**
  * The splash view component
@@ -62,16 +70,18 @@ export default function Splash() {
   }
 
   return (
-    <div>
-      <h1>{locale.text(TranslationKey.SplashWelcome)}</h1>
+    <PageContainer variant={PageContainerVariant.Default}>
+      <Title variant={HeadingTextVariant.Title}>
+        {locale.text(TranslationKey.SplashWelcome)}
+      </Title>
       <Show
         when={auth.store.isInitialized}
         fallback={<div>Initializing...</div>}
       >
         <div>
-          <button onClick={onClickGoogleOAuth}>
+          <Button onClick={onClickGoogleOAuth} variant={ButtonVariant.Primary}>
             <Icon icon={faGoogle} />
-          </button>
+          </Button>
           {users().map((userSummary) => (
             <button onClick={() => onClickUserSummary(userSummary.authId)}>
               <img alt="user avatar" src={userSummary.avatar} />
@@ -80,6 +90,6 @@ export default function Splash() {
           ))}
         </div>
       </Show>
-    </div>
+    </PageContainer>
   );
 }
