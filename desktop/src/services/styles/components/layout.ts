@@ -10,4 +10,6 @@ interface PageContainerProps {
   variant?: PageContainerVariant;
 }
 
-export const PageContainer = styled.div<PageContainerProps>``;
+export const PageContainer = styled.div<PageContainerProps>`
+  padding: 1rem;
+`;

@@ -71,15 +71,20 @@ export default function Views(props: ViewsProps) {
   return (
     <ToastProvider>
       <SideBar />
-      <Styled.Container>
+      <Wrapper>
         <TopBar />
-        <Styled.Content>{c()}</Styled.Content>
-      </Styled.Container>
+        <Content>{c()}</Content>
+      </Wrapper>
     </ToastProvider>
   );
 }
 
-const Styled = {
-  Container: styled.div``,
-  Content: styled.div``,
-};
+const Wrapper = styled("div")`
+  width: 100%;
+  height: 100%;
+`;
+const Content = styled("div")`
+  width: 100%;
+  height: calc(100% - 50px);
+  overflow: hidden;
+`;

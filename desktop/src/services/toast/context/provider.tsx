@@ -14,6 +14,7 @@ import {
 } from "../index.types";
 import { BodyTextVariant, Text } from "@services/styles";
 import { TOAST_MAP } from "@services/toast/index.config";
+import { styled } from "solid-styled-components";
 
 export function ToastProvider(props: ToastProviderProps) {
   //
@@ -71,7 +72,7 @@ export function ToastProvider(props: ToastProviderProps) {
   return (
     <ToastContext.Provider value={toastBindings}>
       {props.children}
-      <KobalteToast.Region
+      <ToastRegion
         swipeDirection="right"
         pauseOnInteraction
         pauseOnPageIdle
@@ -79,7 +80,11 @@ export function ToastProvider(props: ToastProviderProps) {
         // translations
       >
         <KobalteToast.List />
-      </KobalteToast.Region>
+      </ToastRegion>
     </ToastContext.Provider>
   );
 }
+
+const ToastRegion = styled(KobalteToast.Region)`
+  position: absolute;
+`;

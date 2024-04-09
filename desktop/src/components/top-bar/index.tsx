@@ -122,6 +122,11 @@ export function TopBar(_props: TopBarProps) {
 const Styled = {
   Container: styled.div<{ isLoggedIn: boolean }>`
     opacity: ${({ isLoggedIn }) => (!isLoggedIn ? `0.5` : 1)};
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 50px;
+    padding: 0.2rem 1rem;
   `,
   ScopeSearchContainer: styled.div``,
   ScopeSearchInput: styled.input``,
