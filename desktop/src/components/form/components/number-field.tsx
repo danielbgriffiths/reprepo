@@ -1,12 +1,16 @@
 // Third Party Imports
 import { NumberField as KobalteNumberField } from "@kobalte/core";
 import { type JSX, Show, splitProps } from "solid-js";
+import { styled } from "solid-styled-components";
+
+// Local Imports
+import { BodyTextVariant, Text } from "@services/styles";
 
 type NumberFieldProps = {
   name: string;
   label?: string | undefined;
   placeholder?: string | undefined;
-  value: number | undefined;
+  defaultValue?: number;
   error: string;
   multiline?: boolean | undefined;
   required?: boolean | undefined;
@@ -20,22 +24,41 @@ type NumberFieldProps = {
 export function NumberField(props: NumberFieldProps) {
   const [rootProps, inputProps] = splitProps(
     props,
-    ["name", "value", "required", "disabled"],
+    ["name", "defaultValue", "required", "disabled"],
     ["placeholder", "ref", "onInput", "onChange", "onBlur"],
   );
 
   return (
-    <KobalteNumberField.Root
-      {...rootProps}
-      validationState={props.error ? "invalid" : "valid"}
-    >
+    <Root {...rootProps} validationState={props.error ? "invalid" : "valid"}>
       <Show when={props.label}>
-        <KobalteNumberField.Label>{props.label}</KobalteNumberField.Label>
+        <Label>
+          <Text variant={BodyTextVariant.CaptionText}>{props.label}</Text>
+        </Label>
       </Show>
-      <KobalteNumberField.Input {...inputProps} type="number" />
-      <KobalteNumberField.ErrorMessage>
-        {props.error}
-      </KobalteNumberField.ErrorMessage>
-    </KobalteNumberField.Root>
+      <Input {...inputProps} type="number" />
+      <ErrorMessage>
+        <Text variant={BodyTextVariant.CaptionText}>{props.error}</Text>
+      </ErrorMessage>
+    </Root>
   );
 }
+
+const Root = styled(KobalteNumberField.Root)`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+`;
+
+const Label = styled(KobalteNumberField.Label)`
+  margin-bottom: 0.4rem;
+`;
+
+const Input = styled(KobalteNumberField.Input)`
+  width: 100%;
+  min-height: 40px;
+  padding: 0 1rem;
+`;
+
+const ErrorMessage = styled(KobalteNumberField.ErrorMessage)``;

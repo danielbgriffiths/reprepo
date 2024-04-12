@@ -1,14 +1,18 @@
 // Third Party Imports
 import { Select as KobalteSelect } from "@kobalte/core";
 import {
+  createEffect,
+  createSignal,
   type JSX,
   Show,
   splitProps,
-  createEffect,
-  createSignal,
 } from "solid-js";
 import Icon from "solid-fa";
 import { faCheck } from "@fortawesome/pro-light-svg-icons";
+import { styled } from "solid-styled-components";
+
+// Local Imports
+import { BodyTextVariant, Text } from "@services/styles";
 
 type Option = {
   label: string;
@@ -20,7 +24,8 @@ type SelectProps = {
   label?: string | undefined;
   placeholder?: string | undefined;
   options: Option[];
-  value: string | undefined;
+  defaultValue?: Option;
+  value?: string;
   error: string;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
@@ -44,43 +49,88 @@ export function Select(props: SelectProps) {
   });
 
   return (
-    <KobalteSelect.Root
+    <Root
       {...rootProps}
       multiple={false}
+      defaultValue={props.defaultValue}
       value={getValue()}
       onChange={setValue}
       optionValue="value"
       optionTextValue="label"
       validationState={props.error ? "invalid" : "valid"}
-      itemComponent={(props) => (
-        <KobalteSelect.Item item={props.item}>
-          <KobalteSelect.ItemLabel>
-            {props.item.textValue}
-          </KobalteSelect.ItemLabel>
-          <KobalteSelect.ItemIndicator>
+      itemComponent={(
+        props: KobalteSelect.SelectRootItemComponentProps<any>,
+      ) => (
+        <Item item={props.item}>
+          <ItemLabel>
+            <Text variant={BodyTextVariant.CaptionText}>
+              {props.item.textValue}
+            </Text>
+          </ItemLabel>
+          <ItemIndicator>
             <Icon icon={faCheck} />
-          </KobalteSelect.ItemIndicator>
-        </KobalteSelect.Item>
+          </ItemIndicator>
+        </Item>
       )}
     >
       <Show when={props.label}>
-        <KobalteSelect.Label>{props.label}</KobalteSelect.Label>
+        <Label>
+          <Text variant={BodyTextVariant.CaptionText}>{props.label}</Text>
+        </Label>
       </Show>
       <KobalteSelect.HiddenSelect {...selectProps} />
-      <KobalteSelect.Trigger>
+      <Trigger>
         <KobalteSelect.Value<Option>>
           {(state) => state.selectedOption().label}
         </KobalteSelect.Value>
-        <KobalteSelect.Icon>
+        <TriggerIcon>
           <Icon icon={faCheck} />
-        </KobalteSelect.Icon>
-      </KobalteSelect.Trigger>
+        </TriggerIcon>
+      </Trigger>
       <KobalteSelect.Portal>
         <KobalteSelect.Content>
           <KobalteSelect.Listbox />
         </KobalteSelect.Content>
       </KobalteSelect.Portal>
-      <KobalteSelect.ErrorMessage>{props.error}</KobalteSelect.ErrorMessage>
-    </KobalteSelect.Root>
+      <ErrorMessage>
+        <Text variant={BodyTextVariant.CaptionText}>{props.error}</Text>
+      </ErrorMessage>
+    </Root>
   );
 }
+
+const Root = styled(KobalteSelect.Root as any)`
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: column;
+  margin-bottom: 1rem;
+`;
+
+const Item = styled(KobalteSelect.Item)``;
+
+const ItemLabel = styled(KobalteSelect.ItemLabel)``;
+
+const ItemIndicator = styled(KobalteSelect.ItemIndicator)``;
+
+const Label = styled(KobalteSelect.Label)`
+  margin-bottom: 0.4rem;
+`;
+
+const Trigger = styled(KobalteSelect.Trigger)`
+  min-height: 42px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0 1rem;
+
+  background-color: transparent;
+  border: solid 1px grey;
+  border-radius: 2px;
+`;
+
+const TriggerIcon = styled(KobalteSelect.Icon)``;
+
+const ErrorMessage = styled(KobalteSelect.ErrorMessage)``;

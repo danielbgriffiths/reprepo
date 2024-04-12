@@ -44,12 +44,14 @@ export function TopBar(_props: TopBarProps) {
   function onScopeSearchInput(_event: Event): void {}
 
   return (
-    <Styled.Container isLoggedIn={!auth.store.auth}>
+    <Styled.Container isLoggedIn={!!auth.store.auth}>
       <Styled.ScopeSearchContainer>
         <TextField.Root>
           <TextField.Input onChange={onScopeSearchInput} />
           <TextField.Description>
-            Search repositories with search schema
+            <Text variant={BodyTextVariant.OverlineText}>
+              Search repositories with search schema
+            </Text>
           </TextField.Description>
         </TextField.Root>
       </Styled.ScopeSearchContainer>

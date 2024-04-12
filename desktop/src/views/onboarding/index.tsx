@@ -7,6 +7,7 @@ import { userCommands } from "@services/commands";
 import { IOnboardingSchema } from "@views/onboarding/onboarding-form/schema";
 import { OnboardingForm } from "./onboarding-form";
 import { PageContainer, PageContainerVariant } from "@services/styles";
+import { createSignal } from "solid-js";
 
 export default function Onboarding() {
   //
@@ -18,14 +19,33 @@ export default function Onboarding() {
   const navigate = useNavigate();
 
   //
+  // State
+  //
+
+  const [crop, setCrop] = createSignal<Cropper.Data | undefined>(undefined);
+
+  //
   // Event Handlers
   //
 
   async function onSubmit(values: IOnboardingSchema): Promise<void> {
+    const cropFormatted = !crop()
+      ? undefined
+      : {
+          x: crop()!.x,
+          y: crop()!.y,
+          width: crop()!.width,
+          height: crop()!.height,
+          rotate: crop()!.rotate,
+          scale_x: crop()!.scaleX,
+          scale_y: crop()!.scaleY,
+        };
+
     const args = {
       userChanges: {
         ...values,
-        is_onboarded: values.isOnboarded,
+        crop: cropFormatted,
+        is_onboarded: true,
       },
       userId: auth.store.user!.id,
     };
@@ -54,8 +74,8 @@ export default function Onboarding() {
           locale: auth.store.user!.locale ?? LOCALE_KEYS[0],
           age: auth.store.user!.age ?? 18,
           avatar: undefined,
-          isOnboarded: false,
         }}
+        setCrop={setCrop}
       />
     </PageContainer>
   );

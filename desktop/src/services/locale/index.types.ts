@@ -13,6 +13,7 @@ export interface LocaleProviderProps {
 
 export enum SupportedLocale {
   EnglishUS = "en-US",
+  SpanishColombia = "es-CO",
 }
 
 export enum TranslationKey {

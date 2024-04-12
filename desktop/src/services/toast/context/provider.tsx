@@ -28,36 +28,32 @@ export function ToastProvider(props: ToastProviderProps) {
     };
 
     toaster.show((toastProps) => (
-      <KobalteToast.Root
+      <ToastRoot
         toastId={toastProps.toastId}
         priority={nextToast.priority}
         duration={nextToast.duration}
-        persistent={nextToast.isRemovableByClick && nextToast.duration <= 0}
+        persistent={nextToast.isRemovableByClick || nextToast.duration < 1}
         // translations
       >
-        <div>
-          <div>
-            <KobalteToast.Title>
-              <Text variant={BodyTextVariant.OverlineText}>
-                {nextToast.title}
-              </Text>
-            </KobalteToast.Title>
-            <KobalteToast.Description>
-              <Text variant={BodyTextVariant.CaptionText}>
-                {nextToast.message}
-              </Text>
-            </KobalteToast.Description>
-          </div>
+        <ToastItem>
+          <ToastTitle>
+            <Text variant={BodyTextVariant.Text}>{nextToast.title}</Text>
+          </ToastTitle>
+          <ToastDescription>
+            <Text variant={BodyTextVariant.CaptionText}>
+              {nextToast.message}
+            </Text>
+          </ToastDescription>
           <Show when={nextToast.isRemovableByClick}>
-            <KobalteToast.CloseButton>
+            <ToastCloseButton>
               <Icon icon={faTimes} />
-            </KobalteToast.CloseButton>
+            </ToastCloseButton>
           </Show>
-        </div>
-        <KobalteToast.ProgressTrack>
-          <KobalteToast.ProgressFill />
-        </KobalteToast.ProgressTrack>
-      </KobalteToast.Root>
+          <ToastProgressTrack>
+            <KobalteToast.ProgressFill />
+          </ToastProgressTrack>
+        </ToastItem>
+      </ToastRoot>
     ));
   }
 
@@ -72,19 +68,70 @@ export function ToastProvider(props: ToastProviderProps) {
   return (
     <ToastContext.Provider value={toastBindings}>
       {props.children}
-      <ToastRegion
+      <Region
         swipeDirection="right"
         pauseOnInteraction
         pauseOnPageIdle
         limit={5}
         // translations
       >
-        <KobalteToast.List />
-      </ToastRegion>
+        <List />
+      </Region>
     </ToastContext.Provider>
   );
 }
 
-const ToastRegion = styled(KobalteToast.Region)`
+const Region = styled(KobalteToast.Region)`
   position: absolute;
+  bottom: 0;
+  right: 0;
+`;
+
+const List = styled(KobalteToast.List)`
+  list-style: none;
+`;
+
+const ToastRoot = styled(KobalteToast.Root)`
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+`;
+
+const ToastItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 4px 4px 14px -5px rgba(0, 0, 0, 0.8);
+  position: relative;
+  min-width: 280px;
+  border: solid 1px #fff;
+`;
+
+const ToastTitle = styled(KobalteToast.Title)`
+  margin-bottom: 0.4rem;
+`;
+
+const ToastDescription = styled(KobalteToast.Description)`
+  margin-bottom: 0.4rem;
+`;
+
+const ToastCloseButton = styled(KobalteToast.CloseButton)`
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  &:hover {
+  }
+`;
+
+const ToastProgressTrack = styled(KobalteToast.ProgressTrack)`
+  width: 100%;
+  height: 4px;
+  margin-top: 0.4rem;
 `;
