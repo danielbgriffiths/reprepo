@@ -1,18 +1,35 @@
 // External Usages
 use std::env;
 use base64::{Engine as _, engine::{general_purpose}};
+use std::io::Cursor;
+use std::num::NonZeroU32;
 use rusoto_core::{HttpClient, Region};
 use rusoto_credential::{DefaultCredentialsProvider};
 use rusoto_s3::{PutObjectRequest, S3Client, S3, DeleteObjectRequest, StreamingBody};
+use serde::{Deserialize, Serialize};
+use fast_image_resize;
+use image;
+use crate::libs::error::LocalError;
 
-fn get_bytes_from_base64(base64_data: &String) -> Result<StreamingBody, String> {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CropperData {
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+    rotate: u32,
+    scale_x: u32,
+    scale_y: u32,
+}
+
+fn get_bytes_from_base64(base64_data: String) -> Result<StreamingBody, LocalError> {
     match general_purpose::STANDARD.decode(base64_data.split(',').last().unwrap())  {
         Ok(decoded_bytes) => Ok(decoded_bytes.into()),
-        Err(e) => Err(e.to_string())
+        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
     }
 }
 
-pub async fn upload_file_to_s3(base64_data: &String, file_name: String) -> Result<String, String> {
+pub async fn upload_file_to_s3(base64_data: String, file_name: String) -> Result<String, LocalError> {
     let aws_s3_bucket = env::var("AWS_S3_BUCKET")
         .expect("Missing the AWS_S3_BUCKET environment variable.");
     let aws_s3_region = env::var("AWS_S3_REGION")
@@ -38,12 +55,14 @@ pub async fn upload_file_to_s3(base64_data: &String, file_name: String) -> Resul
         ..Default::default()
     };
 
-    s3_client.put_object(put_request).await.map_err(|e| e.to_string())?;
+    s3_client
+        .put_object(put_request).await
+        .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
     Ok(file_name)
 }
 
-pub async fn delete_file_from_s3(file_name: String) -> Result<bool, String> {
+pub async fn delete_file_from_s3(file_name: String) -> Result<bool, LocalError> {
     let aws_s3_bucket = env::var("AWS_S3_BUCKET")
         .expect("Missing the AWS_S3_BUCKET environment variable.");
     let aws_s3_region = env::var("AWS_S3_REGION")
@@ -66,7 +85,57 @@ pub async fn delete_file_from_s3(file_name: String) -> Result<bool, String> {
         ..Default::default()
     };
 
-    s3_client.delete_object(delete_request).await.map_err(|e| e.to_string())?;
+    s3_client
+        .delete_object(delete_request).await
+        .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
     Ok(true)
+}
+
+pub fn resize_image(base64_data: String, cropper_data: CropperData) -> Result<String, LocalError> {
+    let image_data = general_purpose::STANDARD
+        .decode(
+            base64_data
+                .split(',')
+                .last()
+                .unwrap()
+        )
+        .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
+
+    let image = image::load_from_memory(&image_data)
+        .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
+
+    let src_image = fast_image_resize::Image::from_vec_u8(
+        NonZeroU32::new(image.width()).unwrap(),
+        NonZeroU32::new(image.height()).unwrap(),
+        image.to_rgba8().into_raw(),
+        fast_image_resize::PixelType::U8x4,
+    ).map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
+
+    let src_image_view = src_image.view();
+
+    let mut dst_image = fast_image_resize::Image::new(
+        NonZeroU32::try_from(cropper_data.width).unwrap(),
+        NonZeroU32::try_from(cropper_data.height).unwrap(),
+        fast_image_resize::pixels::PixelType::U8x4,
+    );
+
+    let mut dst_image_view = dst_image.view_mut();
+
+    let mut resizer = fast_image_resize::Resizer::new(
+        fast_image_resize::ResizeAlg::Convolution(fast_image_resize::FilterType::CatmullRom),
+    );
+    resizer.resize(&src_image_view, &mut dst_image_view).unwrap();
+
+    let final_image = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(
+        cropper_data.width,
+        cropper_data.height,
+        dst_image.buffer().to_vec(),
+    ).ok_or(LocalError::ProcessError { message: "Error converting image to buffer".to_string() })?;
+
+    let mut buffer = Cursor::new(Vec::new());
+    image::DynamicImage::ImageRgba8(final_image).write_to(&mut buffer, image::ImageFormat::Png)
+        .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
+
+    Ok(general_purpose::STANDARD.encode(buffer.into_inner()))
 }

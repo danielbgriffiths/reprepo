@@ -60,11 +60,21 @@ pub fn create_user_if_not_exists(db_connection: &mut PooledConnection<Connection
         .get_result::<i32>(db_connection)
 }
 
-pub fn update_user_onboarding_partial(app_state: &State<AppState>, user_id: &i32, user_onboarding_changes: &PartialOnboardingUser) -> QueryResult<User> {
+pub fn update_user_onboarding_partial(
+    app_state: &State<AppState>,
+    user_id: &i32,
+    partial_user: PartialOnboardingUser,
+    uploaded_avatar: Option<String>
+) -> QueryResult<User> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     diesel::update(user::table.find(user_id))
-        .set(user_onboarding_changes)
+        .set(&PartialOnboardingUser {
+            age: partial_user.age,
+            avatar: uploaded_avatar,
+            locale: partial_user.locale,
+            is_onboarded: true,
+        })
         .returning(User::as_select())
         .get_result::<User>(db_connection)
 }

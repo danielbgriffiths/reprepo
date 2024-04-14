@@ -32,6 +32,8 @@ rusoto_s3 = "0.48.0"
 rusoto_credential = "0.48.0"
 tokio = { version = "1", features = ["full"] }
 thiserror = "1.0.57"
+image = "0.25.1"
+fast_image_resize = "3.0.4"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

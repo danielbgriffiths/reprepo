@@ -1,3 +1,6 @@
+// Third Party Imports
+import { createSignal } from "solid-js";
+
 // Local Imports
 import { LOCALE_KEYS } from "@services/locale/index.config";
 import { ToastKey, useToast } from "@services/toast";
@@ -7,7 +10,6 @@ import { userCommands } from "@services/commands";
 import { IOnboardingSchema } from "@views/onboarding/onboarding-form/schema";
 import { OnboardingForm } from "./onboarding-form";
 import { PageContainer, PageContainerVariant } from "@services/styles";
-import { createSignal } from "solid-js";
 
 export default function Onboarding() {
   //
@@ -29,23 +31,10 @@ export default function Onboarding() {
   //
 
   async function onSubmit(values: IOnboardingSchema): Promise<void> {
-    const cropFormatted = !crop()
-      ? undefined
-      : {
-          x: crop()!.x,
-          y: crop()!.y,
-          width: crop()!.width,
-          height: crop()!.height,
-          rotate: crop()!.rotate,
-          scale_x: crop()!.scaleX,
-          scale_y: crop()!.scaleY,
-        };
-
     const args = {
       userChanges: {
         ...values,
-        crop: cropFormatted,
-        is_onboarded: true,
+        cropper_data: getCropperData(),
       },
       userId: auth.store.user!.id,
     };
@@ -64,6 +53,24 @@ export default function Onboarding() {
     });
 
     navigate("/auth/repositories");
+  }
+
+  //
+  // Functions
+  //
+
+  function getCropperData(): Cropper.Data | undefined {
+    if (!crop()) return;
+
+    return {
+      x: crop()!.x,
+      y: crop()!.y,
+      width: crop()!.width,
+      height: crop()!.height,
+      rotate: crop()!.rotate,
+      scale_x: crop()!.scaleX,
+      scale_y: crop()!.scaleY,
+    } as unknown as Cropper.Data;
   }
 
   return (

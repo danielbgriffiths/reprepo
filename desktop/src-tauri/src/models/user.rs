@@ -2,6 +2,7 @@
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use diesel::{Queryable, Selectable};
+use crate::libs::file::CropperData;
 
 // Local Usages
 use crate::models::auth::{AuthCore};
@@ -68,4 +69,12 @@ pub struct PartialOnboardingUser {
     pub avatar: Option<String>,
     pub locale: String,
     pub is_onboarded: bool
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserOnboardingChangesPayload {
+    pub age: Option<i32>,
+    pub avatar: Option<String>,
+    pub cropper_data: Option<CropperData>,
+    pub locale: String,
 }

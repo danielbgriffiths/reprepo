@@ -4,9 +4,9 @@ use crate::libs::file::{upload_file_to_s3, delete_file_from_s3};
 
 #[tauri::command]
 pub async fn upload_file(base64: String, original_file_name: String) -> Result<String, LocalError> {
-    match upload_file_to_s3(&base64, original_file_name).await {
+    match upload_file_to_s3(base64, original_file_name).await {
         Ok(res) => Ok(res),
-        Err(e) => Err(LocalError::ExternalError { message: e })
+        Err(e) => Err(e)
     }
 }
 
@@ -14,7 +14,7 @@ pub async fn upload_file(base64: String, original_file_name: String) -> Result<S
 pub async fn delete_file(uri: String) -> Result<bool, LocalError> {
     match delete_file_from_s3(uri).await {
         Ok(res) => Ok(res),
-        Err(e) => Err(LocalError::ExternalError { message: e })
+        Err(e) => Err(e)
     }
 }
 

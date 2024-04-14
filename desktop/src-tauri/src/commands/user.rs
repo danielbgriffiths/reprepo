@@ -1,15 +1,17 @@
 // External Usages
 use tauri::{State};
 use std::env;
+use chrono::Utc;
 use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
 
 
 // Local Usages
-use crate::models::user::{AuthenticatedUser, User, PartialOnboardingUser};
+use crate::models::user::{AuthenticatedUser, User, PartialOnboardingUser, UserOnboardingChangesPayload};
 use crate::models::auth::{AuthedSignatureClaims};
 use crate::state::{AppState};
-use crate::services::user::{select_account_users, select_authenticated_user, update_user_onboarding_partial};
+use crate::services::user::{select_account_users, select_authenticated_user, select_user, update_user_onboarding_partial};
 use crate::libs::error::LocalError;
+use crate::libs::file::{resize_image, upload_file_to_s3};
 
 #[tauri::command]
 pub fn get_users(app_state: State<AppState>, account_id: Option<i32>) -> Result::<Vec<User>, LocalError> {
@@ -70,13 +72,58 @@ pub fn get_authenticated_user(
     }
 }
 
-#[tauri::command]
-pub fn update_user_onboarding(
-    app_state: State<AppState>,
+pub async fn resize_and_upload_avatar(
+    app_state: &State<'_, AppState>,
     user_id: i32,
-    user_changes: PartialOnboardingUser
+    user_changes: UserOnboardingChangesPayload
+) -> Result::<Option<String>, LocalError> {
+    let user = select_user(&app_state, &user_id)
+        .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
+
+    if let (Some(base64_data), Some(cropper_data)) = (user_changes.avatar, user_changes.cropper_data) {
+        let resized_avatar = resize_image(
+            base64_data,
+            cropper_data
+        )?;
+
+        let uploaded_avatar = match upload_file_to_s3(
+            resized_avatar,
+            format!(
+                "{}_{}-avatar-{}.png",
+                user.first_name,
+                user.last_name,
+                Utc::now().timestamp(),
+            )
+        ).await {
+            Ok(uploaded_avatar) => Ok(Some(uploaded_avatar)),
+            Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
+        }?;
+
+        return Ok(uploaded_avatar)
+    }
+
+    return Ok(None)
+}
+
+#[tauri::command]
+pub async fn update_user_onboarding(
+    app_state: State<'_, AppState>,
+    user_id: i32,
+    user_changes: UserOnboardingChangesPayload
 ) -> Result::<User, LocalError> {
-    match update_user_onboarding_partial(&app_state, &user_id, &user_changes) {
+    let partial_user = PartialOnboardingUser {
+        age: user_changes.age,
+        locale: user_changes.locale.clone(),
+        is_onboarded: true,
+        avatar: None,
+    };
+
+    let avatar = match resize_and_upload_avatar(&app_state, user_id, user_changes).await {
+        Ok(avatar) => Ok(avatar),
+        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
+    }?;
+
+    match update_user_onboarding_partial(&app_state, &user_id, partial_user, avatar) {
         Ok(user) => Ok(user),
         Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
     }
