@@ -5,6 +5,8 @@ import {
   HeadingTextVariant,
   TypographyStyleObject,
   TypographyType,
+  ColorVariant,
+  ColorObject,
 } from "@services/styles";
 
 declare module "*.svg" {
@@ -22,6 +24,9 @@ declare module "solid-styled-components" {
       body: {
         [K in BodyTextVariant]: TypographyStyleObject;
       };
+    };
+    colors: {
+      [K in ColorVariant]: ColorObject;
     };
   }
 }

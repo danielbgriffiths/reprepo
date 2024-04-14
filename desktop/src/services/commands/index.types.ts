@@ -14,6 +14,7 @@ export enum Commands {
   // File
   UploadFile = "upload_file",
   DeleteFile = "delete_file",
+  GetFile = "get_file",
 
   // Repository
   GetRepository = "get_repository",

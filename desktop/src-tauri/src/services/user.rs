@@ -68,13 +68,15 @@ pub fn update_user_onboarding_partial(
 ) -> QueryResult<User> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
+    let partial_user_changes = &PartialOnboardingUser {
+        age: partial_user.age,
+        avatar: uploaded_avatar,
+        locale: partial_user.locale,
+        is_onboarded: true,
+    };
+
     diesel::update(user::table.find(user_id))
-        .set(&PartialOnboardingUser {
-            age: partial_user.age,
-            avatar: uploaded_avatar,
-            locale: partial_user.locale,
-            is_onboarded: true,
-        })
+        .set(partial_user_changes)
         .returning(User::as_select())
         .get_result::<User>(db_connection)
 }

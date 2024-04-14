@@ -25,23 +25,25 @@ export default function Onboarding() {
   //
 
   const [crop, setCrop] = createSignal<Cropper.Data | undefined>(undefined);
+  const [isLoading, setIsLoading] = createSignal<boolean>(false);
 
   //
   // Event Handlers
   //
 
   async function onSubmit(values: IOnboardingSchema): Promise<void> {
-    const args = {
+    setIsLoading(true);
+
+    const updatedUser = await userCommands.updateUserOnboarding({
       userChanges: {
         ...values,
         cropper_data: getCropperData(),
       },
       userId: auth.store.user!.id,
-    };
-
-    const updatedUser = await userCommands.updateUserOnboarding(args);
+    });
 
     if (!updatedUser) {
+      setIsLoading(false);
       return toast.register(ToastKey.UpdateUserOnboardingError);
     }
 
@@ -51,6 +53,8 @@ export default function Onboarding() {
       message: `Good job onboarding, ${auth.store.user!.firstName}!`,
       duration: 2000,
     });
+
+    setIsLoading(true);
 
     navigate("/auth/repositories");
   }
@@ -63,13 +67,13 @@ export default function Onboarding() {
     if (!crop()) return;
 
     return {
-      x: crop()!.x,
-      y: crop()!.y,
-      width: crop()!.width,
-      height: crop()!.height,
-      rotate: crop()!.rotate,
-      scale_x: crop()!.scaleX,
-      scale_y: crop()!.scaleY,
+      x: Math.round(crop()!.x),
+      y: Math.round(crop()!.y),
+      width: Math.round(crop()!.width),
+      height: Math.round(crop()!.height),
+      rotate: Math.round(crop()!.rotate),
+      scale_x: Math.round(crop()!.scaleX),
+      scale_y: Math.round(crop()!.scaleY),
     } as unknown as Cropper.Data;
   }
 
@@ -83,6 +87,7 @@ export default function Onboarding() {
           avatar: undefined,
         }}
         setCrop={setCrop}
+        isLoading={isLoading()}
       />
     </PageContainer>
   );

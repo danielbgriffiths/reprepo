@@ -20,7 +20,7 @@ use crate::layout::menu::create_menu;
 use crate::commands::user::{get_users, get_authenticated_user, update_user_onboarding};
 use crate::commands::utilities::get_env;
 use crate::commands::auth::{create_google_oauth, logout};
-use crate::commands::file::{upload_file, delete_file};
+use crate::commands::file::{upload_file, delete_file, get_file};
 use crate::commands::repository::{get_repositories, create_repository, get_repository};
 use crate::commands::record::{get_records, create_record};
 use crate::commands::commit::{get_commits, create_commit};
@@ -64,6 +64,7 @@ fn main() {
                 // File
                 upload_file,
                 delete_file,
+                get_file,
 
                 // Repository
                 get_repositories,

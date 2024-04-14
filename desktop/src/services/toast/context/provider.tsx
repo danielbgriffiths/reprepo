@@ -3,6 +3,7 @@ import Icon from "solid-fa";
 import { faTimes } from "@fortawesome/pro-light-svg-icons";
 import { Toast as KobalteToast, toaster } from "@kobalte/core";
 import { Show } from "solid-js";
+import { styled } from "solid-styled-components";
 
 // Local Imports
 import { ToastContext } from "./create-context";
@@ -14,7 +15,6 @@ import {
 } from "../index.types";
 import { BodyTextVariant, Text } from "@services/styles";
 import { TOAST_MAP } from "@services/toast/index.config";
-import { styled } from "solid-styled-components";
 
 export function ToastProvider(props: ToastProviderProps) {
   //
@@ -26,6 +26,8 @@ export function ToastProvider(props: ToastProviderProps) {
       ...TOAST_MAP[key],
       ...(overrides || {}),
     };
+
+    console.log("nextToast: ", nextToast);
 
     toaster.show((toastProps) => (
       <ToastRoot

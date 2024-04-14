@@ -30,6 +30,7 @@
       "@models/*":  ["./src/models/*"],
       "@views/*":  ["./src/views/*"],
       "@styles/*": ["./src/styles/*"],
+      "@hooks/*": ["./src/hooks/*"]
     }
   },
   "include": ["src"],

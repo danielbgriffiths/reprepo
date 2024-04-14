@@ -1,5 +1,11 @@
 // Third Party Imports
-import { createForm, SubmitEvent, valiForm } from "@modular-forms/solid";
+import {
+  createForm,
+  FieldElement,
+  SubmitEvent,
+  valiForm,
+} from "@modular-forms/solid";
+import { Show, JSX } from "solid-js";
 
 // Local Imports
 import { LOCALE_OPTIONS } from "./config";
@@ -7,16 +13,31 @@ import { IOnboardingSchema, OnboardingSchema } from "./schema";
 import { Select } from "@components/form/components/select";
 import { NumberField } from "@components/form/components/number-field";
 import { FileUpload } from "@components/form/components/file-upload";
-import { ButtonVariant, HeadingTextVariant, Button } from "@services/styles";
+import {
+  BodyTextVariant,
+  Button,
+  ButtonVariant,
+  HeadingTextVariant,
+  Text,
+} from "@services/styles";
 import * as Styled from "./index.styled";
+import { SupportedLocale, useLocale } from "@services/locale";
+import { Loader, LoaderVariant } from "@components/loader";
 
 export interface OnboardingFormProps {
   defaultValues: IOnboardingSchema;
   onSubmit: (values: IOnboardingSchema, event: SubmitEvent) => void;
   setCrop: (data: Cropper.Data | undefined) => void;
+  isLoading: boolean;
 }
 
 export function OnboardingForm(props: OnboardingFormProps) {
+  //
+  // Hooks
+  //
+
+  const locale = useLocale();
+
   //
   // State
   //
@@ -26,6 +47,20 @@ export function OnboardingForm(props: OnboardingFormProps) {
     validateOn: "change",
     revalidateOn: "change",
   });
+
+  //
+  // Event Handlers
+  //
+
+  function onLocaleChangePipe(onChange: JSX.EventHandler<FieldElement, Event>) {
+    return (event: any) => {
+      const target = event.target as HTMLSelectElement;
+      const value = target.value as SupportedLocale | undefined;
+      if (!value) return;
+      locale.setActiveLocale(value);
+      onChange(event);
+    };
+  }
 
   return (
     <Styled.Wrapper>
@@ -47,7 +82,7 @@ export function OnboardingForm(props: OnboardingFormProps) {
               disabled={false}
               ref={fieldElementProps.ref}
               onInput={fieldElementProps.onInput}
-              onChange={fieldElementProps.onChange}
+              onChange={onLocaleChangePipe(fieldElementProps.onChange)}
               onBlur={fieldElementProps.onBlur}
               error={fieldStore.error}
             />
@@ -97,8 +132,18 @@ export function OnboardingForm(props: OnboardingFormProps) {
           )}
         </Field>
         <Styled.FormActions>
-          <Button type="submit" variant={ButtonVariant.Primary}>
-            Complete Onboarding
+          <Button
+            type="submit"
+            variant={ButtonVariant.Primary}
+            disabled={formStore.invalid}
+          >
+            <Show
+              when={props.isLoading || formStore.submitting}
+              fallback={<>Complete Onboarding</>}
+            >
+              <Loader variant={LoaderVariant.MediumButton} />
+              <Text variant={BodyTextVariant.ButtonText}>Processing ...</Text>
+            </Show>
           </Button>
         </Styled.FormActions>
       </Form>

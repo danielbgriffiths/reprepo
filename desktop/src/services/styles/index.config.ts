@@ -2,7 +2,7 @@
 import { DefaultTheme } from "solid-styled-components";
 
 // Local Imports
-import { StyleThemeName } from "@services/styles/index.types";
+import { ColorVariant, StyleThemeName } from "@services/styles/index.types";
 import {
   BodyTextVariant,
   HeadingTextVariant,
@@ -11,33 +11,33 @@ import {
 
 export const DEFAULT_THEME: DefaultTheme = {
   colors: {
-    primary: {
+    [ColorVariant.Primary]: {
       main: "#5a7c65",
       focus: "#48604f",
       content: "#ffffff",
     },
-    secondary: {
+    [ColorVariant.Secondary]: {
       main: "#ecf4e7",
       focus: "#cde2c1",
       content: "#24321a",
     },
-    accent: {
+    [ColorVariant.Accent]: {
       main: "#f9e1e1",
       focus: "#f4bebe",
       content: "#322020",
     },
-    neutral: {
+    [ColorVariant.Neutral]: {
       main: "#5c5757",
       focus: "#272525",
       content: "#e9e7e7",
     },
-    base: {
+    [ColorVariant.Base]: {
       a: "#e9e7e7",
       b: "#d1cccc",
       c: "#b9b1b1",
       d: "#b9b1b1",
     },
-    state: {
+    [ColorVariant.State]: {
       info: "#1c92f2",
       success: "#009485",
       warning: "#ff9900",
@@ -147,9 +147,6 @@ export const THEMES_MAP: Record<StyleThemeName, DefaultTheme> = {
   [StyleThemeName.Light]: DEFAULT_THEME,
   [StyleThemeName.Dark]: {
     ...DEFAULT_THEME,
-    colors: {
-      primary: "black",
-    },
   },
 };
 

@@ -3,7 +3,7 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 import { invoke } from "@tauri-apps/api";
 
 // Local Imports
-import { Commands } from "@services/commands/index.types.ts";
+import { Commands } from "@services/commands/index.types";
 
 export async function deleteFile(
   args: InvokeArgs,
@@ -32,6 +32,20 @@ export async function uploadFile(
     return result;
   } catch (e) {
     console.error("file.commands: uploadFile: ", e);
+
+    return undefined;
+  }
+}
+
+export async function getFile(args: InvokeArgs): Promise<string | undefined> {
+  try {
+    const result = await invoke<string>(Commands.GetFile, args);
+
+    console.info("file.commands: getFile: ", result);
+
+    return result;
+  } catch (e) {
+    console.error("file.commands: getFile: ", e);
 
     return undefined;
   }

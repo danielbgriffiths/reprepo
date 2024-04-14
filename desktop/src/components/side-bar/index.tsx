@@ -11,6 +11,7 @@ import { useStronghold } from "@services/stronghold";
 import { ToastKey, useToast } from "@services/toast";
 import { navItems } from "./index.config";
 import { BodyTextVariant, Text } from "@services/styles";
+import { createAwsFileFetcher } from "@hooks/create-aws-file-fetcher";
 
 export interface SideBarProps {}
 
@@ -22,6 +23,12 @@ export function SideBar(_props: SideBarProps) {
   const auth = useAuth();
   const stronghold = useStronghold();
   const toast = useToast();
+
+  //
+  // state
+  //
+
+  const [avatar] = createAwsFileFetcher(auth.store.user?.avatar);
 
   //
   // Event Handlers
@@ -75,7 +82,7 @@ export function SideBar(_props: SideBarProps) {
           <DropdownMenuTrigger>
             <AvatarRoot fallbackDelay={600}>
               <AvatarImage
-                src={auth.store.user?.avatar}
+                src={avatar()}
                 alt={`${auth.store.user?.firstName} settings menu`}
               />
               <AvatarFallback>NS</AvatarFallback>

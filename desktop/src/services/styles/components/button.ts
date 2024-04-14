@@ -34,4 +34,10 @@ export const Button = styled(KobalteButton.Root)<ButtonProps>`
     background-color: transparent;
     color: inherit;
   }
+
+  &:disabled {
+    cursor: not-allowed;
+    border: solid 1px grey;
+    background-color: transparent;
+  }
 `;
