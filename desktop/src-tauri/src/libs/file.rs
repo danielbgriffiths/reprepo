@@ -6,10 +6,10 @@ use std::num::NonZeroU32;
 use rusoto_core::{HttpClient, Region};
 use rusoto_credential::{DefaultCredentialsProvider};
 use rusoto_s3::{PutObjectRequest, S3Client, S3, DeleteObjectRequest, StreamingBody, GetObjectRequest};
+use tokio::io::AsyncReadExt;
 use serde::{Deserialize, Serialize};
 use fast_image_resize;
 use image;
-use std::io::Read;
 
 // Local Usages
 use crate::libs::error::LocalError;
@@ -95,7 +95,7 @@ pub async fn delete_file_from_s3(file_name: String) -> Result<bool, LocalError> 
     Ok(true)
 }
 
-pub async fn get_file_from_s3(file_path: String) -> Result<String, LocalError> {
+pub async fn get_file_from_s3(file_path: String) -> Result<Vec<u8>, LocalError> {
     let aws_s3_bucket = env::var("AWS_S3_BUCKET")
         .expect("Missing the AWS_S3_BUCKET environment variable.");
     let aws_s3_region = env::var("AWS_S3_REGION")
@@ -114,44 +114,28 @@ pub async fn get_file_from_s3(file_path: String) -> Result<String, LocalError> {
 
     let get_object_request = GetObjectRequest {
         bucket: aws_s3_bucket,
-        expected_bucket_owner: None,
-        if_match: None,
-        if_modified_since: None,
-        if_none_match: None,
-        if_unmodified_since: None,
         key: file_path.clone(),
-        part_number: None,
-        range: None,
-        request_payer: None,
-        response_cache_control: None,
-        response_content_disposition: None,
-        response_content_encoding: None,
-        response_content_language: None,
-        response_content_type: None,
-        response_expires: None,
-        sse_customer_algorithm: None,
-        sse_customer_key: None,
-        sse_customer_key_md5: None,
-        version_id: None,
+        ..Default::default()
     };
 
-    let retrieved_file = s3_client
+    let result = s3_client
         .get_object(get_object_request)
         .await
         .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
-    let mut image_data = Vec::<u8>::new();
+    let mut image_data = Vec::new();
 
-    if let Some(file_body) = retrieved_file.body {
-        file_body
-            .into_blocking_read()
+    if let Some(file_stream) = result.body {
+        file_stream
+            .into_async_read()
             .read_to_end(&mut image_data)
+            .await
             .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
 
-        return Ok(general_purpose::STANDARD.encode(image_data))
+        return Ok(image_data)
     }
 
-    Err(LocalError::ExternalError { message: format!("Unable to find file {}", file_path) })
+    return Err(LocalError::ExternalError { message: format!("Unable to find file {}", file_path) })
 }
 
 pub fn resize_image(base64_data: String, cropper_data: CropperData) -> Result<String, LocalError> {

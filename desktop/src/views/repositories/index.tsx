@@ -37,13 +37,13 @@ export default function Repositories() {
   }
 
   return (
-    <Styled.Container>
+    <Container hasRepos={!!repositories().length}>
       <For
         each={repositories() || []}
         fallback={
-          <Styled.FirstRepositoryButton onClick={onClickCreateRepository}>
+          <FirstRepositoryButton onClick={onClickCreateRepository}>
             <Icon icon={faPlus} />
-          </Styled.FirstRepositoryButton>
+          </FirstRepositoryButton>
         }
       >
         {(item) => (
@@ -53,11 +53,32 @@ export default function Repositories() {
           </div>
         )}
       </For>
-    </Styled.Container>
+    </Container>
   );
 }
 
-const Styled = {
-  Container: styled.div``,
-  FirstRepositoryButton: styled.button``,
-};
+const Container = styled("div")<{ hasRepos: boolean }>(({ hasRepos }) => {
+  if (hasRepos) {
+    return `
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    `;
+  }
+
+  return {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+  };
+});
+
+const FirstRepositoryButton = styled.button`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+`;

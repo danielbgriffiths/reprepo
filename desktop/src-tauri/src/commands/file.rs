@@ -19,7 +19,7 @@ pub async fn delete_file(uri: String) -> Result<bool, LocalError> {
 }
 
 #[tauri::command]
-pub async fn get_file(file_path: String) -> Result<String, LocalError> {
+pub async fn get_file(file_path: String) -> Result<Vec<u8>, LocalError> {
     match get_file_from_s3(file_path).await {
         Ok(res) => Ok(res),
         Err(e) => Err(e)

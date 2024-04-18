@@ -11,7 +11,7 @@ import { useStronghold } from "@services/stronghold";
 import { ToastKey, useToast } from "@services/toast";
 import { navItems } from "./index.config";
 import { BodyTextVariant, Text } from "@services/styles";
-import { createAwsFileFetcher } from "@hooks/create-aws-file-fetcher";
+import { S3Image } from "@components/image/s3-image";
 
 export interface SideBarProps {}
 
@@ -23,12 +23,6 @@ export function SideBar(_props: SideBarProps) {
   const auth = useAuth();
   const stronghold = useStronghold();
   const toast = useToast();
-
-  //
-  // state
-  //
-
-  const [avatar] = createAwsFileFetcher(auth.store.user?.avatar);
 
   //
   // Event Handlers
@@ -80,13 +74,17 @@ export function SideBar(_props: SideBarProps) {
       <SideBarBottomSection>
         <DropdownMenu.Root>
           <DropdownMenuTrigger>
-            <AvatarRoot fallbackDelay={600}>
-              <AvatarImage
-                src={avatar()}
-                alt={`${auth.store.user?.firstName} settings menu`}
-              />
-              <AvatarFallback>NS</AvatarFallback>
-            </AvatarRoot>
+            <S3Image filePath={auth.store.user?.avatar}>
+              {(s3) => (
+                <AvatarRoot fallbackDelay={600}>
+                  <AvatarImg
+                    src={s3.file()}
+                    alt={`${auth.store.user?.firstName} settings menu`}
+                  />
+                  <AvatarFallback>NS</AvatarFallback>
+                </AvatarRoot>
+              )}
+            </S3Image>
             <Text variant={BodyTextVariant.OverlineText}>
               {auth.store.user?.firstName}
             </Text>
@@ -112,10 +110,12 @@ const SideBarWrapper = styled.div`
   justify-content: space-between;
   align-items: flex-start;
 `;
+
 const SideBarTopSection = styled.div`
   margin-bottom: 2rem;
   width: 100%;
 `;
+
 const LogoRoot = styled(Image.Root)`
   height: 50px;
   width: 100%;
@@ -124,11 +124,13 @@ const LogoRoot = styled(Image.Root)`
   align-items: center;
   padding: 0.2rem;
 `;
+
 const LogoImg = styled(Image.Img)`
   object-fit: contain;
   width: 100%;
   height: 100%;
 `;
+
 const LogoFallback = styled(Image.Fallback)`
   width: 40px;
   height: 40px;
@@ -138,14 +140,17 @@ const LogoFallback = styled(Image.Fallback)`
   align-items: center;
   border-radius: 50%;
 `;
+
 const SideBarMiddleSection = styled.nav`
   margin-bottom: 2rem;
 `;
+
 const SideBarMenu = styled.ul`
   padding: 0;
   margin: 0;
   list-style: none;
 `;
+
 const SideMenuAnchorLink = styled.a`
   display: flex;
   align-items: center;
@@ -157,13 +162,16 @@ const SideMenuAnchorLink = styled.a`
     background-color: #f0f0f0;
   }
 `;
+
 const SideMenuAnchorText = styled(Text)`
   color: inherit;
 `;
+
 const SideMenuIcon = styled(Icon)`
   font-size: 1.25rem;
   margin-right: 1rem;
 `;
+
 const SideBarBottomSection = styled.div`
   width: 100%;
   display: flex;
@@ -171,6 +179,7 @@ const SideBarBottomSection = styled.div`
   align-items: center;
   padding: 1rem 0;
 `;
+
 const DropdownMenuTrigger = styled(DropdownMenu.Trigger)`
   cursor: pointer;
   border: none;
@@ -179,6 +188,7 @@ const DropdownMenuTrigger = styled(DropdownMenu.Trigger)`
   justify-content: flex-start;
   align-items: center;
 `;
+
 const AvatarRoot = styled(Image.Root)`
   height: 40px;
   width: 40px;
@@ -187,12 +197,14 @@ const AvatarRoot = styled(Image.Root)`
   align-items: center;
   margin-right: 1rem;
 `;
-const AvatarImage = styled(Image.Img)`
+
+const AvatarImg = styled(Image.Img)`
   object-fit: contain;
   width: 100%;
   height: 100%;
   border-radius: 50%;
 `;
+
 const AvatarFallback = styled(Image.Fallback)`
   width: 40px;
   height: 40px;

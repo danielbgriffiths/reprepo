@@ -16,23 +16,31 @@ export function createAwsFileFetcher(filePath?: string) {
   //
 
   onMount(async () => {
-    if (!filePath) return;
-    const s3AvatarUrl = await fileCommands.getFile({ filePath });
-    setS3File(s3AvatarUrl);
+    await getFile(filePath);
   });
 
   createEffect(
     on(
       () => filePath,
       async (nextFilePath) => {
-        if (!nextFilePath) return;
-        const s3AvatarUrl = await fileCommands.getFile({
-          filePath: nextFilePath,
-        });
-        setS3File(s3AvatarUrl);
+        await getFile(nextFilePath);
       },
     ),
   );
+
+  //
+  // Functions
+  //
+
+  async function getFile(targetFilePath?: string): Promise<void> {
+    console.log("targetFilePath", targetFilePath);
+    if (!filePath) return;
+    const s3AvatarUrl = await fileCommands.getFile({
+      filePath: targetFilePath,
+    });
+    console.log("s3AvatarUrl", s3AvatarUrl);
+    setS3File(s3AvatarUrl);
+  }
 
   return [s3File];
 }

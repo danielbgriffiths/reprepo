@@ -37,11 +37,11 @@ export async function uploadFile(
   }
 }
 
-export async function getFile(args: InvokeArgs): Promise<string | undefined> {
+export async function getFile(args: InvokeArgs): Promise<number[] | undefined> {
   try {
-    const result = await invoke<string>(Commands.GetFile, args);
+    const result = await invoke<number[]>(Commands.GetFile, args);
 
-    console.info("file.commands: getFile: ", result);
+    console.info("file.commands: getFile: ", result.length);
 
     return result;
   } catch (e) {

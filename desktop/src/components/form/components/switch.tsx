@@ -1,8 +1,8 @@
 // Third Party Imports
-import { Checkbox as KobalteSwitch } from "@kobalte/core";
+import { Switch as KobalteSwitch } from "@kobalte/core";
 import { type JSX, splitProps } from "solid-js";
-import { faCheck } from "@fortawesome/pro-light-svg-icons";
-import Icon from "solid-fa";
+import { styled } from "solid-styled-components";
+import { BodyTextVariant, Text } from "@services/styles";
 
 type SwitchProps = {
   name: string;
@@ -25,17 +25,46 @@ export function Switch(props: SwitchProps) {
     ["ref", "onInput", "onChange", "onBlur"],
   );
   return (
-    <KobalteSwitch.Root
-      {...rootProps}
-      validationState={props.error ? "invalid" : "valid"}
-    >
+    <Root {...rootProps} validationState={props.error ? "invalid" : "valid"}>
       <KobalteSwitch.Input {...inputProps} />
-      <KobalteSwitch.Control>
-        <KobalteSwitch.Indicator>
-          <Icon icon={faCheck} />
-        </KobalteSwitch.Indicator>
-      </KobalteSwitch.Control>
-      <KobalteSwitch.Label>{props.label}</KobalteSwitch.Label>
-    </KobalteSwitch.Root>
+      <Label>
+        <Text variant={BodyTextVariant.CaptionText}>{props.label}</Text>
+      </Label>
+      <Control>
+        <Thumb />
+      </Control>
+      <KobalteSwitch.ErrorMessage>{props.error}</KobalteSwitch.ErrorMessage>
+    </Root>
   );
 }
+
+const Root = styled(KobalteSwitch.Root)`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 1rem;
+`;
+
+const Label = styled(KobalteSwitch.Label)`
+  margin-right: 1rem;
+`;
+
+const Thumb = styled(KobalteSwitch.Thumb)`
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  background-color: #d4d4d8;
+  transition: 0.25s transform;
+`;
+
+const Control = styled(KobalteSwitch.Control)`
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  width: 44px;
+  border: 1px solid hsl(240 5% 84%);
+  border-radius: 12px;
+  padding: 0 2px;
+  background-color: #e4e4e7;
+  transition: 0.25s background-color;
+`;

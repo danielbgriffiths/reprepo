@@ -1,15 +1,26 @@
+// Third Party Imports
 import * as v from "valibot";
+
+// Local Imports
+import {
+  FIELD_OPTIONS,
+  SPECIALIZATION_OPTIONS,
+} from "@views/create-repository/create-repository-form/config.ts";
 
 export const CreateRepositorySchema = v.object({
   field: v.string([
-    v.minLength(1, "Please enter your email."),
-    v.email("The email address is badly formatted."),
+    v.custom((input) => {
+      return FIELD_OPTIONS.map((f) => f.value).includes(input);
+    }, "Not a supported field."),
   ]),
   specialization: v.string([
-    v.minLength(1, "Please enter your password."),
-    v.minLength(8, "You password must have 8 characters or more."),
+    v.custom((input) => {
+      return SPECIALIZATION_OPTIONS.get("music")
+        .map((f: any) => f.value)
+        .includes(input);
+    }, "Not a supported specialization for the selected field."),
   ]),
-  isPrivate: v.boolean(),
+  isPrivate: v.optional(v.boolean()),
 });
 
 export type ICreateRepositorySchema = v.Input<typeof CreateRepositorySchema>;

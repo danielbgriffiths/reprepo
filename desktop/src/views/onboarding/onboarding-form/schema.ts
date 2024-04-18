@@ -8,7 +8,6 @@ import { SupportedLocale } from "@services/locale";
 export const OnboardingSchema = v.object({
   locale: v.string([
     v.custom((input) => {
-      console.log("valibot input: ", input);
       return LOCALE_KEYS.includes(input as SupportedLocale);
     }, "Not a supported locale."),
   ]),

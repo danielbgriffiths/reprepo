@@ -25,7 +25,9 @@ export default function CreateRepository() {
     values: ICreateRepositorySchema,
     _event: SubmitEvent,
   ): Promise<void> {
-    const repository = await repositoryCommands.createRepository(values);
+    const repository = await repositoryCommands.createRepository({
+      newRepository: values,
+    });
 
     if (!repository) {
       return toast.register(ToastKey.CreateRepositoryError, {
@@ -41,12 +43,18 @@ export default function CreateRepository() {
   }
 
   return (
-    <Styled.Container>
+    <Container>
       <CreateRepositoryForm onSubmit={onSubmit} />
-    </Styled.Container>
+    </Container>
   );
 }
 
-export const Styled = {
-  Container: styled.div``,
-};
+const Container = styled.div`
+  margin: 0 auto;
+  max-width: 640px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;

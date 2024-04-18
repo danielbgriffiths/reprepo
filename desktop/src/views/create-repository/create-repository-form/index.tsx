@@ -5,19 +5,15 @@ import {
   SubmitEvent,
   valiForm,
 } from "@modular-forms/solid";
-import { styled } from "solid-styled-components";
+import { styled, css } from "solid-styled-components";
 
 // Local Imports
 import { FIELD_OPTIONS, SPECIALIZATION_OPTIONS } from "./config";
 import { CreateRepositorySchema, ICreateRepositorySchema } from "./schema";
 import { Select } from "@components/form/components/select";
 import { Switch } from "@components/form/components/switch";
-import {
-  Button,
-  ButtonVariant,
-  HeadingTextVariant,
-  Title,
-} from "@services/styles";
+import { Button, ButtonVariant } from "@services/styles";
+import { FormTitle } from "@components/form/components/form-title.tsx";
 
 export interface CreateRepositoryFormProps {
   onSubmit: (values: ICreateRepositorySchema, event: SubmitEvent) => void;
@@ -34,8 +30,8 @@ export function CreateRepositoryForm(props: CreateRepositoryFormProps) {
     });
 
   return (
-    <Form onSubmit={props.onSubmit}>
-      <Title variant={HeadingTextVariant.SubTitle}>Create Repository</Title>
+    <Form onSubmit={props.onSubmit} class={FORM_CSS}>
+      <FormTitle>Create Repository</FormTitle>
       <Field name="field" type="string">
         {(fieldStore, fieldElementProps) => (
           <Select
@@ -100,5 +96,9 @@ export function CreateRepositoryForm(props: CreateRepositoryFormProps) {
     </Form>
   );
 }
+
+const FORM_CSS = css`
+  width: 100%;
+`;
 
 const FormActions = styled.div``;
