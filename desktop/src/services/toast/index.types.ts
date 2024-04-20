@@ -2,7 +2,10 @@
 import { JSXElement } from "solid-js";
 
 export type ToastBindings = {
-  register: (key: ToastKey, overrides?: Partial<Toast>) => void;
+  register: (key: ToastKey, overrides?: Partial<Toast>) => ExistingToast;
+  updateError: (existingToast: ExistingToast, error: string) => void;
+  updateProgress: (existingToast: ExistingToast, percentage: number) => void;
+  close: (id: number) => void;
 };
 
 export interface ToastProviderProps {
@@ -18,6 +21,10 @@ export interface Toast {
   isRemovableByClick: boolean;
 }
 
+export interface ExistingToast extends Toast {
+  id: number;
+}
+
 export enum ToastKey {
   Logout,
   LogoutError,
@@ -31,4 +38,5 @@ export enum ToastKey {
   AuthSignatureError,
   UpdateUserOnboardingError,
   UpdateUserOnboardingSuccess,
+  ResizeAvatar,
 }

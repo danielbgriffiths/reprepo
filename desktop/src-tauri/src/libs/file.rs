@@ -10,19 +10,20 @@ use tokio::io::AsyncReadExt;
 use serde::{Deserialize, Serialize};
 use fast_image_resize;
 use image;
+use tauri::Window;
 
 // Local Usages
 use crate::libs::error::LocalError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CropperData {
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
-    rotate: u32,
-    scale_x: u32,
-    scale_y: u32,
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub rotate: u32,
+    pub scale_x: u32,
+    pub scale_y: u32,
 }
 
 fn get_bytes_from_base64(base64_data: String) -> Result<StreamingBody, LocalError> {
@@ -138,7 +139,7 @@ pub async fn get_file_from_s3(file_path: String) -> Result<Vec<u8>, LocalError> 
     return Err(LocalError::ExternalError { message: format!("Unable to find file {}", file_path) })
 }
 
-pub fn resize_image(base64_data: String, cropper_data: CropperData) -> Result<String, LocalError> {
+pub fn resize_image(base64_data: String, cropper_data: CropperData, window: Window, event_key: String) -> Result<Vec<u8>, LocalError> {
     let image_data = general_purpose::STANDARD
         .decode(
             base64_data
@@ -148,8 +149,12 @@ pub fn resize_image(base64_data: String, cropper_data: CropperData) -> Result<St
         )
         .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
+    window.emit(&event_key, "{state: 'in-progress', percentage: 90}").unwrap();
+
     let image = image::load_from_memory(&image_data)
         .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
+
+    window.emit(&event_key, "{state: 'in-progress', percentage: 80}").unwrap();
 
     let src_image = fast_image_resize::Image::from_vec_u8(
         NonZeroU32::new(image.width()).unwrap(),
@@ -160,6 +165,8 @@ pub fn resize_image(base64_data: String, cropper_data: CropperData) -> Result<St
 
     let src_image_view = src_image.view();
 
+    window.emit(&event_key, "{state: 'in-progress', percentage: 70}").unwrap();
+
     let mut dst_image = fast_image_resize::Image::new(
         NonZeroU32::try_from(cropper_data.width).unwrap(),
         NonZeroU32::try_from(cropper_data.height).unwrap(),
@@ -168,10 +175,14 @@ pub fn resize_image(base64_data: String, cropper_data: CropperData) -> Result<St
 
     let mut dst_image_view = dst_image.view_mut();
 
+    window.emit(&event_key, "{state: 'in-progress', percentage: 60}").unwrap();
+
     let mut resizer = fast_image_resize::Resizer::new(
         fast_image_resize::ResizeAlg::Convolution(fast_image_resize::FilterType::CatmullRom),
     );
     resizer.resize(&src_image_view, &mut dst_image_view).unwrap();
+
+    window.emit(&event_key, "{state: 'in-progress', percentage: 30}").unwrap();
 
     let final_image = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(
         cropper_data.width,
@@ -179,9 +190,14 @@ pub fn resize_image(base64_data: String, cropper_data: CropperData) -> Result<St
         dst_image.buffer().to_vec(),
     ).ok_or(LocalError::ProcessError { message: "Error converting image to buffer".to_string() })?;
 
+    window.emit(&event_key, "{state: 'in-progress', percentage: 20}").unwrap();
+
     let mut buffer = Cursor::new(Vec::new());
+
     image::DynamicImage::ImageRgba8(final_image).write_to(&mut buffer, image::ImageFormat::Png)
         .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
 
-    Ok(general_purpose::STANDARD.encode(buffer.into_inner()))
+    window.emit(&event_key, "{state: 'in-progress', percentage: 10}").unwrap();
+
+    Ok(buffer.into_inner())
 }

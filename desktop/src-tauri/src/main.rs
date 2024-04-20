@@ -17,7 +17,7 @@ use std::error::Error;
 
 // Local Usages
 use crate::layout::menu::create_menu;
-use crate::commands::user::{get_users, get_authenticated_user, update_user_onboarding};
+use crate::commands::user::{get_users, get_authenticated_user, update_user_onboarding, async_proc_avatar_resize};
 use crate::commands::utilities::get_env;
 use crate::commands::auth::{create_google_oauth, logout};
 use crate::commands::file::{upload_file, delete_file, get_file};
@@ -53,6 +53,7 @@ fn main() {
                 get_users,
                 get_authenticated_user,
                 update_user_onboarding,
+                async_proc_avatar_resize,
 
                 // Auth
                 create_google_oauth,

@@ -35,7 +35,8 @@ export function SideBar(_props: SideBarProps) {
     });
 
     if (!isLogoutSuccessful) {
-      return toast.register(ToastKey.LogoutError);
+      toast.register(ToastKey.LogoutError);
+      return;
     }
 
     auth.setAuth(undefined);

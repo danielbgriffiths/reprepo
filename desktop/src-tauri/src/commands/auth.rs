@@ -5,8 +5,6 @@ use oauth2::{AccessToken, AuthUrl, Client, ClientId, ClientSecret, RedirectUrl, 
 use oauth2::{TokenResponse};
 use oauth2::{AuthorizationCode, CsrfToken, PkceCodeChallenge, Scope};
 use url::Url;
-use std::io::{BufRead, BufReader, Write};
-use std::net::TcpListener;
 use oauth2::basic::{BasicClient, BasicErrorResponse, BasicRevocationErrorResponse, BasicTokenIntrospectionResponse, BasicTokenResponse, BasicTokenType};
 use std::env;
 use diesel::result::Error;
@@ -14,10 +12,13 @@ use diesel::{Connection};
 use tauri::State;
 use jsonwebtoken::{encode, Header, EncodingKey};
 use webbrowser;
-use crate::libs;
+use tokio::net::TcpListener;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
 
 // Local Usages
 use crate::state::AppState;
+use crate::libs;
 use crate::libs::error::LocalError;
 use crate::models::auth::{GoogleOAuthUserTokenBody, AuthedSignatureClaims, OauthProvider, AllAuthFields, CreateAuth};
 use crate::models::auth_account::{CreateAuthAccount, PartialCreateAuthAccount};
@@ -67,42 +68,58 @@ fn get_google_oauth_client() -> Client<
         .set_revocation_uri(google_token_revoke_url)
 }
 
-fn create_oauth_redirect_listener() -> (AuthorizationCode, CsrfToken) {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+async fn create_oauth_redirect_listener() -> Result<(AuthorizationCode, CsrfToken), LocalError> {
+    let listener = TcpListener::bind("127.0.0.1:8080")
+        .await
+        .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
 
-    let Some(mut stream) = listener.incoming().flatten().next() else {
-        panic!("listener terminated without accepting a connection");
-    };
+    let (mut stream, _) = listener
+        .accept()
+        .await
+        .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
 
-    let mut reader = BufReader::new(&stream);
+    let reader = BufReader::new(&mut stream);
+    let mut lines = reader.lines();
 
-    let mut request_line = String::new();
-    reader.read_line(&mut request_line).unwrap();
+    let request_line = lines
+        .next_line()
+        .await
+        .map_err(|e| LocalError::ProcessError { message: e.to_string() })?
+        .ok_or_else(|| LocalError::ProcessError { message: "No request line received".to_string() })?;
 
-    let redirect_url = request_line.split_whitespace().nth(1).unwrap();
-    let url = Url::parse(&("http://localhost".to_string() + redirect_url)).unwrap();
+    let redirect_url = request_line
+        .split_whitespace()
+        .nth(1)
+        .ok_or_else(|| LocalError::ProcessError { message: "No redirect URL received".to_string() })?;
+
+    let url = Url::parse(&("http://localhost".to_string() + redirect_url))
+        .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
 
     let code = url
         .query_pairs()
         .find(|(key, _)| key == "code")
         .map(|(_, code)| AuthorizationCode::new(code.into_owned()))
-        .unwrap();
+        .ok_or_else(|| LocalError::ProcessError { message: "Code not found in URL".to_string() })?;
 
     let state = url
         .query_pairs()
         .find(|(key, _)| key == "state")
         .map(|(_, state)| CsrfToken::new(state.into_owned()))
-        .unwrap();
+        .ok_or_else(|| LocalError::ProcessError { message: "State not found in URL".to_string() })?;
 
-    let message = "Go back to your terminal :)";
+    let message = "Go back to your application.";
+
     let response = format!(
-        "HTTP/1.1 200 OK\r\ncontent-length: {}\r\n\r\n{}",
+        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
         message.len(),
         message
     );
-    stream.write_all(response.as_bytes()).unwrap();
 
-    (code, state)
+    stream
+        .write_all(response.as_bytes())
+        .await.map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
+
+    Ok((code, state))
 }
 
 fn create_or_find_account_auth_user_records(
@@ -135,7 +152,7 @@ fn create_or_find_account_auth_user_records(
 }
 
 #[tauri::command]
-pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> Result::<(String, i32), LocalError> {
+pub async fn create_google_oauth(app_state: State<'_, AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> Result::<(String, i32), LocalError> {
     let google_oauth_client = get_google_oauth_client();
 
     let (pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -157,7 +174,7 @@ pub fn create_google_oauth(app_state: State<AppState>, existing_account_id: Opti
         return Err(LocalError::ProcessError { message: "Unable to open web browser".to_string() })
     }
 
-    let (code, _csrf_state) = create_oauth_redirect_listener();
+    let (code, _csrf_state) = create_oauth_redirect_listener().await?;
 
     let basic_token_response = google_oauth_client
         .exchange_code(code.clone())

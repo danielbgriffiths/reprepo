@@ -30,9 +30,10 @@ export default function CreateRepository() {
     });
 
     if (!repository) {
-      return toast.register(ToastKey.CreateRepositoryError, {
+      toast.register(ToastKey.CreateRepositoryError, {
         message: `Error creating repository for ${auth.store.user!.firstName}`,
       });
+      return;
     }
 
     toast.register(ToastKey.CreateRepositorySuccess, {

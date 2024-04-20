@@ -1,5 +1,7 @@
 // Third Party Imports
 import { createStore } from "solid-js/store";
+import { createEffect, on, onMount } from "solid-js";
+import { Event, listen } from "@tauri-apps/api/event";
 
 // Local Imports
 import { AuthContext } from "./create-context";
@@ -8,7 +10,9 @@ import { AuthenticatedUser, User } from "@/models";
 import { authCommands, userCommands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useStronghold } from "@services/stronghold";
-import { useToast, ToastKey } from "@services/toast";
+import { ToastKey, useToast } from "@services/toast";
+import { Events, EventState, ResizeAvatarResponse } from "@services/events";
+import { ExistingToast } from "@services/toast/index.types.ts";
 
 export function AuthProvider(props: AuthProviderProps) {
   //
@@ -30,6 +34,56 @@ export function AuthProvider(props: AuthProviderProps) {
     localAccountId: undefined,
     activeRepositoryId: undefined,
   });
+
+  //
+  // Lifecycle
+  //
+
+  onMount(async () => {
+    const stopListen = await listen(
+      Events.ResizeAvatar,
+      async (event: Event<ResizeAvatarResponse>) => {
+        let existingToast!: ExistingToast;
+
+        switch (event.payload.state) {
+          case EventState.Started:
+            existingToast = toasts.register(ToastKey.ResizeAvatar);
+            break;
+          case EventState.InProgress:
+            if (!existingToast) return;
+            toasts.updateProgress(existingToast, event.payload.percentage);
+            break;
+          case EventState.Completed:
+            if (!existingToast) return;
+            toasts.close(existingToast.id);
+            break;
+          case EventState.Failed:
+            if (!existingToast) return;
+            toasts.updateError(existingToast, event.payload.error);
+            break;
+          default:
+            break;
+        }
+      },
+    );
+
+    return () => stopListen();
+  });
+
+  createEffect(
+    on(
+      () => authStore.user?.avatar,
+      async (nextAvatar: string | undefined) => {
+        if (!nextAvatar) return;
+
+        await userCommands.asyncProcAvatarResize({
+          filePath: nextAvatar,
+          userId: authStore.user!.id,
+          eventKey: Events.ResizeAvatar,
+        });
+      },
+    ),
+  );
 
   //
   // Functions
@@ -102,7 +156,8 @@ export function AuthProvider(props: AuthProviderProps) {
     });
 
     if (!authedSignature) {
-      return toasts.register(ToastKey.AuthSignatureError);
+      toasts.register(ToastKey.AuthSignatureError);
+      return;
     }
 
     await storeLocalAccountId(authedSignature[1]);
@@ -116,7 +171,8 @@ export function AuthProvider(props: AuthProviderProps) {
 
     if (!authenticatedUser) {
       await removeAuthedSignature();
-      return toasts.register(ToastKey.AuthenticatedUserError);
+      toasts.register(ToastKey.AuthenticatedUserError);
+      return;
     }
 
     setAuth(authenticatedUser);
@@ -140,7 +196,8 @@ export function AuthProvider(props: AuthProviderProps) {
 
     if (!authenticatedUser) {
       await removeAuthedSignature();
-      return toasts.register(ToastKey.AuthenticatedUserError);
+      toasts.register(ToastKey.AuthenticatedUserError);
+      return;
     }
 
     setAuth(authenticatedUser);

@@ -44,7 +44,8 @@ export default function Onboarding() {
 
     if (!updatedUser) {
       setIsLoading(false);
-      return toast.register(ToastKey.UpdateUserOnboardingError);
+      toast.register(ToastKey.UpdateUserOnboardingError);
+      return;
     }
 
     auth.updateUser(updatedUser);

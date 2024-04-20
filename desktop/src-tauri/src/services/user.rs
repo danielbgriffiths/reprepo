@@ -1,12 +1,16 @@
 // External Usages
 use diesel::QueryResult;
-use tauri::State;
+use tauri::{State, Window};
 use diesel::prelude::*;
 use diesel;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
+use base64::{Engine as _, engine::{general_purpose}};
+use chrono::Utc;
 
 // Local Usages
-use crate::models::user::{AuthenticatedUser, CreateUser, PartialOnboardingUser, User};
+use crate::libs::error::LocalError;
+use crate::libs::file::{CropperData, get_file_from_s3, resize_image, upload_file_to_s3};
+use crate::models::user::{AuthenticatedUser, CreateUser, PartialOnboardingUser, User, AvatarChanges};
 use crate::state::AppState;
 use crate::schema::user;
 use crate::schema::auth_account;
@@ -88,4 +92,112 @@ pub fn select_user(app_state: &State<AppState>, user_id: &i32) -> QueryResult<Us
         .find(&user_id)
         .select(User::as_select())
         .get_result::<User>(db_connection)
+}
+
+pub async fn async_proc_fetch_resize_upload_update(
+    app_state: &State<'_, AppState>,
+    window: &Window,
+    user_id: i32,
+    file_path: String,
+    event_key: Box<str>,
+    cropper_data: CropperData
+) -> Result<String, LocalError> {
+    let db_connection = &mut app_state.pool.get().unwrap();
+
+    //
+    // Get User
+    //
+
+    let user_result = select_user(app_state, &user_id);
+
+    if let Err(e) = user_result {
+        return Err(LocalError::DatabaseError { message: e.to_string() })
+    }
+
+    let user = user_result.unwrap();
+
+    //
+    // Get File
+    //
+
+    let bytes_result = get_file_from_s3(file_path.clone())
+        .await;
+
+    if let Err(e) = bytes_result {
+        return Err(LocalError::ExternalError { message: e.to_string() })
+    }
+
+    let bytes = bytes_result.unwrap();
+
+    window.emit(&event_key, "{state: 'started'}").unwrap();
+
+    //
+    // Resize Image
+    //
+
+    let resized_bytes_result = resize_image(
+        general_purpose::STANDARD.encode(bytes),
+        cropper_data,
+        window.clone(),
+        event_key.clone().into()
+    );
+
+    if let Err(e) = resized_bytes_result {
+        window.emit(&event_key, "{state: 'failed', error: e.to_string()}").unwrap();
+        return Err(e)
+    }
+
+    let resized_bytes = resized_bytes_result.unwrap();
+
+    window.emit(&event_key, "{state: 'in-progress', percentage: 5}").unwrap();
+
+    //
+    // Upload Resized Image
+    //
+
+    let resized_file_path_result = upload_file_to_s3(
+        general_purpose::STANDARD.encode(resized_bytes),
+        format!(
+            "{}_{}-avatar-{}.png",
+            user.first_name,
+            user.last_name,
+            Utc::now().timestamp(),
+        )
+    )
+        .await;
+
+    if let Err(e) = resized_file_path_result {
+        window.emit(&event_key, "{state: 'failed', error: e.to_string()}").unwrap();
+        return Err(e)
+    }
+
+    let resized_file_path = resized_file_path_result.unwrap();
+
+    window.emit(&event_key, "{state: 'in-progress', percentage: 1}").unwrap();
+
+    //
+    // Update User Avatar
+    //
+
+    let avatar_changes = AvatarChanges {
+        avatar: Some(resized_file_path.clone()),
+    };
+
+    let updated_user = diesel::update(user::table.find(user_id))
+        .set(&avatar_changes)
+        .returning(user::id)
+        .get_result::<i32>(db_connection);
+
+    if let Err(e) = updated_user {
+        window.emit(&event_key, "{state: 'failed', error: 'e.to_string()'}").unwrap();
+        return Err(LocalError::DatabaseError { message: e.to_string() })
+    }
+
+    window.emit(&event_key, "{state: 'completed'}").unwrap();
+
+    //
+    // Return Resized Path
+    //
+
+    Ok(resized_file_path)
 }
