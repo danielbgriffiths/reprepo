@@ -11,8 +11,6 @@ pub struct Record {
     pub parent_id: Option<i32>,
     pub name: String,
     pub author: String,
-    pub category: String,
-    pub authored_at: Option<chrono::NaiveDateTime>,
     pub started_at: Option<chrono::NaiveDateTime>,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
@@ -26,7 +24,5 @@ pub struct CreateRecord {
     pub parent_id: Option<i32>,
     pub name: String,
     pub author: String,
-    pub category: String,
-    pub authored_at: Option<chrono::NaiveDateTime>,
     pub started_at: Option<chrono::NaiveDateTime>,
 }

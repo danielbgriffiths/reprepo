@@ -34,8 +34,6 @@ export default function CreateRepository() {
   ): Promise<void> {
     setIsLoading(true);
 
-    console.log("values.startDate: ", values.startDate);
-
     const repository = await repositoryCommands.createRepository({
       newRepository: {
         name: values.name,

@@ -11,7 +11,6 @@ type TextFieldProps = {
   multiline?: boolean | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
-  format: "dd-MM-yyyy";
   ref: (element: HTMLInputElement | HTMLTextAreaElement) => void;
   onInput: JSX.EventHandler<HTMLInputElement | HTMLTextAreaElement, InputEvent>;
   onChange: JSX.EventHandler<HTMLInputElement | HTMLTextAreaElement, Event>;

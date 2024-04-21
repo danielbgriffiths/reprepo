@@ -39,4 +39,6 @@ export enum ToastKey {
   UpdateUserOnboardingError,
   UpdateUserOnboardingSuccess,
   ResizeAvatar,
+  CreateRecordError,
+  CreateRecordSuccess,
 }

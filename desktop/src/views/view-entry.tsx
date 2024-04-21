@@ -10,7 +10,6 @@ const Splash = lazy(() => import("@views/splash"));
 const Dashboard = lazy(() => import("@views/dashboard"));
 const Records = lazy(() => import("@views/records"));
 const Record = lazy(() => import("@views/record"));
-const CreateRecord = lazy(() => import("@views/create-record"));
 const CreateConnect = lazy(() => import("@views/create-connect"));
 const Onboarding = lazy(() => import("@views/onboarding"));
 const CreateRepository = lazy(() => import("@views/create-repository"));
@@ -27,10 +26,6 @@ export function ViewEntry() {
         <Route path="/auth/repositories/create" component={CreateRepository} />
         <Route path="/auth/repositories/:id" component={Dashboard} />
         <Route path="/auth/repositories/:id/records" component={Records} />
-        <Route
-          path="/auth/repositories/:id/records/create"
-          component={CreateRecord}
-        />
         <Route
           path="/auth/repositories/:id/records/:recordId"
           component={Record}

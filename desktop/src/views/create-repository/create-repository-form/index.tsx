@@ -121,7 +121,6 @@ export function CreateRepositoryForm(props: CreateRepositoryFormProps) {
             placeholder="Field"
             required={true}
             disabled={false}
-            format="dd-MM-yyyy"
             ref={fieldElementProps.ref}
             onInput={fieldElementProps.onInput}
             onChange={fieldElementProps.onChange}
