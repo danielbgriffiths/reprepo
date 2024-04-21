@@ -1,6 +1,6 @@
 // Third Party Imports
 import { createStore } from "solid-js/store";
-import { createEffect, on, onMount } from "solid-js";
+import { onMount } from "solid-js";
 import { Event, listen } from "@tauri-apps/api/event";
 
 // Local Imports
@@ -69,21 +69,6 @@ export function AuthProvider(props: AuthProviderProps) {
 
     return () => stopListen();
   });
-
-  createEffect(
-    on(
-      () => authStore.user?.avatar,
-      async (nextAvatar: string | undefined) => {
-        if (!nextAvatar) return;
-
-        await userCommands.asyncProcAvatarResize({
-          filePath: nextAvatar,
-          userId: authStore.user!.id,
-          eventKey: Events.ResizeAvatar,
-        });
-      },
-    ),
-  );
 
   //
   // Functions
@@ -196,6 +181,7 @@ export function AuthProvider(props: AuthProviderProps) {
 
     if (!authenticatedUser) {
       await removeAuthedSignature();
+      setAuth(undefined);
       toasts.register(ToastKey.AuthenticatedUserError);
       return;
     }

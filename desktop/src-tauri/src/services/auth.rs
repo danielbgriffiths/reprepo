@@ -1,6 +1,5 @@
 // External Usages
 use diesel::QueryResult;
-use tauri::State;
 use diesel::prelude::*;
 use diesel;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
@@ -12,7 +11,7 @@ use crate::schema::auth;
 use crate::state::AppState;
 
 
-pub fn select_auth_fields_from_auth(app_state: &State<AppState>, target_auth_id: &i32) -> QueryResult<AuthFieldsFromAuth> {
+pub fn select_auth_fields_from_auth(app_state: &AppState, target_auth_id: &i32) -> QueryResult<AuthFieldsFromAuth> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     auth::table
@@ -21,7 +20,7 @@ pub fn select_auth_fields_from_auth(app_state: &State<AppState>, target_auth_id:
         .get_result::<AuthFieldsFromAuth>(db_connection)
 }
 
-pub fn select_auth_core(app_state: &State<AppState>, target_auth_id: &i32) -> QueryResult<AuthCore> {
+pub fn select_auth_core(app_state: &AppState, target_auth_id: &i32) -> QueryResult<AuthCore> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     auth::table

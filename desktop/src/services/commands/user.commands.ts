@@ -108,7 +108,7 @@ export async function updateUserOnboarding(
 
 export async function asyncProcAvatarResize(args: InvokeArgs): Promise<void> {
   try {
-    await invoke<void>(Commands.AsyncProcFileResize, args);
+    await invoke<void>(Commands.AsyncProcAvatarResize, args);
 
     console.info("file.commands: asyncProcAvatarResize: ", "success");
   } catch (e) {

@@ -3,6 +3,8 @@ use tauri::{State, Window};
 use std::env;
 use chrono::Utc;
 use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 
 // Local Usages
@@ -20,10 +22,16 @@ use crate::libs::error::LocalError;
 use crate::libs::file::{CropperData, upload_file_to_s3};
 
 #[tauri::command]
-pub fn get_users(app_state: State<AppState>, account_id: Option<i32>) -> Result::<Vec<User>, LocalError> {
+pub async fn get_users(state: State<'_, Arc<Mutex<AppState>>>, account_id: Option<i32>) -> Result::<Vec<User>, LocalError> {
     if !account_id.is_some() {
         return Ok(Vec::new())
     }
+
+    let state_guard = state
+        .inner()
+        .lock()
+        .await;
+    let app_state = &*state_guard;
 
     match select_account_users(&app_state, &account_id.unwrap()) {
         Ok(users) => Ok(users),
@@ -32,8 +40,8 @@ pub fn get_users(app_state: State<AppState>, account_id: Option<i32>) -> Result:
 }
 
 #[tauri::command]
-pub fn get_authenticated_user(
-    app_state: State<AppState>,
+pub async fn get_authenticated_user(
+    state: State<'_, Arc<Mutex<AppState>>>,
     authed_signature: Option<String>,
     account_id: Option<i32>
 ) -> Result::<AuthenticatedUser, LocalError> {
@@ -56,6 +64,12 @@ pub fn get_authenticated_user(
 
     match authed_signature_result {
         Ok(authed_signature) => {
+            let state_guard = state
+                .inner()
+                .lock()
+                .await;
+            let app_state = &*state_guard;
+
             match select_authenticated_user(&app_state, &authed_signature.claims.id, &account_id.unwrap()) {
                 Ok(authenticated_user) => {
                     if authed_signature.claims.email == authenticated_user.auth.email &&
@@ -79,16 +93,16 @@ pub fn get_authenticated_user(
 }
 
 pub async fn upload_avatar(
-    app_state: &State<'_, AppState>,
+    app_state: &AppState,
     user_id: i32,
-    user_changes: UserOnboardingChangesPayload
+    user_changes_avatar: Option<String>
 ) -> Result::<Option<String>, LocalError> {
     let user = select_user(&app_state, &user_id)
         .map_err(|e| LocalError::ProcessError { message: e.to_string() })?;
 
-    if let Some(base64_data) = user_changes.avatar {
-        let uploaded_avatar = match upload_file_to_s3(
-            base64_data,
+    if let Some(avatar_ase64) = user_changes_avatar {
+        let uploaded_avatar_s3_path = match upload_file_to_s3(
+            avatar_ase64,
             format!(
                 "{}_{}-avatar-{}.png",
                 user.first_name,
@@ -100,7 +114,7 @@ pub async fn upload_avatar(
             Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
         }?;
 
-        return Ok(uploaded_avatar)
+        return Ok(uploaded_avatar_s3_path)
     }
 
     return Ok(None)
@@ -108,23 +122,29 @@ pub async fn upload_avatar(
 
 #[tauri::command]
 pub async fn update_user_onboarding(
-    app_state: State<'_, AppState>,
+    state: State<'_, Arc<Mutex<AppState>>>,
     user_id: i32,
     user_changes: UserOnboardingChangesPayload
 ) -> Result::<User, LocalError> {
-    let partial_user = PartialOnboardingUser {
-        age: user_changes.age,
-        locale: user_changes.locale.clone(),
-        is_onboarded: true,
-        avatar: None,
-    };
+    let state_guard = state
+        .inner()
+        .lock()
+        .await;
+    let app_state = &*state_guard;
 
-    let avatar = match upload_avatar(&app_state, user_id, user_changes).await {
+    let avatar = match upload_avatar(&app_state, user_id, user_changes.avatar).await {
         Ok(avatar) => Ok(avatar),
         Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
     }?;
 
-    match update_user_onboarding_partial(&app_state, &user_id, partial_user, avatar) {
+    let partial_user = PartialOnboardingUser {
+        age: user_changes.age,
+        locale: user_changes.locale.clone(),
+        is_onboarded: true,
+        avatar,
+    };
+
+    match update_user_onboarding_partial(&app_state, &user_id, partial_user) {
         Ok(user) => Ok(user),
         Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
     }
@@ -132,17 +152,27 @@ pub async fn update_user_onboarding(
 
 #[tauri::command]
 pub fn async_proc_avatar_resize(
-    app_state: State<AppState>,
+    state: State<'_, Arc<Mutex<AppState>>>,
     window: Window,
     user_id: i32,
     file_path: String,
     event_key: Box<str>,
     cropper_data: CropperData
 ) {
+    let state_arc = state.inner().clone();
+    let window_arc = Arc::new(Mutex::new(window));
+
     tokio::spawn(async move {
+        let state_guard = state_arc
+            .lock()
+            .await;
+        let window_guard = window_arc
+            .lock()
+            .await;
+
         if let Err(e) = async_proc_fetch_resize_upload_update(
-            &app_state,
-            &window,
+            &*state_guard,
+            &*window_guard,
             user_id,
             file_path,
             event_key,

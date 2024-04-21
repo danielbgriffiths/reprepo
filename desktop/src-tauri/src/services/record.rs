@@ -1,6 +1,5 @@
 // External Usages
 use diesel::QueryResult;
-use tauri::State;
 use diesel::prelude::*;
 use diesel;
 
@@ -9,7 +8,7 @@ use crate::models::record::{Record, CreateRecord};
 use crate::schema::record;
 use crate::state::AppState;
 
-pub fn select_records(app_state: &State<AppState>, target_repository_id: &i32) -> QueryResult<Vec<Record>> {
+pub fn select_records(app_state: &AppState, target_repository_id: &i32) -> QueryResult<Vec<Record>> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     record::table
@@ -18,7 +17,7 @@ pub fn select_records(app_state: &State<AppState>, target_repository_id: &i32) -
         .get_results::<Record>(db_connection)
 }
 
-pub fn create_record(app_state: &State<AppState>, new_record: &CreateRecord) -> QueryResult<i32> {
+pub fn create_record(app_state: &AppState, new_record: &CreateRecord) -> QueryResult<i32> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     diesel::insert_into(record::table)

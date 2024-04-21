@@ -1,6 +1,7 @@
 // Third Party Imports
 import { styled } from "solid-styled-components";
 import { SubmitEvent } from "@modular-forms/solid";
+import { createSignal } from "solid-js";
 
 // Local Imports
 import { repositoryCommands } from "@services/commands";
@@ -18,6 +19,12 @@ export default function CreateRepository() {
   const auth = useAuth();
 
   //
+  // State
+  //
+
+  const [isLoading, setIsLoading] = createSignal<boolean>(false);
+
+  //
   // Event Handlers
   //
 
@@ -25,27 +32,40 @@ export default function CreateRepository() {
     values: ICreateRepositorySchema,
     _event: SubmitEvent,
   ): Promise<void> {
+    setIsLoading(true);
+
     const repository = await repositoryCommands.createRepository({
-      newRepository: values,
+      newRepository: {
+        name: values.name,
+        field: values.field,
+        specialization: values.specialization,
+        description: values.description,
+        social_links: [],
+        start_date: values.startDate,
+        is_private: values.isPrivate === "private",
+        user_id: auth.store.user!.id,
+      },
     });
 
     if (!repository) {
       toast.register(ToastKey.CreateRepositoryError, {
         message: `Error creating repository for ${auth.store.user!.firstName}`,
       });
+      setIsLoading(false);
       return;
     }
 
     toast.register(ToastKey.CreateRepositorySuccess, {
       message: `${auth.store.user!.firstName}, your artist profile has been created!`,
     });
+    setIsLoading(false);
 
     await auth.setActiveRepositoryId(repository);
   }
 
   return (
     <Container>
-      <CreateRepositoryForm onSubmit={onSubmit} />
+      <CreateRepositoryForm onSubmit={onSubmit} isLoading={isLoading()} />
     </Container>
   );
 }

@@ -91,8 +91,9 @@ diesel::table! {
         field -> Varchar,
         #[max_length = 50]
         specialization -> Varchar,
-        #[max_length = 255]
-        avatar -> Nullable<Varchar>,
+        #[max_length = 2000]
+        description -> Nullable<Varchar>,
+        social_links -> Array<Nullable<Text>>,
         is_private -> Bool,
         start_date -> Timestamp,
         created_at -> Timestamp,

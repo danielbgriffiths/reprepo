@@ -2,14 +2,13 @@
 import { TextField as KobalteTextField } from "@kobalte/core";
 import { type JSX, Show, splitProps } from "solid-js";
 
-type TextFieldProps = {
+type TextAreaFieldProps = {
   name: string;
   type?: "text" | "email" | "tel" | "password" | "url" | "date" | undefined;
   label?: string | undefined;
   placeholder?: string | undefined;
   defaultValue?: string;
   error: string;
-  multiline?: boolean | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
   ref: (element: HTMLInputElement | HTMLTextAreaElement) => void;
@@ -18,7 +17,7 @@ type TextFieldProps = {
   onBlur: JSX.EventHandler<HTMLInputElement | HTMLTextAreaElement, FocusEvent>;
 };
 
-export function TextField(props: TextFieldProps) {
+export function TextAreaField(props: TextAreaFieldProps) {
   const [rootProps, inputProps] = splitProps(
     props,
     ["name", "defaultValue", "required", "disabled"],
@@ -33,7 +32,7 @@ export function TextField(props: TextFieldProps) {
       <Show when={props.label}>
         <KobalteTextField.Label>{props.label}</KobalteTextField.Label>
       </Show>
-      <KobalteTextField.Input {...inputProps} type={props.type} />
+      <KobalteTextField.TextArea {...inputProps} autoResize />
       <KobalteTextField.ErrorMessage>
         {props.error}
       </KobalteTextField.ErrorMessage>

@@ -10,6 +10,8 @@ import { userCommands } from "@services/commands";
 import { IOnboardingSchema } from "@views/onboarding/onboarding-form/schema";
 import { OnboardingForm } from "./onboarding-form";
 import { PageContainer, PageContainerVariant } from "@services/styles";
+import { Events } from "@services/events";
+import { createCropper } from "@hooks/create-cropper";
 
 export default function Onboarding() {
   //
@@ -19,12 +21,12 @@ export default function Onboarding() {
   const auth = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+  const cropper = createCropper();
 
   //
   // State
   //
 
-  const [crop, setCrop] = createSignal<Cropper.Data | undefined>(undefined);
   const [isLoading, setIsLoading] = createSignal<boolean>(false);
 
   //
@@ -35,47 +37,31 @@ export default function Onboarding() {
     setIsLoading(true);
 
     const updatedUser = await userCommands.updateUserOnboarding({
-      userChanges: {
-        ...values,
-        cropper_data: getCropperData(),
-      },
+      userChanges: values,
       userId: auth.store.user!.id,
     });
 
     if (!updatedUser) {
-      setIsLoading(false);
       toast.register(ToastKey.UpdateUserOnboardingError);
+      setIsLoading(false);
       return;
     }
 
     auth.updateUser(updatedUser);
-
     toast.register(ToastKey.UpdateUserOnboardingSuccess, {
       message: `Good job onboarding, ${auth.store.user!.firstName}!`,
       duration: 2000,
     });
-
     setIsLoading(true);
 
+    userCommands.asyncProcAvatarResize({
+      filePath: values.avatar,
+      userId: auth.store.user!.id,
+      eventKey: Events.ResizeAvatar,
+      cropData: cropper.get(),
+    });
+
     navigate("/auth/repositories");
-  }
-
-  //
-  // Functions
-  //
-
-  function getCropperData(): Cropper.Data | undefined {
-    if (!crop()) return;
-
-    return {
-      x: Math.round(crop()!.x),
-      y: Math.round(crop()!.y),
-      width: Math.round(crop()!.width),
-      height: Math.round(crop()!.height),
-      rotate: Math.round(crop()!.rotate),
-      scale_x: Math.round(crop()!.scaleX),
-      scale_y: Math.round(crop()!.scaleY),
-    } as unknown as Cropper.Data;
   }
 
   return (
@@ -87,7 +73,7 @@ export default function Onboarding() {
           age: auth.store.user!.age ?? 18,
           avatar: undefined,
         }}
-        setCrop={setCrop}
+        setCropper={cropper.set}
         isLoading={isLoading()}
       />
     </PageContainer>

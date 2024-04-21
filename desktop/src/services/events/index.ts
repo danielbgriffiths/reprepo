@@ -1,5 +1,6 @@
 export enum Events {
   ResizeAvatar = "resize_avatar",
+  ResizeRepositoryAvatar = "resize_repository_avatar",
 }
 
 export enum EventState {

@@ -1,6 +1,5 @@
 // External Usages
 use diesel::QueryResult;
-use tauri::State;
 use diesel::prelude::*;
 use diesel;
 
@@ -9,7 +8,7 @@ use crate::models::commit::{Commit, CreateCommit};
 use crate::schema::commit;
 use crate::state::AppState;
 
-pub fn select_commits(app_state: &State<AppState>, target_record_id: &i32) -> QueryResult<Vec<Commit>> {
+pub fn select_commits(app_state: &AppState, target_record_id: &i32) -> QueryResult<Vec<Commit>> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     commit::table
@@ -18,7 +17,7 @@ pub fn select_commits(app_state: &State<AppState>, target_record_id: &i32) -> Qu
         .get_results::<Commit>(db_connection)
 }
 
-pub fn create_commit(app_state: &State<AppState>, new_commit: &CreateCommit) -> QueryResult<i32> {
+pub fn create_commit(app_state: &AppState, new_commit: &CreateCommit) -> QueryResult<i32> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     diesel::insert_into(commit::table)

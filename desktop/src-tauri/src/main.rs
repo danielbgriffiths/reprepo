@@ -14,6 +14,8 @@ mod libs;
 // External Usages
 use tauri::{App, LogicalSize, Manager};
 use std::error::Error;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 // Local Usages
 use crate::layout::menu::create_menu;
@@ -46,7 +48,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(create_stronghold_plugin().build())
         .menu(create_menu())
-        .manage(AppState { pool: get_connection_pool() })
+        .manage(Arc::new(Mutex::new(AppState { pool: get_connection_pool() })))
         .invoke_handler(
             tauri::generate_handler![
                 // User

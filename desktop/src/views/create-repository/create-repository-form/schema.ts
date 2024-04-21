@@ -20,7 +20,10 @@ export const CreateRepositorySchema = v.object({
         .includes(input);
     }, "Not a supported specialization for the selected field."),
   ]),
-  isPrivate: v.optional(v.boolean()),
+  isPrivate: v.optional(v.string()),
+  startDate: v.string(),
+  description: v.optional(v.string()),
+  name: v.string(),
 });
 
 export type ICreateRepositorySchema = v.Input<typeof CreateRepositorySchema>;

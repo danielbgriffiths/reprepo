@@ -14,6 +14,9 @@ use jsonwebtoken::{encode, Header, EncodingKey};
 use webbrowser;
 use tokio::net::TcpListener;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
 
 
 // Local Usages
@@ -123,7 +126,7 @@ async fn create_oauth_redirect_listener() -> Result<(AuthorizationCode, CsrfToke
 }
 
 fn create_or_find_account_auth_user_records(
-    app_state: &State<AppState>,
+    app_state: &AppState,
     target_account_id: &Option<i32>,
     new_auth: CreateAuth,
     partial_new_auth_account: PartialCreateAuthAccount,
@@ -152,7 +155,7 @@ fn create_or_find_account_auth_user_records(
 }
 
 #[tauri::command]
-pub async fn create_google_oauth(app_state: State<'_, AppState>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> Result::<(String, i32), LocalError> {
+pub async fn create_google_oauth(state: State<'_, Arc<Mutex<AppState>>>, existing_account_id: Option<i32>, existing_auth_id: Option<i32>) -> Result::<(String, i32), LocalError> {
     let google_oauth_client = get_google_oauth_client();
 
     let (pkce_code_challenge, pkce_code_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -199,8 +202,14 @@ pub async fn create_google_oauth(app_state: State<'_, AppState>, existing_accoun
             match user_info_token_body_result {
                 Ok(user_info_token_body) => {
 
+                    let state_guard = state
+                        .inner()
+                        .lock()
+                        .await;
+                    let app_state = &*state_guard;
+
                     if existing_auth_id.is_some() {
-                        let auth_core_result = select_auth_core(&app_state, &existing_auth_id.unwrap());
+                        let auth_core_result = select_auth_core(app_state, &existing_auth_id.unwrap());
                         let auth_core = auth_core_result.unwrap();
                         if auth_core.email != user_info_token_body.email {
                             return Err(LocalError::ProcessError {
@@ -212,7 +221,7 @@ pub async fn create_google_oauth(app_state: State<'_, AppState>, existing_accoun
                     let auth_creation_result: Result<(i32, i32), Error> = match existing_auth_id {
                         Some(auth_id) => Ok((auth_id, existing_account_id.unwrap())),
                         None => create_or_find_account_auth_user_records(
-                            &app_state,
+                            app_state,
                             &existing_account_id,
                             CreateAuth {
                                 email: &user_info_token_body.email,
@@ -234,7 +243,7 @@ pub async fn create_google_oauth(app_state: State<'_, AppState>, existing_accoun
 
                     match auth_creation_result {
                         Ok((auth_id, account_id)) => {
-                            match select_auth_core(&app_state, &auth_id) {
+                            match select_auth_core(app_state, &auth_id) {
                                 Ok(auth_core) => {
                                     let claims = AuthedSignatureClaims {
                                         id: auth_core.id,
@@ -270,7 +279,7 @@ pub async fn create_google_oauth(app_state: State<'_, AppState>, existing_accoun
     }
 }
 
-fn select_all_auth_fields(app_state: &State<AppState>, target_account_id: &i32, target_auth_id: &i32) -> Result<AllAuthFields, LocalError> {
+fn select_all_auth_fields(app_state: &AppState, target_account_id: &i32, target_auth_id: &i32) -> Result<AllAuthFields, LocalError> {
     Ok(AllAuthFields {
         auth_fields_from_auth_account: select_auth_fields_from_account(app_state, target_account_id, target_auth_id)
             .map_err(|e| LocalError::DatabaseError { message: e.to_string() })?,
@@ -291,7 +300,7 @@ fn get_standard_revocable_token(auth_fields: &AllAuthFields) -> Option<StandardR
 }
 
 fn logout_google_oauth(
-    app_state: State<AppState>,
+    app_state: &AppState,
     account_id: &i32,
     auth_id: &i32,
     auth_fields: &AllAuthFields
@@ -309,7 +318,7 @@ fn logout_google_oauth(
 
             match revoke_response_result {
                 Ok(_revoke_response) => {
-                    match remove_auth_account_tokens(&app_state, &account_id, &auth_id) {
+                    match remove_auth_account_tokens(app_state, &account_id, &auth_id) {
                         Ok(_auth_account_id) => Ok(true),
                         Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
                     }
@@ -322,8 +331,14 @@ fn logout_google_oauth(
 }
 
 #[tauri::command]
-pub fn logout(app_state: State<AppState>, account_id: i32, auth_id: i32) -> Result::<bool, LocalError> {
-    let all_auth_fields = select_all_auth_fields(&app_state, &account_id, &auth_id)?;
+pub async fn logout(state: State<'_, Arc<Mutex<AppState>>>, account_id: i32, auth_id: i32) -> Result::<bool, LocalError> {
+    let state_guard = state
+        .inner()
+        .lock()
+        .await;
+    let app_state = &*state_guard;
+
+    let all_auth_fields = select_all_auth_fields(app_state, &account_id, &auth_id)?;
 
     match all_auth_fields.auth_fields_from_auth.provider {
         OauthProvider::Email => Err(LocalError::UnavailableError { message: "Email auth is not configured".to_string() }),

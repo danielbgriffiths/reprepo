@@ -5,7 +5,8 @@ pub enum LocalErrorType {
     External,
     Process,
     Database,
-    Unavailable
+    Unavailable,
+    Lock
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -18,6 +19,8 @@ pub enum LocalError {
     DatabaseError { message: String },
     #[error("local error: Unavailable: {message}")]
     UnavailableError { message: String },
+    #[error("local error: Lock: {message}")]
+    LockError { message: String },
 }
 
 #[derive(serde::Serialize)]
@@ -42,6 +45,9 @@ impl serde::Serialize for LocalError {
             },
             LocalError::UnavailableError { message } => {
                 format!("local error: {:?}: {}", LocalErrorType::Unavailable, message)
+            },
+            LocalError::LockError { message } => {
+                format!("local error: {:?}: {}", LocalErrorType::Lock, message)
             },
         };
 

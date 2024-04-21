@@ -1,14 +1,16 @@
 // Third Party Imports
 import { Switch as KobalteSwitch } from "@kobalte/core";
-import { type JSX, splitProps } from "solid-js";
+import { createSignal, type JSX, splitProps } from "solid-js";
 import { styled } from "solid-styled-components";
+
+// Local Imports
 import { BodyTextVariant, Text } from "@services/styles";
 
 type SwitchProps = {
   name: string;
   label: string;
-  value?: string | undefined;
-  checked: boolean | undefined;
+  defaultChecked?: boolean;
+  value: string;
   error: string;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
@@ -21,11 +23,21 @@ type SwitchProps = {
 export function Switch(props: SwitchProps) {
   const [rootProps, inputProps] = splitProps(
     props,
-    ["name", "value", "checked", "required", "disabled"],
+    ["name", "value", "defaultChecked", "required", "disabled"],
     ["ref", "onInput", "onChange", "onBlur"],
   );
+
+  const [checked, setChecked] = createSignal<boolean>(
+    props.defaultChecked ?? false,
+  );
+
   return (
-    <Root {...rootProps} validationState={props.error ? "invalid" : "valid"}>
+    <Root
+      {...rootProps}
+      checked={checked()}
+      onChange={setChecked}
+      validationState={props.error ? "invalid" : "valid"}
+    >
       <KobalteSwitch.Input {...inputProps} />
       <Label>
         <Text variant={BodyTextVariant.CaptionText}>{props.label}</Text>
@@ -55,6 +67,10 @@ const Thumb = styled(KobalteSwitch.Thumb)`
   border-radius: 10px;
   background-color: #d4d4d8;
   transition: 0.25s transform;
+
+  &[data-checked] {
+    transform: translate(calc(100% - 1px));
+  }
 `;
 
 const Control = styled(KobalteSwitch.Control)`
@@ -67,4 +83,10 @@ const Control = styled(KobalteSwitch.Control)`
   padding: 0 2px;
   background-color: #e4e4e7;
   transition: 0.25s background-color;
+  cursor: pointer;
+
+  &[data-checked] {
+    border-color: #0284c5;
+    background-color: #0284c5;
+  }
 `;

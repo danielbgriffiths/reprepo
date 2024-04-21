@@ -1,6 +1,5 @@
 // External Usages
 use diesel::QueryResult;
-use tauri::State;
 use diesel::prelude::*;
 use diesel;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
@@ -10,7 +9,7 @@ use crate::schema::account;
 use crate::state::AppState;
 
 
-pub fn select_account(app_state: &State<AppState>, target_account_id: &Option<i32>) -> QueryResult<Account> {
+pub fn select_account(app_state: &AppState, target_account_id: &Option<i32>) -> QueryResult<Account> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     let existing_account_id = match target_account_id {
@@ -23,7 +22,7 @@ pub fn select_account(app_state: &State<AppState>, target_account_id: &Option<i3
         .get_result(db_connection)
 }
 
-pub fn create_account(app_state: &State<AppState>) -> QueryResult<i32> {
+pub fn create_account(app_state: &AppState) -> QueryResult<i32> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     diesel::insert_into(account::table)

@@ -2,7 +2,6 @@
 use diesel::prelude::*;
 use serde;
 
-
 #[derive(Debug, Queryable, Selectable, serde::Serialize, serde::Deserialize)]
 #[diesel(table_name = crate::schema::repository)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -13,7 +12,8 @@ pub struct Repository {
     pub field: String,
     pub specialization: String,
     pub is_private: bool,
-    pub avatar: Option<String>,
+    pub description: Option<String>,
+    pub social_links: Vec<Option<String>>,
     pub start_date: chrono::NaiveDateTime,
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
@@ -28,6 +28,7 @@ pub struct CreateRepository {
     pub field: String,
     pub specialization: String,
     pub is_private: bool,
-    pub avatar: String,
+    pub description: Option<String>,
+    pub social_links: Vec<Option<String>>,
     pub start_date: chrono::NaiveDateTime,
 }

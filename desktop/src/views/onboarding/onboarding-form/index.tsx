@@ -27,7 +27,7 @@ import { Loader, LoaderVariant } from "@components/loader";
 export interface OnboardingFormProps {
   defaultValues: IOnboardingSchema;
   onSubmit: (values: IOnboardingSchema, event: SubmitEvent) => void;
-  setCrop: (data: Cropper.Data | undefined) => void;
+  setCropper: (data: Cropper.Data | undefined) => void;
   isLoading: boolean;
 }
 
@@ -126,7 +126,7 @@ export function OnboardingForm(props: OnboardingFormProps) {
               onDeleteFail={() => {}}
               onUploadFail={() => {}}
               formStore={formStore}
-              onCrop={props.setCrop}
+              onCrop={props.setCropper}
               cropAspectRatio={1}
             />
           )}

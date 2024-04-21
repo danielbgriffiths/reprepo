@@ -28,7 +28,8 @@ export interface ApiRepository extends ApiBaseDataModel {
   specialization: ArtistSpecialization;
   is_private: boolean;
   start_date: Date;
-  avatar?: string;
+  description?: string;
+  social_links?: string[];
 }
 
 export interface Repository extends BaseDataModel {
@@ -37,6 +38,7 @@ export interface Repository extends BaseDataModel {
   field: ArtistField;
   specialization: ArtistSpecialization;
   isPrivate: boolean;
-  avatar?: string;
   startDate: Date;
+  description?: string;
+  socialLinks?: string[];
 }

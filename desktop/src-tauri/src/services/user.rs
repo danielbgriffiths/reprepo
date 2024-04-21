@@ -1,6 +1,6 @@
 // External Usages
 use diesel::QueryResult;
-use tauri::{State, Window};
+use tauri::{Window};
 use diesel::prelude::*;
 use diesel;
 use diesel::r2d2::{ConnectionManager, PooledConnection};
@@ -17,7 +17,7 @@ use crate::schema::auth_account;
 use crate::services::auth::select_auth_core;
 use crate::services::auth_account::select_auth_account;
 
-pub fn select_account_users(app_state: &State<AppState>, target_account_id: &i32) -> QueryResult<Vec<User>> {
+pub fn select_account_users(app_state: &AppState, target_account_id: &i32) -> QueryResult<Vec<User>> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     user::table
@@ -31,7 +31,7 @@ pub fn select_account_users(app_state: &State<AppState>, target_account_id: &i32
         .load::<User>(db_connection)
 }
 
-pub fn select_authenticated_user(app_state: &State<AppState>, target_user_id: &i32, account_id: &i32) -> QueryResult<AuthenticatedUser> {
+pub fn select_authenticated_user(app_state: &AppState, target_user_id: &i32, account_id: &i32) -> QueryResult<AuthenticatedUser> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     let result: User = user::table
@@ -65,27 +65,19 @@ pub fn create_user_if_not_exists(db_connection: &mut PooledConnection<Connection
 }
 
 pub fn update_user_onboarding_partial(
-    app_state: &State<AppState>,
+    app_state: &AppState,
     user_id: &i32,
     partial_user: PartialOnboardingUser,
-    uploaded_avatar: Option<String>
 ) -> QueryResult<User> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
-    let partial_user_changes = &PartialOnboardingUser {
-        age: partial_user.age,
-        avatar: uploaded_avatar,
-        locale: partial_user.locale,
-        is_onboarded: true,
-    };
-
     diesel::update(user::table.find(user_id))
-        .set(partial_user_changes)
+        .set(&partial_user)
         .returning(User::as_select())
         .get_result::<User>(db_connection)
 }
 
-pub fn select_user(app_state: &State<AppState>, user_id: &i32) -> QueryResult<User> {
+pub fn select_user(app_state: &AppState, user_id: &i32) -> QueryResult<User> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     user::table
@@ -95,7 +87,7 @@ pub fn select_user(app_state: &State<AppState>, user_id: &i32) -> QueryResult<Us
 }
 
 pub async fn async_proc_fetch_resize_upload_update(
-    app_state: &State<'_, AppState>,
+    app_state: &AppState,
     window: &Window,
     user_id: i32,
     file_path: String,

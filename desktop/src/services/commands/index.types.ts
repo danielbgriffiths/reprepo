@@ -15,7 +15,7 @@ export enum Commands {
   UploadFile = "upload_file",
   DeleteFile = "delete_file",
   GetFile = "get_file",
-  AsyncProcFileResize = "asnyc_proc_file_resize",
+  AsyncProcAvatarResize = "async_proc_avatar_resize",
 
   // Repository
   GetRepository = "get_repository",
