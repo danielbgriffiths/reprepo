@@ -36,6 +36,7 @@ export default function Views(props: ViewsProps) {
     auth
       .hydrateLocalAccountId()
       .then(auth.createAuthFromStronghold)
+      .then(auth.hydrateActiveRepositoryId)
       .catch(console.error);
   } else {
     strongholdInitReaction(() => stronghold.isInitialized());
@@ -51,9 +52,12 @@ export default function Views(props: ViewsProps) {
     }
 
     if (auth.store.activeRepositoryId) {
-      return navigate(`/auth/repositories/${auth.store.activeRepositoryId}`, {
-        replace: true,
-      });
+      return navigate(
+        `/auth/repositories/${String(auth.store.activeRepositoryId)}`,
+        {
+          replace: true,
+        },
+      );
     }
 
     return navigate("/auth/repositories", { replace: true });
@@ -66,6 +70,7 @@ export default function Views(props: ViewsProps) {
   async function hydrateFromStronghold(): Promise<void> {
     await auth.hydrateLocalAccountId();
     await auth.createAuthFromStronghold();
+    await auth.hydrateActiveRepositoryId();
   }
 
   return (

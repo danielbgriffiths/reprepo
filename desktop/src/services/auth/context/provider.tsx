@@ -89,7 +89,11 @@ export function AuthProvider(props: AuthProviderProps) {
   async function setActiveRepositoryId(
     activeRepositoryId: number,
   ): Promise<void> {
-    setAuthStore("activeRepositoryId", activeRepositoryId);
+    if (!activeRepositoryId) {
+      return await stronghold.remove(StrongholdKeys.ActiveRepository, {
+        save: true,
+      });
+    }
 
     await stronghold.insertWithParse(
       StrongholdKeys.ActiveRepository,
@@ -99,6 +103,19 @@ export function AuthProvider(props: AuthProviderProps) {
       },
       { save: true },
     );
+
+    await hydrateActiveRepositoryId();
+  }
+
+  async function hydrateActiveRepositoryId(): Promise<void> {
+    const activeRepositoryId = await stronghold.readWithParse(
+      StrongholdKeys.ActiveRepository,
+      authStore.user!.id,
+    );
+
+    if (!activeRepositoryId) return;
+
+    setAuthStore("activeRepositoryId", Number(activeRepositoryId));
   }
 
   async function hydrateLocalAccountId(): Promise<void> {
@@ -207,6 +224,7 @@ export function AuthProvider(props: AuthProviderProps) {
     store: authStore,
     setActiveRepositoryId,
     hydrateLocalAccountId,
+    hydrateActiveRepositoryId,
     setAuth,
     updateUser,
     createGoogleOAuth,

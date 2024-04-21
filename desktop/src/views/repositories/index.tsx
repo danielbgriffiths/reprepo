@@ -1,6 +1,6 @@
 // Third Party Imports
 import { styled } from "solid-styled-components";
-import { createSignal, For } from "solid-js";
+import { createResource, For, ResourceFetcher } from "solid-js";
 import { faPlus } from "@fortawesome/pro-light-svg-icons";
 import Icon from "solid-fa";
 
@@ -8,6 +8,7 @@ import Icon from "solid-fa";
 import { useNavigate } from "@solidjs/router";
 import { useAuth } from "@services/auth";
 import { Repository } from "@/models";
+import { repositoryCommands } from "@services/commands";
 
 export default function Repositories() {
   //
@@ -21,7 +22,13 @@ export default function Repositories() {
   // State
   //
 
-  const [repositories] = createSignal<Repository[]>([]);
+  const fetchRepos: ResourceFetcher<any, any> = async () => {
+    return await repositoryCommands.getRepositories({
+      userId: auth.store.user!.id,
+    });
+  };
+
+  const [repositories] = createResource<Repository[]>(fetchRepos);
 
   //
   // Event Handlers
@@ -37,7 +44,7 @@ export default function Repositories() {
   }
 
   return (
-    <Container hasRepos={!!repositories().length}>
+    <Container hasRepos={!!repositories()?.length}>
       <For
         each={repositories() || []}
         fallback={

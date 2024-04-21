@@ -5,7 +5,7 @@ use tokio::sync::Mutex;
 
 // local Usages
 use crate::libs::error::LocalError;
-use crate::models::repository::{CreateRepository, Repository};
+use crate::models::repository::{CreateRepositoryPayload, IntoRepository, Repository};
 use crate::services;
 use crate::state::AppState;
 
@@ -24,14 +24,18 @@ pub async fn get_repositories(state: State<'_, Arc<Mutex<AppState>>>, user_id: i
 }
 
 #[tauri::command]
-pub async fn create_repository(state: State<'_, Arc<Mutex<AppState>>>, new_repository: CreateRepository) -> Result<i32, LocalError> {
+pub async fn create_repository(state: State<'_, Arc<Mutex<AppState>>>, new_repository: CreateRepositoryPayload) -> Result<i32, LocalError> {
     let state_guard = state
         .inner()
         .lock()
         .await;
     let app_state = &*state_guard;
 
-    match services::repository::create_repository(&app_state, &new_repository) {
+    let repository = new_repository
+        .into_repository()
+        .map_err(|e| LocalError::ProcessError {message: e.to_string()})?;
+
+    match services::repository::create_repository(&app_state, repository) {
         Ok(repository_id) => Ok(repository_id),
         Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
     }

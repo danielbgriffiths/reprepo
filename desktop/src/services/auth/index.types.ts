@@ -17,6 +17,7 @@ export type AuthBindings = {
   store: AuthStore;
   setActiveRepositoryId: (repositoryId: number) => Promise<void>;
   hydrateLocalAccountId: () => Promise<void>;
+  hydrateActiveRepositoryId: () => Promise<void>;
   setAuth: (_authenticatedUser?: AuthenticatedUser) => void;
   updateUser: (partialUser: Partial<User>) => void;
   createAuthFromStronghold: () => Promise<void>;

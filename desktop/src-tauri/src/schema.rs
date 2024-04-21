@@ -95,7 +95,7 @@ diesel::table! {
         description -> Nullable<Varchar>,
         social_links -> Array<Nullable<Text>>,
         is_private -> Bool,
-        start_date -> Timestamp,
+        start_date -> Date,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
         deleted_at -> Nullable<Timestamp>,

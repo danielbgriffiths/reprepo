@@ -25,12 +25,16 @@ export function ViewEntry() {
         <Route path="/auth/onboarding" component={Onboarding} />
         <Route path="/auth/repositories" component={Repositories} />
         <Route path="/auth/repositories/create" component={CreateRepository} />
-        <Route path="/auth/repositories/:id" component={Dashboard}>
-          <Route path="/records" component={Records}>
-            <Route path="/create" component={CreateRecord} />
-            <Route path="/:id" component={Record} />
-          </Route>
-        </Route>
+        <Route path="/auth/repositories/:id" component={Dashboard} />
+        <Route path="/auth/repositories/:id/records" component={Records} />
+        <Route
+          path="/auth/repositories/:id/records/create"
+          component={CreateRecord}
+        />
+        <Route
+          path="/auth/repositories/:id/records/:recordId"
+          component={Record}
+        />
         <Route path="/auth/create-connect" component={CreateConnect} />
         <Route path="*404" component={Catch} />
       </Router>

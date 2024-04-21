@@ -17,11 +17,11 @@ pub fn select_repositories(app_state: &AppState, target_user_id: &i32) -> QueryR
         .get_results::<Repository>(db_connection)
 }
 
-pub fn create_repository(app_state: &AppState, new_repository: &CreateRepository) -> QueryResult<i32> {
+pub fn create_repository(app_state: &AppState, new_repository: CreateRepository) -> QueryResult<i32> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
     diesel::insert_into(repository::table)
-        .values(new_repository)
+        .values(&new_repository)
         .returning(repository::id)
         .get_result::<i32>(db_connection)
 }
