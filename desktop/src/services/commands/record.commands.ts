@@ -51,3 +51,31 @@ export async function getRecords(
     return undefined;
   }
 }
+
+export async function getRecordById(
+  args: InvokeArgs,
+): Promise<Record | undefined> {
+  try {
+    const result = await invoke<ApiRecord>(Commands.GetRecord, args);
+
+    console.info("record.commands: getRecordById: ", result);
+
+    return {
+      id: result.id,
+      repositoryId: result.repository_id,
+      parentId: result.parent_id,
+      name: result.name,
+      author: result.author,
+      category: result.category,
+      authoredAt: result.authored_at,
+      startedAt: result.started_at,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at,
+      deletedAt: result.deleted_at,
+    };
+  } catch (e) {
+    console.error("record.commands: getRecordById: ", e);
+
+    return undefined;
+  }
+}

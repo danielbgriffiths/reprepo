@@ -24,7 +24,7 @@ use crate::commands::utilities::get_env;
 use crate::commands::auth::{create_google_oauth, logout};
 use crate::commands::file::{upload_file, delete_file, get_file};
 use crate::commands::repository::{get_repositories, create_repository, get_repository};
-use crate::commands::record::{get_records, create_record};
+use crate::commands::record::{get_records, create_record, get_record};
 use crate::commands::commit::{get_commits, create_commit};
 use crate::database::connection::get_connection_pool;
 use crate::services::stronghold::create_stronghold_plugin;
@@ -77,6 +77,7 @@ fn main() {
                 // Record
                 get_records,
                 create_record,
+                get_record,
 
                 // Commit
                 get_commits,

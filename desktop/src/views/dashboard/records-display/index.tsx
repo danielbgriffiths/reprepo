@@ -1,9 +1,10 @@
 // Third Party Imports
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 
 // Local Imports
 import { Record } from "@/models";
 import { BodyTextVariant, Button, Text } from "@services/styles";
+import { useParams } from "@solidjs/router";
 
 interface RecordsTableProps {
   records?: Record[];
@@ -11,6 +12,12 @@ interface RecordsTableProps {
 }
 
 export function RecordsDisplay(props: RecordsTableProps) {
+  //
+  // Hooks
+  //
+
+  const params = useParams();
+
   return (
     <Show
       when={!!props.records?.length}
@@ -22,7 +29,13 @@ export function RecordsDisplay(props: RecordsTableProps) {
         </Button>
       }
     >
-      records
+      <For each={props.records || []}>
+        {(record) => (
+          <a href={`/auth/repositories/${params.id}/records/${record.id}`}>
+            <Text variant={BodyTextVariant.OverlineText}>{record.name}</Text>
+          </a>
+        )}
+      </For>
     </Show>
   );
 }

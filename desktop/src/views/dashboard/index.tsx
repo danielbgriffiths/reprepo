@@ -29,7 +29,7 @@ export default function Dashboard() {
   //
 
   const [repository] = createResource(() => params.id, fetchRepository);
-  const [records] = createResource(() => params.id, fetchRecords);
+  const [records, { refetch }] = createResource(() => params.id, fetchRecords);
   const [isCreateRecordDialogOpen, setIsCreateRecordDialogOpen] =
     createSignal<boolean>(false);
   const [isCreateRecordLoading, setIsCreateRecordLoading] =
@@ -68,10 +68,9 @@ export default function Dashboard() {
       newRecord: {
         repository_id: Number(params.id),
         user_id: auth.store.user!.id,
+        parent_id: undefined,
         name: values.name,
         author: values.author,
-        category: values.category,
-        authored_at: values.authoredAt,
         started_at: values.startedAt,
       },
     });
@@ -89,6 +88,8 @@ export default function Dashboard() {
     });
     setIsCreateRecordLoading(false);
     setIsCreateRecordDialogOpen(false);
+
+    refetch();
   }
 
   return (

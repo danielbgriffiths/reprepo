@@ -9,10 +9,10 @@ import { Show } from "solid-js";
 // Local Imports
 import { CreateRecordSchema, ICreateRecordSchema } from "./schema";
 import { FormTitle } from "@components/form/components/form-title";
-import { TextField } from "@components/form/components/text-field.tsx";
+import { TextField } from "@components/form/components/text-field";
 import { BodyTextVariant, Button, ButtonVariant, Text } from "@services/styles";
 import { Loader, LoaderVariant } from "@components/loader";
-import { DateField } from "@components/form/components/date-field.tsx";
+import { DateField } from "@components/form/components/date-field";
 
 interface CreateRecordDialogProps {
   isOpen: boolean;
@@ -59,29 +59,12 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
           <Overlay>
             <Content>
               <Header>
-                <FormTitle>Create Repository</FormTitle>
+                <FormTitle>Record Entry</FormTitle>
                 <CloseButton>
                   <Icon icon={faTimes} />
                 </CloseButton>
               </Header>
               <FormBody>
-                <Field name="name" type="string">
-                  {(fieldStore, fieldElementProps) => (
-                    <TextField
-                      label="Record Name"
-                      name={fieldStore.name}
-                      placeholder="Etude Op. 10 No. 1 ..."
-                      required={true}
-                      disabled={false}
-                      type="text"
-                      ref={fieldElementProps.ref}
-                      onInput={fieldElementProps.onInput}
-                      onChange={fieldElementProps.onChange}
-                      onBlur={fieldElementProps.onBlur}
-                      error={fieldStore.error}
-                    />
-                  )}
-                </Field>
                 <Field name="author" type="string">
                   {(fieldStore, fieldElementProps) => (
                     <TextField
@@ -99,30 +82,15 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
                     />
                   )}
                 </Field>
-                <Field name="category" type="string">
+                <Field name="name" type="string">
                   {(fieldStore, fieldElementProps) => (
                     <TextField
-                      label="Genre / Category / Period"
+                      label="Record Name"
                       name={fieldStore.name}
-                      placeholder="Romantic ..."
+                      placeholder="Etude Op. 10 No. 1 ..."
                       required={true}
                       disabled={false}
                       type="text"
-                      ref={fieldElementProps.ref}
-                      onInput={fieldElementProps.onInput}
-                      onChange={fieldElementProps.onChange}
-                      onBlur={fieldElementProps.onBlur}
-                      error={fieldStore.error}
-                    />
-                  )}
-                </Field>
-                <Field name="authoredAt" type="string">
-                  {(fieldStore, fieldElementProps) => (
-                    <DateField
-                      label="Date of Publication"
-                      name={fieldStore.name}
-                      required={false}
-                      disabled={false}
                       ref={fieldElementProps.ref}
                       onInput={fieldElementProps.onInput}
                       onChange={fieldElementProps.onChange}
@@ -137,6 +105,7 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
                       label="Started Learning At"
                       name={fieldStore.name}
                       required={false}
+                      defaultValue={new Date().toISOString()}
                       disabled={false}
                       ref={fieldElementProps.ref}
                       onInput={fieldElementProps.onInput}

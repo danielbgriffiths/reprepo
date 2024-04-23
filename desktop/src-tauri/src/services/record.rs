@@ -17,6 +17,15 @@ pub fn select_records(app_state: &AppState, target_repository_id: &i32) -> Query
         .get_results::<Record>(db_connection)
 }
 
+pub fn select_record(app_state: &AppState, target_record_id: &i32) -> QueryResult<Record> {
+    let db_connection = &mut app_state.pool.get().unwrap();
+
+    record::table
+        .find(target_record_id)
+        .select(Record::as_select())
+        .get_result::<Record>(db_connection)
+}
+
 pub fn create_record(app_state: &AppState, new_record: &CreateRecord) -> QueryResult<i32> {
     let db_connection = &mut app_state.pool.get().unwrap();
 

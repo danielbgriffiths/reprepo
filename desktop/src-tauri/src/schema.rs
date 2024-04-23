@@ -65,14 +65,15 @@ diesel::table! {
 diesel::table! {
     record (id) {
         id -> Int4,
+        user_id -> Int4,
         repository_id -> Int4,
         parent_id -> Nullable<Int4>,
         #[max_length = 50]
         name -> Varchar,
         #[max_length = 50]
         author -> Varchar,
-        authored_at -> Nullable<Timestamp>,
-        started_at -> Nullable<Timestamp>,
+        authored_at -> Date,
+        started_at -> Date,
         #[max_length = 50]
         category -> Varchar,
         created_at -> Timestamp,
@@ -126,6 +127,7 @@ diesel::joinable!(auth_account -> account (account_id));
 diesel::joinable!(auth_account -> auth (auth_id));
 diesel::joinable!(commit -> record (record_id));
 diesel::joinable!(record -> repository (repository_id));
+diesel::joinable!(record -> user (user_id));
 diesel::joinable!(repository -> user (user_id));
 diesel::joinable!(user -> auth (auth_id));
 

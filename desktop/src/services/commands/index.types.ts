@@ -25,4 +25,5 @@ export enum Commands {
   // Record
   GetRecords = "get_records",
   CreateRecord = "create_record",
+  GetRecord = "get_record",
 }
