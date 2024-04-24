@@ -41,4 +41,6 @@ export enum ToastKey {
   ResizeAvatar,
   CreateRecordError,
   CreateRecordSuccess,
+  CreateCommitError,
+  CreateCommitSuccess,
 }

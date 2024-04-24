@@ -26,4 +26,9 @@ export enum Commands {
   GetRecords = "get_records",
   CreateRecord = "create_record",
   GetRecord = "get_record",
+
+  // Commit
+  GetCommits = "get_commits",
+  CreateCommit = "create_commit",
+  GetCommit = "get_commit",
 }

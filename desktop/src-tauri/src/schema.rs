@@ -52,10 +52,10 @@ diesel::table! {
     commit (id) {
         id -> Int4,
         record_id -> Int4,
-        #[max_length = 5000]
+        #[max_length = 200]
+        title -> Nullable<Varchar>,
+        #[max_length = 8000]
         notes -> Varchar,
-        #[max_length = 50]
-        category -> Varchar,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
         deleted_at -> Nullable<Timestamp>,
