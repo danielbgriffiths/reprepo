@@ -2,14 +2,16 @@
 import Icon from "solid-fa";
 import { styled } from "solid-styled-components";
 import { DropdownMenu, Image } from "@kobalte/core";
+import { createMemo, createResource } from "solid-js";
+import { faGrid } from "@fortawesome/pro-light-svg-icons";
 
 // Local Imports
-import { authCommands } from "@services/commands";
+import { authCommands, repositoryCommands } from "@services/commands";
 import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
 import { ToastKey, useToast } from "@services/toast";
-import { navItems } from "./index.config";
+import { NavItem, navItems } from "./index.config";
 import { BodyTextVariant, Text } from "@services/styles";
 import { S3Image } from "@components/image/s3-image";
 
@@ -23,6 +25,30 @@ export function SideBar(_props: SideBarProps) {
   const auth = useAuth();
   const stronghold = useStronghold();
   const toast = useToast();
+
+  //
+  // State
+  //
+  const [repositories] = createResource(
+    () => auth.store.user,
+    async () => {
+      if (!auth.store.user) return [];
+      return await repositoryCommands.getRepositories({
+        userId: auth.store.user?.id,
+      });
+    },
+  );
+
+  const formattedNavItems = createMemo<NavItem[]>(() => {
+    return [
+      ...(repositories() || []).map((repository) => ({
+        name: repository.name,
+        path: `/auth/repositories/${repository.id}`,
+        icon: faGrid,
+      })),
+      ...navItems,
+    ];
+  });
 
   //
   // Event Handlers
@@ -58,7 +84,7 @@ export function SideBar(_props: SideBarProps) {
 
         <SideBarMiddleSection>
           <SideBarMenu>
-            {navItems.map((item) => (
+            {formattedNavItems().map((item) => (
               <li>
                 <SideMenuAnchorLink href={item.path}>
                   <SideMenuAnchorText variant={BodyTextVariant.CaptionText}>
