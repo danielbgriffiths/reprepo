@@ -6,8 +6,27 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 import { Commands } from "@services/commands/index.types";
 import { ApiRecord, Record } from "@/models";
 
+interface CreateRecordPayload extends InvokeArgs {
+  newRecord: {
+    repository_id: number;
+    user_id: number;
+    parent_id: number | undefined;
+    name: string;
+    author: string;
+    started_at: string;
+  };
+}
+
+interface GetRecordsPayload extends InvokeArgs {
+  targetRepositoryId: number;
+}
+
+interface GetRecordByIdPayload extends InvokeArgs {
+  targetRecordId: number;
+}
+
 export async function createRecord(
-  args: InvokeArgs,
+  args: CreateRecordPayload,
 ): Promise<number | undefined> {
   try {
     const result = await invoke<number>(Commands.CreateRecord, args);
@@ -23,7 +42,7 @@ export async function createRecord(
 }
 
 export async function getRecords(
-  args: InvokeArgs,
+  args: GetRecordsPayload,
 ): Promise<Record[] | undefined> {
   try {
     const result = await invoke<ApiRecord[]>(Commands.GetRecords, args);
@@ -53,7 +72,7 @@ export async function getRecords(
 }
 
 export async function getRecordById(
-  args: InvokeArgs,
+  args: GetRecordByIdPayload,
 ): Promise<Record | undefined> {
   try {
     const result = await invoke<ApiRecord>(Commands.GetRecord, args);

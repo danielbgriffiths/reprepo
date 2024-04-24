@@ -1,10 +1,16 @@
 // Third Party Imports
-import { styled } from "solid-styled-components";
 import { useParams } from "@solidjs/router";
 import { createResource, createSignal, For } from "solid-js";
 
 // Local Imports
-import { HeadingTextVariant, PageContainer, Title } from "@services/styles";
+import {
+  HeadingTextVariant,
+  PageContainer,
+  Title,
+  Split,
+  SplitContent,
+  SplitDetails,
+} from "@services/styles";
 import { recordCommands, commitCommands } from "@services/commands";
 import { CreateCommitDialog } from "@views/record/create-commit-dialog";
 import { ToastKey, useToast } from "@services/toast";
@@ -91,7 +97,7 @@ export default function Record() {
   return (
     <>
       <PageContainer>
-        <Split direction="left">
+        <Split>
           <SplitContent>
             <Title variant={HeadingTextVariant.Title}>{record()?.name}</Title>
             <button onClick={onCreateCommit}>New Commit</button>
@@ -111,19 +117,3 @@ export default function Record() {
     </>
   );
 }
-
-const Split = styled.div<{ direction: "left" | "right" }>`
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  flex-wrap: ${({ direction }) =>
-    direction === "left" ? "wrap" : "wrap-reverse"};
-`;
-
-const SplitContent = styled.div`
-  width: 70%;
-`;
-
-const SplitDetails = styled.div`
-  width: 30%;
-`;

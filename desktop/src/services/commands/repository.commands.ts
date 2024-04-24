@@ -56,8 +56,12 @@ export async function getRepositories(
   }
 }
 
+interface GetRepositoryPayload extends InvokeArgs {
+  targetRepositoryId: number;
+}
+
 export async function getRepository(
-  args: InvokeArgs,
+  args: GetRepositoryPayload,
 ): Promise<Repository | undefined> {
   try {
     const result = await invoke<ApiRepository>(Commands.GetRepository, args);

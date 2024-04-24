@@ -11,7 +11,7 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-  { name: "Connect", path: "/add-record", icon: faNetworkWired },
-  { name: "Addons", path: "/addons", icon: faGrid2Plus },
-  { name: "Calendar", path: "/calendar", icon: faCalendar },
+  { name: "Connect", path: "/auth/create-connect", icon: faNetworkWired },
+  { name: "Addons", path: "/auth/addons", icon: faGrid2Plus },
+  { name: "Calendar", path: "/auth/calendar", icon: faCalendar },
 ];

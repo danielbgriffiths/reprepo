@@ -28,3 +28,29 @@ export const PageContainer = styled.div<PageContainerProps>`
     }
   }}
 `;
+
+export const Split = styled.div`
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+`;
+
+export const SplitDetails = styled.div`
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 1rem;
+`;
+
+export const SplitContent = styled.div`
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 1rem;
+`;

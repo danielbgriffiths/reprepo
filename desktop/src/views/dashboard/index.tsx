@@ -1,11 +1,15 @@
 // Third Party Imports
-import { styled } from "solid-styled-components";
 import { createResource, createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
 
 // Local Imports
 import { recordCommands, repositoryCommands } from "@services/commands";
-import { PageContainer } from "@services/styles";
+import {
+  PageContainer,
+  Split,
+  SplitContent,
+  SplitDetails,
+} from "@services/styles";
 import { RepositoryProfile } from "./repository-profile";
 import { RecordsDisplay } from "./records-display";
 import { RecordsAnalytics } from "./records-analytics";
@@ -28,28 +32,26 @@ export default function Dashboard() {
   // State
   //
 
-  const [repository] = createResource(() => params.id, fetchRepository);
-  const [records, { refetch }] = createResource(() => params.id, fetchRecords);
+  const [repository] = createResource(
+    () => params.id,
+    async () => {
+      return await repositoryCommands.getRepository({
+        targetRepositoryId: Number(params.id),
+      });
+    },
+  );
+  const [records, { refetch }] = createResource(
+    () => params.id,
+    async () => {
+      return await recordCommands.getRecords({
+        targetRepositoryId: Number(params.id),
+      });
+    },
+  );
   const [isCreateRecordDialogOpen, setIsCreateRecordDialogOpen] =
     createSignal<boolean>(false);
   const [isCreateRecordLoading, setIsCreateRecordLoading] =
     createSignal<boolean>(false);
-
-  //
-  // Functions
-  //
-
-  async function fetchRepository() {
-    return await repositoryCommands.getRepository({
-      targetRepositoryId: Number(params.id),
-    });
-  }
-
-  async function fetchRecords() {
-    return await recordCommands.getRecords({
-      targetRepositoryId: Number(params.id),
-    });
-  }
 
   //
   // Event Handlers
@@ -96,15 +98,17 @@ export default function Dashboard() {
     <>
       <PageContainer>
         <Split>
-          <RepositoryProfile repository={repository()} />
-          <ContentSection>
+          <SplitDetails>
+            <RepositoryProfile repository={repository()} />
+          </SplitDetails>
+          <SplitContent>
             <RecordsDisplay
               records={records()}
               onCreateRecord={onCreateRecord}
             />
             <RecordsAnalytics />
             <ContributionHistory />
-          </ContentSection>
+          </SplitContent>
         </Split>
       </PageContainer>
       <CreateRecordDialog
@@ -116,7 +120,3 @@ export default function Dashboard() {
     </>
   );
 }
-
-const Split = styled.div``;
-
-const ContentSection = styled.div``;
