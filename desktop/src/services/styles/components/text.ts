@@ -20,6 +20,7 @@ export enum BodyTextVariant {
   ButtonText = "buttonText",
   CaptionText = "captionText",
   OverlineText = "overlineText",
+  Code = "code",
 }
 
 export enum HeadingTextVariant {
@@ -52,6 +53,7 @@ export const Text = styled.div<TextProps>`
           font-weight: ${typography.fontWeight};
           line-height: ${typography.lineHeight};
           letter-spacing: ${typography.letterSpacing};
+          color: inherit;
         `;
   }};
 `;
@@ -71,6 +73,7 @@ export const Title = styled.div<TitleProps>`
           font-weight: ${typography.fontWeight};
           line-height: ${typography.lineHeight};
           letter-spacing: ${typography.letterSpacing};
+          color: inherit;
         `;
   }};
 `;

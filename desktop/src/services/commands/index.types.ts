@@ -31,4 +31,13 @@ export enum Commands {
   GetCommits = "get_commits",
   CreateCommit = "create_commit",
   GetCommit = "get_commit",
+
+  // Author Meta
+  GetAuthors = "get_authors",
+
+  // Composition Meta
+  GetNames = "get_names",
+
+  // AI
+  GenerateAuthorCompositionMeta = "generate_author_composition_meta",
 }

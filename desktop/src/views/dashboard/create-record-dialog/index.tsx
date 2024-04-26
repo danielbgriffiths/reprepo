@@ -3,25 +3,50 @@ import { Dialog } from "@kobalte/core";
 import Icon from "solid-fa";
 import { faTimes } from "@fortawesome/pro-light-svg-icons";
 import { styled } from "solid-styled-components";
-import { createForm, valiForm, reset } from "@modular-forms/solid";
-import { Show } from "solid-js";
+import {
+  createForm,
+  valiForm,
+  reset,
+  getValue,
+  setValue,
+} from "@modular-forms/solid";
+import { createSignal, Show, createResource } from "solid-js";
 
 // Local Imports
 import { CreateRecordSchema, ICreateRecordSchema } from "./schema";
 import { FormTitle } from "@components/form/components/form-title";
-import { TextField } from "@components/form/components/text-field";
 import { BodyTextVariant, Button, ButtonVariant, Text } from "@services/styles";
 import { Loader, LoaderVariant } from "@components/loader";
 import { DateField } from "@components/form/components/date-field";
+import {
+  aiCommands,
+  authorMetaCommands,
+  compositionMetaCommands,
+} from "@services/commands";
+import { ToastKey, useToast } from "@services/toast";
+import { Repository, AuthorMeta, CompositionMeta } from "@/models";
+import { useAuth } from "@services/auth";
+import {
+  ComboboxField,
+  ComboboxOption,
+} from "@components/form/components/combobox-field";
 
 interface CreateRecordDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSubmit: (values: ICreateRecordSchema) => void;
   isLoading: boolean;
+  repository: Repository;
 }
 
 export function CreateRecordDialog(props: CreateRecordDialogProps) {
+  //
+  // Hooks
+  //
+
+  const auth = useAuth();
+  const toast = useToast();
+
   //
   // State
   //
@@ -29,6 +54,37 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
   const [createRecordForm, { Form, Field }] = createForm<ICreateRecordSchema>({
     validate: valiForm(CreateRecordSchema),
   });
+
+  const [allAuthors] = createResource(async () => {
+    return await authorMetaCommands.getAuthors({
+      field: props.repository.field,
+      specialization: props.repository.specialization,
+    });
+  });
+
+  const [allNames] = createResource(
+    () => filteredAuthors(),
+    async () => {
+      return await compositionMetaCommands.getNames({
+        field: props.repository.field,
+        specialization: props.repository.specialization,
+        authorMetaIds: filteredAuthors().map((item) => item.value),
+      });
+    },
+  );
+
+  const [filteredAuthors, setFilteredAuthors] = createSignal<ComboboxOption[]>(
+    allAuthors() ?? [],
+  );
+  const [filteredNames, setFilteredNames] = createSignal<ComboboxOption[]>(
+    allNames() ?? [],
+  );
+  const [isGenerated, setIsGenerated] = createSignal<boolean>(false);
+  const [isGenerating, setIsGenerating] = createSignal<boolean>(false);
+  const [authorMeta, setAuthorMeta] = createSignal<AuthorMeta | undefined>();
+  const [compositionMeta, setCompositionMeta] = createSignal<
+    CompositionMeta | undefined
+  >();
 
   //
   // Event Handlers
@@ -41,6 +97,51 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
     } else {
       reset(createRecordForm);
     }
+  }
+
+  async function onClickGenerate(): Promise<void> {
+    setIsGenerating(true);
+
+    const result = await aiCommands.generateAuthorCompositionMeta({
+      name: getValue(createRecordForm, "name")!,
+      author: getValue(createRecordForm, "author")!,
+      field: props.repository.field,
+      specialization: props.repository.specialization,
+    });
+
+    if (!result) {
+      toast.register(ToastKey.GetUniversalRecordMetaError, {
+        message: `Error generating meta for ${auth.store.user!.firstName}`,
+      });
+      setIsGenerating(false);
+      return;
+    }
+
+    setAuthorMeta(result.authorMeta);
+    setCompositionMeta(result.compositionMeta);
+    setIsGenerating(false);
+
+    setIsGenerated(true);
+  }
+
+  function onClickEdit(): void {
+    setIsGenerated(false);
+  }
+
+  function onAuthorInput(nextValue: string): void {
+    setValue(createRecordForm, "author", nextValue);
+
+    setFilteredAuthors((prev) => {
+      return prev.filter((author) => author.label.includes(nextValue));
+    });
+  }
+
+  function onNameInput(nextValue: string): void {
+    setValue(createRecordForm, "name", nextValue);
+
+    setFilteredNames((prev) => {
+      return prev.filter((name) => name.label.includes(nextValue));
+    });
   }
 
   return (
@@ -67,16 +168,15 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
               <FormBody>
                 <Field name="author" type="string">
                   {(fieldStore, fieldElementProps) => (
-                    <TextField
+                    <ComboboxField
                       label="Creator / Author / Composer"
                       name={fieldStore.name}
                       placeholder="Frederick Chopin ..."
                       required={true}
-                      disabled={false}
-                      type="text"
+                      disabled={isGenerating() || isGenerated()}
+                      options={filteredAuthors()}
                       ref={fieldElementProps.ref}
-                      onInput={fieldElementProps.onInput}
-                      onChange={fieldElementProps.onChange}
+                      onInput={onAuthorInput}
                       onBlur={fieldElementProps.onBlur}
                       error={fieldStore.error}
                     />
@@ -84,21 +184,42 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
                 </Field>
                 <Field name="name" type="string">
                   {(fieldStore, fieldElementProps) => (
-                    <TextField
+                    <ComboboxField
                       label="Record Name"
                       name={fieldStore.name}
                       placeholder="Etude Op. 10 No. 1 ..."
                       required={true}
-                      disabled={false}
-                      type="text"
+                      disabled={isGenerating() || isGenerated()}
+                      options={filteredNames()}
                       ref={fieldElementProps.ref}
-                      onInput={fieldElementProps.onInput}
-                      onChange={fieldElementProps.onChange}
+                      onInput={onNameInput}
                       onBlur={fieldElementProps.onBlur}
                       error={fieldStore.error}
                     />
                   )}
                 </Field>
+                <Show when={!!authorMeta() && !!compositionMeta()}>
+                  <div>
+                    <ul>
+                      <li>
+                        <span>Date Authored:</span>
+                        <span>{compositionMeta()!.writtenAt}</span>
+                      </li>
+                      <li>
+                        <span>Genre:</span>
+                        <span>{compositionMeta()!.genre}</span>
+                      </li>
+                      <li>
+                        <span>Composer Summary:</span>
+                        <span>{authorMeta()!.authorSummary}</span>
+                      </li>
+                      <li>
+                        <span>Work Summary:</span>
+                        <span>{compositionMeta()!.workSummary}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </Show>
                 <Field name="startedAt" type="string">
                   {(fieldStore, fieldElementProps) => (
                     <DateField
@@ -106,7 +227,7 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
                       name={fieldStore.name}
                       required={false}
                       defaultValue={new Date().toISOString()}
-                      disabled={false}
+                      disabled={isGenerating() || isGenerated()}
                       ref={fieldElementProps.ref}
                       onInput={fieldElementProps.onInput}
                       onChange={fieldElementProps.onChange}
@@ -124,21 +245,47 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
                 >
                   {createRecordForm.touched ? "Clear" : "Close"}
                 </Button>
-                <Button
-                  type="submit"
-                  variant={ButtonVariant.Primary}
-                  disabled={createRecordForm.invalid}
+                <Show
+                  when={isGenerated()}
+                  fallback={
+                    <Button
+                      type="button"
+                      variant={ButtonVariant.Primary}
+                      disabled={isGenerating() || createRecordForm.invalid}
+                      onClick={onClickGenerate}
+                    >
+                      <Show when={isGenerating()} fallback={<>Generate</>}>
+                        <Loader variant={LoaderVariant.MediumButton} />
+                        <Text variant={BodyTextVariant.ButtonText}>
+                          Analyzing ...
+                        </Text>
+                      </Show>
+                    </Button>
+                  }
                 >
-                  <Show
-                    when={props.isLoading || createRecordForm.submitting}
-                    fallback={<>Create</>}
+                  <Button
+                    type="button"
+                    disabled={isGenerating() || createRecordForm.submitting}
+                    onClick={onClickEdit}
                   >
-                    <Loader variant={LoaderVariant.MediumButton} />
-                    <Text variant={BodyTextVariant.ButtonText}>
-                      Processing ...
-                    </Text>
-                  </Show>
-                </Button>
+                    Edit
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant={ButtonVariant.Primary}
+                    disabled={props.isLoading || createRecordForm.invalid}
+                  >
+                    <Show
+                      when={props.isLoading || createRecordForm.submitting}
+                      fallback={<>Approve</>}
+                    >
+                      <Loader variant={LoaderVariant.MediumButton} />
+                      <Text variant={BodyTextVariant.ButtonText}>
+                        Processing ...
+                      </Text>
+                    </Show>
+                  </Button>
+                </Show>
               </Footer>
             </Content>
           </Overlay>

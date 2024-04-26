@@ -7,13 +7,19 @@ import { faGrid } from "@fortawesome/pro-light-svg-icons";
 
 // Local Imports
 import { authCommands, repositoryCommands } from "@services/commands";
-import { StrongholdKeys } from "@services/stronghold/index.config";
 import { useAuth } from "@services/auth";
 import { useStronghold } from "@services/stronghold";
 import { ToastKey, useToast } from "@services/toast";
 import { NavItem, navItems } from "./index.config";
 import { BodyTextVariant, Text } from "@services/styles";
 import { S3Image } from "@components/image/s3-image";
+import {
+  DropdownMenuArrow,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuItemAppend,
+} from "@services/styles/components/dropdown";
+import { StrongholdKeys } from "@services/stronghold/index.config";
 
 export interface SideBarProps {}
 
@@ -99,7 +105,7 @@ export function SideBar(_props: SideBarProps) {
       </div>
 
       <SideBarBottomSection>
-        <DropdownMenu.Root>
+        <DropdownMenu.Root overflowPadding={10} placement="top-start">
           <DropdownMenuTrigger>
             <S3Image filePath={auth.store.user?.avatar}>
               {(s3) => (
@@ -112,16 +118,22 @@ export function SideBar(_props: SideBarProps) {
                 </AvatarRoot>
               )}
             </S3Image>
-            <Text variant={BodyTextVariant.OverlineText}>
+            <Text variant={BodyTextVariant.CaptionText}>
               {auth.store.user?.firstName}
             </Text>
           </DropdownMenuTrigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item onClick={onClickLogout}>
-                Logout <div class="dropdown-menu__item-right-slot">⌘+K</div>
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
+            <DropdownMenuContent>
+              <DropdownMenuArrow size={20} left="1rem" />
+              <DropdownMenuItem
+                onSelect={onClickLogout}
+                closeOnSelect={false}
+                textValue="Logout"
+              >
+                <Text variant={BodyTextVariant.CaptionText}>Logout</Text>
+                <DropdownMenuItemAppend>⌘+K</DropdownMenuItemAppend>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
       </SideBarBottomSection>
@@ -136,6 +148,8 @@ const SideBarWrapper = styled.div`
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
+
+  background-color: ${({ theme }) => theme?.colors.base.a};
 `;
 
 const SideBarTopSection = styled.div`

@@ -112,6 +112,7 @@ export default function Dashboard() {
         </Split>
       </PageContainer>
       <CreateRecordDialog
+        repository={repository()!}
         isOpen={isCreateRecordDialogOpen()}
         onOpenChange={setIsCreateRecordDialogOpen}
         isLoading={isCreateRecordLoading()}

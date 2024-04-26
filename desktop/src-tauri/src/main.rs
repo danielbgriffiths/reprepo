@@ -26,6 +26,9 @@ use crate::commands::file::{upload_file, delete_file, get_file};
 use crate::commands::repository::{get_repositories, create_repository, get_repository};
 use crate::commands::record::{get_records, create_record, get_record};
 use crate::commands::commit::{get_commits, create_commit};
+use crate::commands::author_meta::get_authors;
+use crate::commands::composition_meta::get_names;
+use crate::commands::ai::generate_author_composition_meta;
 use crate::database::connection::get_connection_pool;
 use crate::services::stronghold::create_stronghold_plugin;
 use crate::state::{AppState};
@@ -82,6 +85,15 @@ fn main() {
                 // Commit
                 get_commits,
                 create_commit,
+
+                // AI
+                generate_author_composition_meta,
+
+                // Author Meta
+                get_authors,
+
+                // Composition Meta
+                get_names,
             ]
         )
         .setup(setup_window_constraints)

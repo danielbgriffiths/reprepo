@@ -10,9 +10,8 @@ interface CreateRecordPayload extends InvokeArgs {
   newRecord: {
     repository_id: number;
     user_id: number;
-    parent_id: number | undefined;
-    name: string;
-    author: string;
+    parent_id?: number;
+    author_meta_id: number;
     started_at: string;
   };
 }
@@ -23,6 +22,15 @@ interface GetRecordsPayload extends InvokeArgs {
 
 interface GetRecordByIdPayload extends InvokeArgs {
   targetRecordId: number;
+}
+
+interface GetAuthorsPayload extends InvokeArgs {
+  field: string;
+  specialization: string;
+}
+
+interface GetNamesPayload extends GetAuthorsPayload {
+  authors: string[];
 }
 
 export async function createRecord(
@@ -54,10 +62,8 @@ export async function getRecords(
         id: record.id,
         repositoryId: record.repository_id,
         parentId: record.parent_id,
-        name: record.name,
-        author: record.author,
-        category: record.category,
-        authoredAt: record.authored_at,
+        userId: record.user_id,
+        authorMetaId: record.author_meta_id,
         startedAt: record.started_at,
         createdAt: record.created_at,
         updatedAt: record.updated_at,
@@ -83,10 +89,8 @@ export async function getRecordById(
       id: result.id,
       repositoryId: result.repository_id,
       parentId: result.parent_id,
-      name: result.name,
-      author: result.author,
-      category: result.category,
-      authoredAt: result.authored_at,
+      userId: result.user_id,
+      authorMetaId: result.author_meta_id,
       startedAt: result.started_at,
       createdAt: result.created_at,
       updatedAt: result.updated_at,
@@ -94,6 +98,38 @@ export async function getRecordById(
     };
   } catch (e) {
     console.error("record.commands: getRecordById: ", e);
+
+    return undefined;
+  }
+}
+
+export async function getAuthors(
+  args: GetAuthorsPayload,
+): Promise<string[] | undefined> {
+  try {
+    const result = await invoke<string[]>(Commands.GetAuthors, args);
+
+    console.info("record.commands: getAuthors: ", result);
+
+    return result;
+  } catch (e) {
+    console.error("record.commands: getAuthors: ", e);
+
+    return undefined;
+  }
+}
+
+export async function getNames(
+  args: GetNamesPayload,
+): Promise<string[] | undefined> {
+  try {
+    const result = await invoke<string[]>(Commands.GetNames, args);
+
+    console.info("record.commands: getNames: ", result);
+
+    return result;
+  } catch (e) {
+    console.error("record.commands: getNames: ", e);
 
     return undefined;
   }

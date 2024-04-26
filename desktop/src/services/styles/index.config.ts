@@ -51,6 +51,7 @@ export const DEFAULT_THEME: DefaultTheme = {
   },
   animation: {
     duration: "0.2s",
+    easing: "ease-in",
   },
   border: {
     size: "1px",
@@ -135,6 +136,13 @@ export const DEFAULT_THEME: DefaultTheme = {
         fontFamily:
           '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
         fontSize: "10px",
+        fontWeight: "400",
+        lineHeight: "normal",
+        letterSpacing: "1.5px",
+      },
+      [BodyTextVariant.Code]: {
+        fontFamily: "monospace",
+        fontSize: "12px",
         fontWeight: "400",
         lineHeight: "normal",
         letterSpacing: "1.5px",

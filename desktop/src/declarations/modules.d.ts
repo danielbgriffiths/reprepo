@@ -28,5 +28,17 @@ declare module "solid-styled-components" {
     colors: {
       [K in ColorVariant]: ColorObject;
     };
+    border: {
+      size: string | number;
+    };
+    radius: {
+      card: string | number;
+      button: string | number;
+      badge: string | number;
+    };
+    animation: {
+      duration: string | number;
+      easing: string | number;
+    };
   }
 }
