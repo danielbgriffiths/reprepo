@@ -13,7 +13,11 @@ import {
 import { createSignal, Show, createResource } from "solid-js";
 
 // Local Imports
-import { CreateRecordSchema, ICreateRecordSchema } from "./schema";
+import {
+  CreateRecordSchema,
+  ICreateRecordSchema,
+  IFinalCreateRecordSchema,
+} from "./schema";
 import { FormTitle } from "@components/form/components/form-title";
 import { BodyTextVariant, Button, ButtonVariant, Text } from "@services/styles";
 import { Loader, LoaderVariant } from "@components/loader";
@@ -34,7 +38,7 @@ import {
 interface CreateRecordDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSubmit: (values: ICreateRecordSchema) => void;
+  onSubmit: (values: IFinalCreateRecordSchema) => void;
   isLoading: boolean;
   repository: Repository;
 }
@@ -61,6 +65,9 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
       specialization: props.repository.specialization,
     });
   });
+  const [filteredAuthors, setFilteredAuthors] = createSignal<ComboboxOption[]>(
+    allAuthors() ?? [],
+  );
 
   const [allNames] = createResource(
     () => filteredAuthors(),
@@ -71,10 +78,6 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
         authorMetaIds: filteredAuthors().map((item) => item.value),
       });
     },
-  );
-
-  const [filteredAuthors, setFilteredAuthors] = createSignal<ComboboxOption[]>(
-    allAuthors() ?? [],
   );
   const [filteredNames, setFilteredNames] = createSignal<ComboboxOption[]>(
     allNames() ?? [],
@@ -108,6 +111,8 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
       field: props.repository.field,
       specialization: props.repository.specialization,
     });
+
+    console.log("result: ", result);
 
     if (!result) {
       toast.register(ToastKey.GetUniversalRecordMetaError, {
@@ -144,6 +149,14 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
     });
   }
 
+  function onSubmit(values: ICreateRecordSchema): void {
+    props.onSubmit({
+      startedAt: values.startedAt,
+      authorMetaId: authorMeta()!.id,
+      compositionMetaId: compositionMeta()!.id,
+    });
+  }
+
   return (
     <Dialog.Root
       open={props.isOpen}
@@ -156,7 +169,7 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
       defaultOpen={false}
     >
       <Dialog.Portal>
-        <Form onSubmit={props.onSubmit}>
+        <Form onSubmit={onSubmit}>
           <Overlay>
             <Content>
               <Header>

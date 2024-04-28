@@ -8,3 +8,11 @@ export const CreateRecordSchema = v.object({
 });
 
 export type ICreateRecordSchema = v.Input<typeof CreateRecordSchema>;
+
+const FinalCreateRecordSchema = v.object({
+  compositionMetaId: v.number(),
+  authorMetaId: v.number(),
+  startedAt: v.string(),
+});
+
+export type IFinalCreateRecordSchema = v.Input<typeof FinalCreateRecordSchema>;

@@ -37,6 +37,6 @@ CREATE TABLE IF NOT EXISTS record (
 
     CONSTRAINT fk_composition_meta
         FOREIGN KEY (composition_meta_id)
-            REFERENCES "composition_meta_id" (id)
+            REFERENCES "composition_meta" (id)
             ON DELETE CASCADE
 );

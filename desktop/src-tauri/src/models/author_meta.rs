@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use diesel::{Insertable, Queryable, Selectable};
 
 // Local Usages
-use crate::models::composition_meta::CompositionMeta;
+use crate::models::composition_meta::{CompositionMeta, GeneratedCompositionMeta};
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::author_meta)]
@@ -55,4 +55,10 @@ pub struct AuthorFilterItem {
 pub struct AuthorCompositionMeta {
     pub author_meta: AuthorMeta,
     pub composition_meta: CompositionMeta,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GeneratedAuthorCompositionMeta {
+    pub author_meta: CreateAuthorMeta,
+    pub composition_meta: GeneratedCompositionMeta,
 }

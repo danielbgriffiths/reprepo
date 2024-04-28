@@ -18,6 +18,9 @@
       },
       "path": {
         "all": true
+      },
+      "fs": {
+        "scope": ["$RESOURCE/prompts/*"]
       }
     },
     "windows": [
@@ -40,6 +43,9 @@
         "icons/128x128@2x.png",
         "icons/icon.icns",
         "icons/icon.ico"
+      ],
+      "resources": [
+        "prompts/author_composition_meta.txt"
       ]
     }
   }

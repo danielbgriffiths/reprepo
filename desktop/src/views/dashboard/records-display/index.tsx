@@ -50,7 +50,7 @@ export function RecordsDisplay(props: RecordsTableProps) {
         <For each={props.records || []}>
           {(record) => (
             <a href={`/auth/repositories/${params.id}/records/${record.id}`}>
-              <Text variant={BodyTextVariant.OverlineText}>{record.name}</Text>
+              <Text variant={BodyTextVariant.OverlineText}>Example</Text>
             </a>
           )}
         </For>

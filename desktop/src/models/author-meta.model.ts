@@ -9,7 +9,9 @@ export interface ApiAuthorMeta extends ApiBaseDataModel {
   middle?: string;
   born_at?: string;
   died_at?: string;
-  birth_location?: string;
+  birth_city?: string;
+  birth_region?: string;
+  birth_country?: string;
   nationality?: string;
   gender?: string;
   author_summary?: string;
@@ -22,7 +24,9 @@ export interface AuthorMeta extends BaseDataModel {
   middle?: string;
   bornAt?: string;
   diedAt?: string;
-  birthLocation?: string;
+  birthCity?: string;
+  birthRegion?: string;
+  birthCountry?: string;
   nationality?: string;
   gender?: string;
   authorSummary?: string;

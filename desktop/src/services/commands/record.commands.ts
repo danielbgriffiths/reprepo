@@ -11,7 +11,7 @@ interface CreateRecordPayload extends InvokeArgs {
     repository_id: number;
     user_id: number;
     parent_id?: number;
-    author_meta_id: number;
+    composition_meta_id: number;
     started_at: string;
   };
 }
@@ -55,7 +55,7 @@ export async function getRecords(
   try {
     const result = await invoke<ApiRecord[]>(Commands.GetRecords, args);
 
-    console.info("record.commands: getRecordsByRepositoryId: ", result);
+    console.info("record.commands: getRecords: ", result);
 
     return result.map(
       (record): Record => ({
@@ -63,7 +63,7 @@ export async function getRecords(
         repositoryId: record.repository_id,
         parentId: record.parent_id,
         userId: record.user_id,
-        authorMetaId: record.author_meta_id,
+        compositionMetaId: record.composition_meta_id,
         startedAt: record.started_at,
         createdAt: record.created_at,
         updatedAt: record.updated_at,
@@ -71,7 +71,7 @@ export async function getRecords(
       }),
     );
   } catch (e) {
-    console.error("record.commands: getRecordsByRepositoryId: ", e);
+    console.error("record.commands: getRecords: ", e);
 
     return undefined;
   }
@@ -90,7 +90,7 @@ export async function getRecordById(
       repositoryId: result.repository_id,
       parentId: result.parent_id,
       userId: result.user_id,
-      authorMetaId: result.author_meta_id,
+      compositionMetaId: result.composition_meta_id,
       startedAt: result.started_at,
       createdAt: result.created_at,
       updatedAt: result.updated_at,

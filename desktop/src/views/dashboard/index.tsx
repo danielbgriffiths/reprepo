@@ -15,7 +15,7 @@ import { RecordsDisplay } from "./records-display";
 import { RecordsAnalytics } from "./records-analytics";
 import { ContributionHistory } from "./contribution-history";
 import { CreateRecordDialog } from "./create-record-dialog";
-import { ICreateRecordSchema } from "./create-record-dialog/schema";
+import { IFinalCreateRecordSchema } from "./create-record-dialog/schema";
 import { useAuth } from "@services/auth";
 import { ToastKey, useToast } from "@services/toast";
 
@@ -62,7 +62,7 @@ export default function Dashboard() {
   }
 
   async function onCreateRecordSubmit(
-    values: ICreateRecordSchema,
+    values: IFinalCreateRecordSchema,
   ): Promise<void> {
     setIsCreateRecordLoading(true);
 
@@ -71,8 +71,7 @@ export default function Dashboard() {
         repository_id: Number(params.id),
         user_id: auth.store.user!.id,
         parent_id: undefined,
-        name: values.name,
-        author: values.author,
+        composition_meta_id: values.compositionMetaId,
         started_at: values.startedAt,
       },
     });
