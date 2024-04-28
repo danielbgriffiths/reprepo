@@ -2,6 +2,7 @@
 use diesel::QueryResult;
 use diesel::prelude::*;
 use diesel;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 
 // Local Usages
 use crate::models::record::{Record, CreateRecord};
@@ -26,11 +27,9 @@ pub fn select_record(app_state: &AppState, target_record_id: &i32) -> QueryResul
         .get_result::<Record>(db_connection)
 }
 
-pub fn create_record(app_state: &AppState, new_record: &CreateRecord) -> QueryResult<i32> {
-    let db_connection = &mut app_state.pool.get().unwrap();
-
+pub fn create_record(transaction_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, new_record: &CreateRecord) -> QueryResult<i32> {
     diesel::insert_into(record::table)
         .values(new_record)
         .returning(record::id)
-        .get_result::<i32>(db_connection)
+        .get_result::<i32>(transaction_connection)
 }

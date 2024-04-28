@@ -1,4 +1,6 @@
+// Third Party Usages
 use serde;
+use diesel::result::Error as DieselError;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum LocalErrorType {
@@ -26,6 +28,16 @@ pub enum LocalError {
 #[derive(serde::Serialize)]
 struct LocalErrorWrapper {
     error: String,
+}
+
+impl From<DieselError> for LocalError {
+    fn from(error: DieselError) -> Self {
+        match error {
+            DieselError::NotFound => LocalError::DatabaseError { message: "Record not found".into() },
+            DieselError::QueryBuilderError(err) => LocalError::DatabaseError { message: format!("Query builder error: {}", err) },
+            _ => LocalError::DatabaseError { message: "Unhandled diesel error".into() },
+        }
+    }
 }
 
 impl serde::Serialize for LocalError {

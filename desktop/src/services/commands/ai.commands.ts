@@ -4,7 +4,10 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 
 // Local Imports
 import { Commands } from "@services/commands/index.types";
-import { ApiAuthorCompositionMeta, AuthorCompositionMeta } from "@/models";
+import {
+  ApiGeneratedAuthorCompositionMeta,
+  GeneratedAuthorCompositionMeta,
+} from "@/models";
 
 interface GenerateUniversalRecordMetaPayload extends InvokeArgs {
   field: string;
@@ -15,9 +18,9 @@ interface GenerateUniversalRecordMetaPayload extends InvokeArgs {
 
 export async function generateAuthorCompositionMeta(
   args: GenerateUniversalRecordMetaPayload,
-): Promise<AuthorCompositionMeta | undefined> {
+): Promise<GeneratedAuthorCompositionMeta | undefined> {
   try {
-    const result = await invoke<ApiAuthorCompositionMeta>(
+    const result = await invoke<ApiGeneratedAuthorCompositionMeta>(
       Commands.GenerateAuthorCompositionMeta,
       args,
     );
@@ -26,7 +29,6 @@ export async function generateAuthorCompositionMeta(
 
     return {
       authorMeta: {
-        id: result.author_meta.id,
         fullName: result.author_meta.full_name,
         firstName: result.author_meta.first_name,
         lastName: result.author_meta.last_name,
@@ -39,12 +41,8 @@ export async function generateAuthorCompositionMeta(
         nationality: result.author_meta.nationality,
         gender: result.author_meta.gender,
         authorSummary: result.author_meta.author_summary,
-        createdAt: result.author_meta.created_at,
-        updatedAt: result.author_meta.updated_at,
-        deletedAt: result.author_meta.deleted_at,
       },
       compositionMeta: {
-        id: result.composition_meta.id,
         genre: result.composition_meta.genre,
         writtenAt: result.composition_meta.written_at,
         fullTitle: result.composition_meta.full_title,
@@ -58,9 +56,6 @@ export async function generateAuthorCompositionMeta(
         variation: result.composition_meta.variation,
         key: result.composition_meta.key,
         workSummary: result.composition_meta.work_summary,
-        createdAt: result.composition_meta.created_at,
-        updatedAt: result.composition_meta.updated_at,
-        deletedAt: result.composition_meta.deleted_at,
       },
     };
   } catch (e) {

@@ -1,7 +1,7 @@
 // Local Imports
 import { ApiBaseDataModel, BaseDataModel } from "@models/api.model";
 
-export interface ApiCompositionMeta extends ApiBaseDataModel {
+export interface ApiGeneratedCompositionMeta {
   genre: string;
   written_at?: string;
   full_title: string;
@@ -17,7 +17,7 @@ export interface ApiCompositionMeta extends ApiBaseDataModel {
   work_summary?: string;
 }
 
-export interface CompositionMeta extends BaseDataModel {
+export interface GeneratedCompositionMeta {
   genre: string;
   writtenAt?: string;
   fullTitle: string;
@@ -31,6 +31,18 @@ export interface CompositionMeta extends BaseDataModel {
   variation?: number;
   key?: string;
   workSummary?: string;
+}
+
+export interface ApiCompositionMeta
+  extends ApiBaseDataModel,
+    ApiGeneratedCompositionMeta {
+  author_meta_id: number;
+}
+
+export interface CompositionMeta
+  extends BaseDataModel,
+    GeneratedCompositionMeta {
+  authorMetaId: number;
 }
 
 export interface ApiCompositionMetaFilterItem {

@@ -28,7 +28,11 @@ import {
   compositionMetaCommands,
 } from "@services/commands";
 import { ToastKey, useToast } from "@services/toast";
-import { Repository, AuthorMeta, CompositionMeta } from "@/models";
+import {
+  Repository,
+  GeneratedAuthorMeta,
+  GeneratedCompositionMeta,
+} from "@/models";
 import { useAuth } from "@services/auth";
 import {
   ComboboxField,
@@ -84,9 +88,11 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
   );
   const [isGenerated, setIsGenerated] = createSignal<boolean>(false);
   const [isGenerating, setIsGenerating] = createSignal<boolean>(false);
-  const [authorMeta, setAuthorMeta] = createSignal<AuthorMeta | undefined>();
+  const [authorMeta, setAuthorMeta] = createSignal<
+    GeneratedAuthorMeta | undefined
+  >();
   const [compositionMeta, setCompositionMeta] = createSignal<
-    CompositionMeta | undefined
+    GeneratedCompositionMeta | undefined
   >();
 
   //
@@ -152,8 +158,8 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
   function onSubmit(values: ICreateRecordSchema): void {
     props.onSubmit({
       startedAt: values.startedAt,
-      authorMetaId: authorMeta()!.id,
-      compositionMetaId: compositionMeta()!.id,
+      authorMeta: authorMeta()!,
+      compositionMeta: compositionMeta()!,
     });
   }
 
@@ -276,28 +282,30 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
                     </Button>
                   }
                 >
-                  <Button
-                    type="button"
-                    disabled={isGenerating() || createRecordForm.submitting}
-                    onClick={onClickEdit}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant={ButtonVariant.Primary}
-                    disabled={props.isLoading || createRecordForm.invalid}
-                  >
-                    <Show
-                      when={props.isLoading || createRecordForm.submitting}
-                      fallback={<>Approve</>}
+                  <div>
+                    <Button
+                      type="button"
+                      disabled={isGenerating() || createRecordForm.submitting}
+                      onClick={onClickEdit}
                     >
-                      <Loader variant={LoaderVariant.MediumButton} />
-                      <Text variant={BodyTextVariant.ButtonText}>
-                        Processing ...
-                      </Text>
-                    </Show>
-                  </Button>
+                      Edit
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant={ButtonVariant.Primary}
+                      disabled={props.isLoading || createRecordForm.invalid}
+                    >
+                      <Show
+                        when={props.isLoading || createRecordForm.submitting}
+                        fallback={<>Approve</>}
+                      >
+                        <Loader variant={LoaderVariant.MediumButton} />
+                        <Text variant={BodyTextVariant.ButtonText}>
+                          Processing ...
+                        </Text>
+                      </Show>
+                    </Button>
+                  </div>
                 </Show>
               </Footer>
             </Content>

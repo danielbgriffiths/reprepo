@@ -1,10 +1,13 @@
 // External Usages
 use tauri::State;
 use std::sync::Arc;
+use diesel::Connection;
 use tokio::sync::Mutex;
 
 // local Usages
 use crate::libs::error::LocalError;
+use crate::models::author_meta::IntoAuthorMeta;
+use crate::models::composition_meta::IntoCompositionMeta;
 use crate::models::record::{CreateRecordPayload, IntoRecord, Record};
 use crate::services;
 use crate::state::AppState;
@@ -45,12 +48,38 @@ pub async fn create_record(state: State<'_, Arc<Mutex<AppState>>>, new_record: C
         .await;
     let app_state = &*state_guard;
 
-    let record = new_record
-        .into_record()
-        .map_err(|e| LocalError::ProcessError {message: e.to_string()})?;
+    let db_connection = &mut app_state.pool.get().unwrap();
 
-    match services::record::create_record(&app_state, &record) {
-        Ok(record_id) => Ok(record_id),
-        Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
-    }
+    db_connection.transaction(|transaction_connection| {
+        let create_author_meta = new_record
+            .clone()
+            .author_meta
+            .into_author_meta()
+            .map_err(|e| LocalError::ProcessError {message: e.to_string()})?;
+
+        let author_meta_id = services::author_meta::create_author_meta(
+            transaction_connection,
+            &create_author_meta
+        )
+            .map_err(|e| LocalError::DatabaseError {message: e.to_string()})?;
+
+        let create_composition_meta = new_record
+            .clone()
+            .composition_meta
+            .into_composition_meta(author_meta_id)
+            .map_err(|e| LocalError::ProcessError {message: e.to_string()})?;
+
+        let composition_meta_id = services::composition_meta::create_composition_meta(
+            transaction_connection,
+            &create_composition_meta
+        )
+            .map_err(|e| LocalError::DatabaseError {message: e.to_string()})?;
+
+        let record = new_record
+            .into_record(author_meta_id.clone(), composition_meta_id.clone())
+            .map_err(|e| LocalError::ProcessError {message: e.to_string()})?;
+
+        services::record::create_record(transaction_connection, &record)
+            .map_err(|e| LocalError::DatabaseError {message: e.to_string()})
+    })
 }

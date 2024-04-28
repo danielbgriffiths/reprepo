@@ -1,8 +1,13 @@
 // Local Imports
 import { ApiBaseDataModel, BaseDataModel } from "@models/api.model";
-import { ApiCompositionMeta, CompositionMeta } from "@models/index";
+import {
+  ApiCompositionMeta,
+  CompositionMeta,
+  ApiGeneratedCompositionMeta,
+  GeneratedCompositionMeta,
+} from "@models/index";
 
-export interface ApiAuthorMeta extends ApiBaseDataModel {
+export interface ApiGeneratedAuthorMeta {
   full_name: string;
   first_name: string;
   last_name: string;
@@ -17,7 +22,7 @@ export interface ApiAuthorMeta extends ApiBaseDataModel {
   author_summary?: string;
 }
 
-export interface AuthorMeta extends BaseDataModel {
+export interface GeneratedAuthorMeta {
   fullName: string;
   firstName: string;
   lastName: string;
@@ -32,6 +37,12 @@ export interface AuthorMeta extends BaseDataModel {
   authorSummary?: string;
 }
 
+export interface ApiAuthorMeta
+  extends ApiBaseDataModel,
+    ApiGeneratedAuthorMeta {}
+
+export interface AuthorMeta extends BaseDataModel, GeneratedAuthorMeta {}
+
 export interface AuthorCompositionMeta {
   authorMeta: AuthorMeta;
   compositionMeta: CompositionMeta;
@@ -45,4 +56,14 @@ export interface ApiAuthorMetaFilterItem {
 export interface ApiAuthorCompositionMeta {
   author_meta: ApiAuthorMeta;
   composition_meta: ApiCompositionMeta;
+}
+
+export interface ApiGeneratedAuthorCompositionMeta {
+  author_meta: ApiGeneratedAuthorMeta;
+  composition_meta: ApiGeneratedCompositionMeta;
+}
+
+export interface GeneratedAuthorCompositionMeta {
+  authorMeta: GeneratedAuthorMeta;
+  compositionMeta: GeneratedCompositionMeta;
 }

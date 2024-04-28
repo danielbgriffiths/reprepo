@@ -1,7 +1,5 @@
 // External Usages
-use tauri::{AppHandle, State};
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use tauri::{AppHandle};
 use async_openai::{types::{CreateChatCompletionRequestArgs, ChatCompletionResponseFormat, ChatCompletionResponseFormatType}, Client};
 use std::fs::read_to_string;
 use async_openai::types::ChatCompletionRequestUserMessageArgs;
@@ -9,12 +7,10 @@ use async_openai::types::ChatCompletionRequestUserMessageArgs;
 // local Usages
 use crate::libs::error::LocalError;
 use crate::models::author_meta::GeneratedAuthorCompositionMeta;
-use crate::state::AppState;
 
 #[tauri::command]
 pub async fn generate_author_composition_meta(
     app_handle: AppHandle,
-    _state: State<'_, Arc<Mutex<AppState>>>,
     field: Box<str>,
     specialization: Box<str>,
     name: Box<str>,
@@ -64,8 +60,6 @@ pub async fn generate_author_composition_meta(
 
     let result: Result<GeneratedAuthorCompositionMeta, LocalError> = serde_json::from_str(stringed)
         .map_err(|e| LocalError::ExternalError { message: e.to_string() });
-
-    print!("{:?}", result);
 
     return result
 }

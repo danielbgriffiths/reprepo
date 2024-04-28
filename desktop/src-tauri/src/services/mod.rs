@@ -6,3 +6,5 @@ pub mod repository;
 pub mod account;
 pub mod record;
 pub mod commit;
+pub mod author_meta;
+pub mod composition_meta;

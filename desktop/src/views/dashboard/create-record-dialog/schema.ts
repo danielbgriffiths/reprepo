@@ -1,6 +1,9 @@
 // Third Party Imports
 import * as v from "valibot";
 
+// Local Imports
+import { GeneratedAuthorMeta, GeneratedCompositionMeta } from "@/models";
+
 export const CreateRecordSchema = v.object({
   name: v.string(),
   author: v.string(),
@@ -10,9 +13,14 @@ export const CreateRecordSchema = v.object({
 export type ICreateRecordSchema = v.Input<typeof CreateRecordSchema>;
 
 const FinalCreateRecordSchema = v.object({
-  compositionMetaId: v.number(),
-  authorMetaId: v.number(),
+  compositionMeta: v.any(),
+  authorMeta: v.any(),
   startedAt: v.string(),
 });
 
-export type IFinalCreateRecordSchema = v.Input<typeof FinalCreateRecordSchema>;
+export type IFinalCreateRecordSchema = v.Input<
+  typeof FinalCreateRecordSchema
+> & {
+  compositionMeta: GeneratedCompositionMeta;
+  authorMeta: GeneratedAuthorMeta;
+};

@@ -45,10 +45,10 @@ pub struct CreateCompositionMeta {
     pub work_summary: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GeneratedCompositionMeta {
     pub genre: String,
-    pub written_at: Option<chrono::NaiveDate>,
+    pub written_at: Option<String>,
     pub full_title: String,
     pub piece_title: String,
     pub set_title: Option<String>,
@@ -67,4 +67,31 @@ pub struct GeneratedCompositionMeta {
 pub struct CompositionFilterItem {
     pub id: i32,
     pub full_title: String,
+}
+
+pub trait IntoCompositionMeta {
+    fn into_composition_meta(self, author_meta_id: i32) -> Result<CreateCompositionMeta, chrono::ParseError>;
+}
+
+impl crate::models::composition_meta::IntoCompositionMeta for GeneratedCompositionMeta {
+    fn into_composition_meta(self, author_meta_id: i32) -> Result<CreateCompositionMeta, chrono::ParseError> {
+        let written_at = chrono::NaiveDate::parse_from_str(&self.written_at.unwrap(), "%Y-%m-%d")?;
+
+        Ok(CreateCompositionMeta {
+            author_meta_id,
+            genre: self.genre,
+            written_at: Some(written_at),
+            full_title: self.full_title,
+            piece_title: self.piece_title,
+            set_title: self.set_title,
+            number_in_set: self.number_in_set,
+            movement: self.movement,
+            opus: self.opus,
+            kvv: self.kvv,
+            n: self.n,
+            variation: self.variation,
+            key: self.key,
+            work_summary: self.work_summary,
+        })
+    }
 }

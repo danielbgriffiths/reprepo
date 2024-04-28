@@ -71,7 +71,8 @@ export default function Dashboard() {
         repository_id: Number(params.id),
         user_id: auth.store.user!.id,
         parent_id: undefined,
-        composition_meta_id: values.compositionMetaId,
+        composition_meta: values.compositionMeta,
+        author_meta: values.authorMeta,
         started_at: values.startedAt,
       },
     });
