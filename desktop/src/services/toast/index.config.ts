@@ -137,11 +137,19 @@ export const TOAST_MAP: { [K in ToastKey]: Toast } = {
     duration: 5000,
     isRemovableByClick: false,
   },
-  [ToastKey.GetUniversalRecordMetaError]: {
+  [ToastKey.GenerateAuthorCompositionMetaError]: {
     priority: "high",
     title: "Record Meta",
     message: "Error getting record meta.",
     type: "error",
+    duration: -1,
+    isRemovableByClick: true,
+  },
+  [ToastKey.GenerateAuthorCompositionMetaProgress]: {
+    priority: "high",
+    title: "Record Meta",
+    message: "Generating record meta...",
+    type: "info",
     duration: -1,
     isRemovableByClick: true,
   },

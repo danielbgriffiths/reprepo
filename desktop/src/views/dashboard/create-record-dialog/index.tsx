@@ -10,7 +10,7 @@ import {
   getValue,
   setValue,
 } from "@modular-forms/solid";
-import { createSignal, Show, createResource } from "solid-js";
+import { createSignal, Show, createResource, onMount } from "solid-js";
 
 // Local Imports
 import {
@@ -38,6 +38,9 @@ import {
   ComboboxField,
   ComboboxOption,
 } from "@components/form/components/combobox-field";
+import { Event, listen } from "@tauri-apps/api/event";
+import { Events, EventState, ProgressEventResponse } from "@services/events";
+import { ExistingToast } from "@services/toast/index.types.ts";
 
 interface CreateRecordDialogProps {
   isOpen: boolean;
@@ -96,6 +99,43 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
   >();
 
   //
+  // Lifecycle
+  //
+
+  onMount(async () => {
+    const stopListen = await listen(
+      Events.GenerateAuthorCompositionMeta,
+      async (event: Event<ProgressEventResponse>) => {
+        let existingToast!: ExistingToast;
+
+        switch (event.payload.state) {
+          case EventState.Started:
+            existingToast = toast.register(
+              ToastKey.GenerateAuthorCompositionMetaProgress,
+            );
+            break;
+          case EventState.InProgress:
+            if (!existingToast) return;
+            toast.updateProgress(existingToast, event.payload.percentage);
+            break;
+          case EventState.Completed:
+            if (!existingToast) return;
+            toast.close(existingToast.id);
+            break;
+          case EventState.Failed:
+            if (!existingToast) return;
+            toast.updateError(existingToast, event.payload.error);
+            break;
+          default:
+            break;
+        }
+      },
+    );
+
+    return () => stopListen();
+  });
+
+  //
   // Event Handlers
   //
 
@@ -116,12 +156,11 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
       author: getValue(createRecordForm, "author")!,
       field: props.repository.field,
       specialization: props.repository.specialization,
+      eventKey: Events.GenerateAuthorCompositionMeta,
     });
 
-    console.log("result: ", result);
-
     if (!result) {
-      toast.register(ToastKey.GetUniversalRecordMetaError, {
+      toast.register(ToastKey.GenerateAuthorCompositionMetaError, {
         message: `Error generating meta for ${auth.store.user!.firstName}`,
       });
       setIsGenerating(false);

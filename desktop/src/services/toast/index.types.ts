@@ -43,5 +43,6 @@ export enum ToastKey {
   CreateRecordSuccess,
   CreateCommitError,
   CreateCommitSuccess,
-  GetUniversalRecordMetaError,
+  GenerateAuthorCompositionMetaError,
+  GenerateAuthorCompositionMetaProgress,
 }

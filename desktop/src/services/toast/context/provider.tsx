@@ -20,14 +20,20 @@ export function ToastProvider(props: ToastProviderProps) {
   //
 
   function register(key: ToastKey, overrides?: Partial<Toast>): ExistingToast {
+    console.log("register: key: ", key);
+
     const nextToast: Toast = {
       ...TOAST_MAP[key],
       ...(overrides || {}),
     };
 
+    console.log("register: nextToast: ", nextToast);
+
     const id = toaster.show((toastProps) => (
       <ToastLayout toastProps={toastProps} toast={nextToast} />
     ));
+
+    console.log("register: id: ", id);
 
     return {
       ...nextToast,

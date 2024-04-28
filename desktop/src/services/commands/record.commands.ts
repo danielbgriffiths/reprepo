@@ -5,9 +5,9 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 // Local Imports
 import { Commands } from "@services/commands/index.types";
 import {
+  ApiGeneratedAuthorMeta,
+  ApiGeneratedCompositionMeta,
   ApiRecord,
-  GeneratedAuthorMeta,
-  GeneratedCompositionMeta,
   Record,
 } from "@/models";
 
@@ -16,8 +16,8 @@ interface CreateRecordPayload extends InvokeArgs {
     repository_id: number;
     user_id: number;
     parent_id?: number;
-    author_meta: GeneratedAuthorMeta;
-    composition_meta: GeneratedCompositionMeta;
+    author_meta: ApiGeneratedAuthorMeta;
+    composition_meta: ApiGeneratedCompositionMeta;
     started_at: string;
   };
 }
@@ -36,11 +36,11 @@ export async function createRecord(
   try {
     const result = await invoke<number>(Commands.CreateRecord, args);
 
-    console.info("record.commands: createRepository: ", result);
+    console.info("record.commands: createRecord: ", result);
 
     return result;
   } catch (e) {
-    console.error("record.commands: createRepository: ", e);
+    console.error("record.commands: createRecord: ", e);
 
     return undefined;
   }

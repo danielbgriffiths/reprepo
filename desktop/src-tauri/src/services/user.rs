@@ -135,7 +135,7 @@ pub async fn async_proc_fetch_resize_upload_update(
     );
 
     if let Err(e) = resized_bytes_result {
-        window.emit(&event_key, "{state: 'failed', error: e.to_string()}").unwrap();
+        window.emit(&event_key, "{state: 'failed', error: 'e.to_string()'}").unwrap();
         return Err(e)
     }
 
@@ -159,7 +159,7 @@ pub async fn async_proc_fetch_resize_upload_update(
         .await;
 
     if let Err(e) = resized_file_path_result {
-        window.emit(&event_key, "{state: 'failed', error: e.to_string()}").unwrap();
+        window.emit(&event_key, "{state: 'failed', error: 'e.to_string()'}").unwrap();
         return Err(e)
     }
 

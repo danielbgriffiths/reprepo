@@ -20,7 +20,7 @@ export function AuthProvider(props: AuthProviderProps) {
   //
 
   const stronghold = useStronghold();
-  const toasts = useToast();
+  const toast = useToast();
 
   //
   // State
@@ -47,19 +47,19 @@ export function AuthProvider(props: AuthProviderProps) {
 
         switch (event.payload.state) {
           case EventState.Started:
-            existingToast = toasts.register(ToastKey.ResizeAvatar);
+            existingToast = toast.register(ToastKey.ResizeAvatar);
             break;
           case EventState.InProgress:
             if (!existingToast) return;
-            toasts.updateProgress(existingToast, event.payload.percentage);
+            toast.updateProgress(existingToast, event.payload.percentage);
             break;
           case EventState.Completed:
             if (!existingToast) return;
-            toasts.close(existingToast.id);
+            toast.close(existingToast.id);
             break;
           case EventState.Failed:
             if (!existingToast) return;
-            toasts.updateError(existingToast, event.payload.error);
+            toast.updateError(existingToast, event.payload.error);
             break;
           default:
             break;
@@ -158,7 +158,7 @@ export function AuthProvider(props: AuthProviderProps) {
     });
 
     if (!authedSignature) {
-      toasts.register(ToastKey.AuthSignatureError);
+      toast.register(ToastKey.AuthSignatureError);
       return;
     }
 
@@ -173,7 +173,7 @@ export function AuthProvider(props: AuthProviderProps) {
 
     if (!authenticatedUser) {
       await removeAuthedSignature();
-      toasts.register(ToastKey.AuthenticatedUserError);
+      toast.register(ToastKey.AuthenticatedUserError);
       return;
     }
 
@@ -199,7 +199,7 @@ export function AuthProvider(props: AuthProviderProps) {
     if (!authenticatedUser) {
       await removeAuthedSignature();
       setAuth(undefined);
-      toasts.register(ToastKey.AuthenticatedUserError);
+      toast.register(ToastKey.AuthenticatedUserError);
       return;
     }
 
