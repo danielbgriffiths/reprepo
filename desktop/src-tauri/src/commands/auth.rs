@@ -16,6 +16,7 @@ use tokio::net::TcpListener;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use oauth2::reqwest::async_http_client;
 
 
 
@@ -182,100 +183,95 @@ pub async fn create_google_oauth(state: State<'_, Arc<Mutex<AppState>>>, existin
     let basic_token_response = google_oauth_client
         .exchange_code(code.clone())
         .set_pkce_verifier(pkce_code_verifier)
-        .request(&oauth2::reqwest::http_client)
-        .unwrap();
+        .request_async(async_http_client)
+        .await
+        .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
     let google_user_info_url_env = env::var("GOOGLE_USER_INFO_URL")
         .expect("Missing the GOOGLE_USER_INFO_URL environment variable.");
 
-    let user_info_response_result = reqwest::blocking::Client::new()
+    let user_info_response = reqwest::Client::new()
         .get(google_user_info_url_env)
         .header(reqwest::header::AUTHORIZATION,  format!("Bearer {}", basic_token_response.access_token().secret()))
         .header(reqwest::header::CONTENT_TYPE,  "application/json".to_string())
         .header(reqwest::header::ACCEPT,  "application/json".to_string())
-        .send();
+        .send()
+        .await
+        .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
-    match user_info_response_result {
-        Ok(user_info_response) => {
-            let user_info_token_body_result = user_info_response.json::<GoogleOAuthUserTokenBody>();
 
-            match user_info_token_body_result {
-                Ok(user_info_token_body) => {
+    let user_info_token_body = user_info_response.json::<GoogleOAuthUserTokenBody>()
+        .await
+        .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
-                    let state_guard = state
-                        .inner()
-                        .lock()
-                        .await;
-                    let app_state = &*state_guard;
+    let state_guard = state
+        .inner()
+        .lock()
+        .await;
+    let app_state = &*state_guard;
 
-                    if existing_auth_id.is_some() {
-                        let auth_core_result = select_auth_core(app_state, &existing_auth_id.unwrap());
-                        let auth_core = auth_core_result.unwrap();
-                        if auth_core.email != user_info_token_body.email {
-                            return Err(LocalError::ProcessError {
-                                message: format!("auth/token mismatch. {}/{}", auth_core.email, user_info_token_body.email)
-                            })
-                        }
-                    }
+    if existing_auth_id.is_some() {
+        let auth_core_result = select_auth_core(app_state, &existing_auth_id.unwrap());
+        let auth_core = auth_core_result.unwrap();
+        if auth_core.email != user_info_token_body.email {
+            return Err(LocalError::ProcessError {
+                message: format!("auth/token mismatch. {}/{}", auth_core.email, user_info_token_body.email)
+            })
+        }
+    }
 
-                    let auth_creation_result: Result<(i32, i32), Error> = match existing_auth_id {
-                        Some(auth_id) => Ok((auth_id, existing_account_id.unwrap())),
-                        None => create_or_find_account_auth_user_records(
-                            app_state,
-                            &existing_account_id,
-                            CreateAuth {
-                                email: &user_info_token_body.email,
-                                password: None,
-                                provider: &OauthProvider::Google,
-                            },
-                            PartialCreateAuthAccount {
-                                access_token: Some(basic_token_response.access_token().secret().clone()),
-                                refresh_token: Some(basic_token_response.refresh_token().unwrap().secret().clone()),
-                            },
-                            PartialCreateUser {
-                                first_name: &user_info_token_body.given_name,
-                                last_name: &user_info_token_body.family_name,
-                                avatar: &user_info_token_body.picture,
-                                locale: &user_info_token_body.locale,
-                            },
-                        )
+    let auth_creation_result: Result<(i32, i32), Error> = match existing_auth_id {
+        Some(auth_id) => Ok((auth_id, existing_account_id.unwrap())),
+        None => create_or_find_account_auth_user_records(
+            app_state,
+            &existing_account_id,
+            CreateAuth {
+                email: &user_info_token_body.email,
+                password: None,
+                provider: &OauthProvider::Google,
+            },
+            PartialCreateAuthAccount {
+                access_token: Some(basic_token_response.access_token().secret().clone()),
+                refresh_token: Some(basic_token_response.refresh_token().unwrap().secret().clone()),
+            },
+            PartialCreateUser {
+                first_name: &user_info_token_body.given_name,
+                last_name: &user_info_token_body.family_name,
+                avatar: &user_info_token_body.picture,
+                locale: &user_info_token_body.locale,
+            },
+        )
+    };
+
+    match auth_creation_result {
+        Ok((auth_id, account_id)) => {
+            match select_auth_core(app_state, &auth_id) {
+                Ok(auth_core) => {
+                    let claims = AuthedSignatureClaims {
+                        id: auth_core.id,
+                        email: auth_core.email,
+                        account_id,
+                        exp: 1735689600, // TODO: 01-01-2025
                     };
 
-                    match auth_creation_result {
-                        Ok((auth_id, account_id)) => {
-                            match select_auth_core(app_state, &auth_id) {
-                                Ok(auth_core) => {
-                                    let claims = AuthedSignatureClaims {
-                                        id: auth_core.id,
-                                        email: auth_core.email,
-                                        account_id,
-                                        exp: 1735689600, // TODO: 01-01-2025
-                                    };
+                    let authed_signature_secret = env::var("AUTHED_SIGNATURE_SECRET")
+                        .expect("Missing the AUTHED_SIGNATURE_SECRET environment variable.");
 
-                                    let authed_signature_secret = env::var("AUTHED_SIGNATURE_SECRET")
-                                        .expect("Missing the AUTHED_SIGNATURE_SECRET environment variable.");
+                    let token_result = encode(
+                        &Header::default(),
+                        &claims,
+                        &EncodingKey::from_secret(authed_signature_secret.as_ref())
+                    );
 
-                                    let token_result = encode(
-                                        &Header::default(),
-                                        &claims,
-                                        &EncodingKey::from_secret(authed_signature_secret.as_ref())
-                                    );
-
-                                    match token_result {
-                                        Ok(token) => Ok((token, account_id)),
-                                        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
-                                    }
-                                },
-                                Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
-                            }
-                        },
-                        Err(e) => Err(LocalError::DatabaseError { message: e.to_string()  })
+                    match token_result {
+                        Ok(token) => Ok((token, account_id)),
+                        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
                     }
                 },
-                Err(e) => Err(LocalError::ExternalError { message: e.to_string() })
+                Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
             }
         },
-        Err(e) => Err(LocalError::ProcessError { message: e.to_string() })
+        Err(e) => Err(LocalError::DatabaseError { message: e.to_string()  })
     }
 }
 

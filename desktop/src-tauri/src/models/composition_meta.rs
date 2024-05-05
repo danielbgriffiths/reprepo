@@ -47,6 +47,8 @@ pub struct CreateCompositionMeta {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GeneratedCompositionMeta {
+    pub id: Option<i32>,
+    pub author_meta_id: Option<i32>,
     pub genre: String,
     pub written_at: Option<String>,
     pub full_title: String,
@@ -60,6 +62,9 @@ pub struct GeneratedCompositionMeta {
     pub variation: Option<i32>,
     pub key: Option<String>,
     pub work_summary: Option<String>,
+    pub created_at: Option<chrono::NaiveDateTime>,
+    pub updated_at: Option<chrono::NaiveDateTime>,
+    pub deleted_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
@@ -92,6 +97,35 @@ impl crate::models::composition_meta::IntoCompositionMeta for GeneratedCompositi
             variation: self.variation,
             key: self.key,
             work_summary: self.work_summary,
+        })
+    }
+}
+
+pub trait IntoGeneratedCompositionMeta {
+    fn into_generated_composition_meta(self) -> Result<GeneratedCompositionMeta, chrono::ParseError>;
+}
+
+impl crate::models::composition_meta::IntoGeneratedCompositionMeta for CompositionMeta {
+    fn into_generated_composition_meta(self) -> Result<GeneratedCompositionMeta, chrono::ParseError> {
+        Ok(GeneratedCompositionMeta {
+            id: Some(self.id),
+            author_meta_id: Some(self.author_meta_id),
+            genre: self.genre,
+            written_at: self.written_at.map(|date| date.format("%Y-%m-%d").to_string()),
+            full_title: self.full_title,
+            piece_title: self.piece_title,
+            set_title: self.set_title,
+            number_in_set: self.number_in_set,
+            movement: self.movement,
+            opus: self.opus,
+            kvv: self.kvv,
+            n: self.n,
+            variation: self.variation,
+            key: self.key,
+            work_summary: self.work_summary,
+            created_at: Some(self.created_at),
+            updated_at: self.updated_at,
+            deleted_at: self.deleted_at,
         })
     }
 }

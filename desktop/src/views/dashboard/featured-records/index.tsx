@@ -15,12 +15,12 @@ import {
 } from "@services/styles";
 import { useParams } from "@solidjs/router";
 
-interface RecordsTableProps {
+interface Props {
   records?: Record[];
   onCreateRecord: () => void;
 }
 
-export function RecordsDisplay(props: RecordsTableProps) {
+export function FeaturedRecords(props: Props) {
   //
   // Hooks
   //

@@ -21,6 +21,8 @@ export enum Commands {
   GetRepository = "get_repository",
   GetRepositories = "get_repositories",
   CreateRepository = "create_repository",
+  GetCommitCalendar = "get_commit_calendar",
+  GetYearsList = "get_years_list",
 
   // Record
   GetRecords = "get_records",

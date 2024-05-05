@@ -76,6 +76,8 @@ export function ToastProvider(props: ToastProviderProps) {
     close,
   };
 
+  console.log("toastBindings: ", toastBindings);
+
   return (
     <ToastContext.Provider value={toastBindings}>
       {props.children}

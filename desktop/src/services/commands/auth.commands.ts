@@ -5,8 +5,18 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 // Local Imports
 import { Commands } from "@services/commands/index.types";
 
+interface CreateGoogleOAuthPayload extends InvokeArgs {
+  existingAuthId?: number;
+  existingAccountId?: number;
+}
+
+interface LogoutPayload extends InvokeArgs {
+  authId: number;
+  accountId?: number;
+}
+
 export async function createGoogleOAuth(
-  args: InvokeArgs,
+  args: CreateGoogleOAuthPayload,
 ): Promise<[string, number] | undefined> {
   try {
     const result = await invoke<[string, number]>(
@@ -24,7 +34,9 @@ export async function createGoogleOAuth(
   }
 }
 
-export async function logout(args: InvokeArgs): Promise<boolean | undefined> {
+export async function logout(
+  args: LogoutPayload,
+): Promise<boolean | undefined> {
   try {
     const result = await invoke<boolean>(Commands.Logout, args);
 

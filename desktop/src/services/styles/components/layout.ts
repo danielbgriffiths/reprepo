@@ -37,8 +37,17 @@ export const Split = styled.div`
   align-items: flex-start;
 `;
 
-export const SplitDetails = styled.div`
-  width: 30%;
+export const SplitDetails = styled.div<{ size?: "even" | "wide" }>`
+  width: ${({ size }) => {
+    switch (size) {
+      case "even":
+        return "50%";
+      case "wide":
+        return "10%";
+      default:
+        return "30%";
+    }
+  }};
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -46,8 +55,17 @@ export const SplitDetails = styled.div`
   padding: 1rem;
 `;
 
-export const SplitContent = styled.div`
-  width: 70%;
+export const SplitContent = styled.div<{ size?: "even" | "wide" }>`
+  width: ${({ size }) => {
+    switch (size) {
+      case "even":
+        return "50%";
+      case "wide":
+        return "90%";
+      default:
+        return "70%";
+    }
+  }};
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

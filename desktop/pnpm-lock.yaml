@@ -35,6 +35,9 @@ dependencies:
   animejs:
     specifier: ^3.2.2
     version: 3.2.2
+  change-case:
+    specifier: ^5.4.4
+    version: 5.4.4
   cropperjs:
     specifier: ^1.6.1
     version: 1.6.1
@@ -76,6 +79,9 @@ devDependencies:
   '@types/animejs':
     specifier: ^3.1.12
     version: 3.1.12
+  '@types/change-case':
+    specifier: ^2.3.1
+    version: 2.3.1
   '@types/node':
     specifier: ^20.11.27
     version: 20.11.27
@@ -1103,6 +1109,13 @@ packages:
       '@babel/types': 7.24.0
     dev: true
 
+  /@types/change-case@2.3.1:
+    resolution: {integrity: sha512-HYiGjhmGInNzJjtt6ciXEfl2s8ZQGUQpPiwgWSth1fycE69hXbV/RgWH7MvSq2QPhMBzi4SGhu1vE+cMx1xB8g==}
+    deprecated: This is a stub types definition for change-case (https://github.com/blakeembrey/change-case). change-case provides its own type definitions, so you don't need @types/change-case installed!
+    dependencies:
+      change-case: 5.4.4
+    dev: true
+
   /@types/estree@1.0.5:
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
     dev: true
@@ -1200,6 +1213,9 @@ packages:
       escape-string-regexp: 1.0.5
       supports-color: 5.5.0
     dev: true
+
+  /change-case@5.4.4:
+    resolution: {integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==}
 
   /chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}

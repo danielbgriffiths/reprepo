@@ -1,6 +1,7 @@
 // Third Party Imports
 import { createResource, createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
+import { Tabs } from "@kobalte/core";
 
 // Local Imports
 import { recordCommands, repositoryCommands } from "@services/commands";
@@ -11,8 +12,8 @@ import {
   SplitDetails,
 } from "@services/styles";
 import { RepositoryProfile } from "./repository-profile";
-import { RecordsDisplay } from "./records-display";
-import { RecordsAnalytics } from "./records-analytics";
+import { FeaturedRecords } from "./featured-records";
+import { RepositoryAnalytics } from "./repository-analytics";
 import { ContributionHistory } from "./contribution-history";
 import { CreateRecordDialog } from "./create-record-dialog";
 import { IFinalCreateRecordSchema } from "./create-record-dialog/schema";
@@ -68,39 +69,10 @@ export default function Dashboard() {
 
     const record = await recordCommands.createRecord({
       newRecord: {
-        repository_id: Number(params.id),
-        user_id: auth.store.user!.id,
-        parent_id: undefined,
-        composition_meta: {
-          genre: values.compositionMeta.genre,
-          written_at: values.compositionMeta.writtenAt,
-          full_title: values.compositionMeta.fullTitle,
-          piece_title: values.compositionMeta.pieceTitle,
-          set_title: values.compositionMeta.setTitle,
-          number_in_set: values.compositionMeta.numberInSet,
-          movement: values.compositionMeta.movement,
-          opus: values.compositionMeta.opus,
-          kvv: values.compositionMeta.kvv,
-          n: values.compositionMeta.n,
-          variation: values.compositionMeta.variation,
-          key: values.compositionMeta.key,
-          work_summary: values.compositionMeta.workSummary,
-        },
-        author_meta: {
-          full_name: values.authorMeta.fullName,
-          first_name: values.authorMeta.firstName,
-          last_name: values.authorMeta.lastName,
-          middle: values.authorMeta.middle,
-          born_at: values.authorMeta.bornAt,
-          died_at: values.authorMeta.diedAt,
-          birth_city: values.authorMeta.birthCity,
-          birth_region: values.authorMeta.birthRegion,
-          birth_country: values.authorMeta.birthCountry,
-          nationality: values.authorMeta.nationality,
-          gender: values.authorMeta.gender,
-          author_summary: values.authorMeta.authorSummary,
-        },
-        started_at: values.startedAt,
+        repositoryId: Number(params.id),
+        userId: auth.store.user!.id,
+        parentId: undefined,
+        ...values,
       },
     });
 
@@ -129,12 +101,23 @@ export default function Dashboard() {
             <RepositoryProfile repository={repository()} />
           </SplitDetails>
           <SplitContent>
-            <RecordsDisplay
-              records={records()}
+            <FeaturedRecords
+              records={records() || []}
               onCreateRecord={onCreateRecord}
             />
-            <RecordsAnalytics />
-            <ContributionHistory />
+            <Tabs.Root defaultValue="history">
+              <Tabs.List>
+                <Tabs.Trigger value="history">History</Tabs.Trigger>
+                <Tabs.Trigger value="analytics">Analytics</Tabs.Trigger>
+                <Tabs.Indicator />
+              </Tabs.List>
+              <Tabs.Content value="history">
+                <ContributionHistory />
+              </Tabs.Content>
+              <Tabs.Content value="analytics">
+                <RepositoryAnalytics />
+              </Tabs.Content>
+            </Tabs.Root>
           </SplitContent>
         </Split>
       </PageContainer>

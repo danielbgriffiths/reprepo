@@ -42,3 +42,22 @@ export interface Repository extends BaseDataModel {
   description?: string;
   socialLinks?: string[];
 }
+
+export interface CommitCalendarDay {
+  date: string;
+  density: number;
+  count: number;
+}
+
+export interface CommitCalendarHeader {
+  count: number;
+}
+
+export interface CommitCalendarRow {
+  days: CommitCalendarDay[];
+}
+
+export interface CommitCalendarTable {
+  headers: CommitCalendarHeader[];
+  rows: CommitCalendarRow[];
+}

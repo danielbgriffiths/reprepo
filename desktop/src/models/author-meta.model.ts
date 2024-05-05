@@ -8,6 +8,7 @@ import {
 } from "@models/index";
 
 export interface ApiGeneratedAuthorMeta {
+  id?: number;
   full_name: string;
   first_name: string;
   last_name: string;
@@ -23,6 +24,7 @@ export interface ApiGeneratedAuthorMeta {
 }
 
 export interface GeneratedAuthorMeta {
+  id?: number;
   fullName: string;
   firstName: string;
   lastName: string;
@@ -39,9 +41,11 @@ export interface GeneratedAuthorMeta {
 
 export interface ApiAuthorMeta
   extends ApiBaseDataModel,
-    ApiGeneratedAuthorMeta {}
+    Omit<ApiGeneratedAuthorMeta, "id"> {}
 
-export interface AuthorMeta extends BaseDataModel, GeneratedAuthorMeta {}
+export interface AuthorMeta
+  extends BaseDataModel,
+    Omit<GeneratedAuthorMeta, "id"> {}
 
 export interface AuthorCompositionMeta {
   authorMeta: AuthorMeta;

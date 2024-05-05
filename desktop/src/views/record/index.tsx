@@ -30,10 +30,7 @@ export default function Record() {
   // State
   //
 
-  const [record] = createResource(
-    () => params.id || params.recordId,
-    fetchRecord,
-  );
+  const [_] = createResource(() => params.id || params.recordId, fetchRecord);
   const [commits, { refetch }] = createResource(() => params.id, fetchCommits);
   const [isCreateCommitDialogOpen, setIsCreateCommitDialogOpen] =
     createSignal<boolean>(false);
@@ -71,7 +68,7 @@ export default function Record() {
 
     const commit = await commitCommands.createCommit({
       newCommit: {
-        record_id: Number(params.recordId),
+        recordId: Number(params.recordId),
         title: values.title,
         notes: values.notes,
       },
@@ -99,7 +96,7 @@ export default function Record() {
       <PageContainer>
         <Split>
           <SplitContent>
-            <Title variant={HeadingTextVariant.Title}>{record()?.name}</Title>
+            <Title variant={HeadingTextVariant.Title}>Record Name</Title>
             <button onClick={onCreateCommit}>New Commit</button>
             <For each={commits() ?? []}>
               {(commit) => <div>{commit.notes}</div>}

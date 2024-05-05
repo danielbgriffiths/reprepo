@@ -50,8 +50,8 @@ pub async fn create_record(state: State<'_, Arc<Mutex<AppState>>>, new_record: C
 
     let db_connection = &mut app_state.pool.get().unwrap();
 
-    db_connection.transaction(|transaction_connection| {
-        let create_author_meta = new_record
+    let record_id = db_connection.transaction(|transaction_connection| {
+        let author_meta = new_record
             .clone()
             .author_meta
             .into_author_meta()
@@ -59,11 +59,13 @@ pub async fn create_record(state: State<'_, Arc<Mutex<AppState>>>, new_record: C
 
         let author_meta_id = services::author_meta::create_author_meta(
             transaction_connection,
-            &create_author_meta
+            &author_meta
         )
             .map_err(|e| LocalError::DatabaseError {message: e.to_string()})?;
 
-        let create_composition_meta = new_record
+        // create author meta if not exists
+
+        let composition_meta = new_record
             .clone()
             .composition_meta
             .into_composition_meta(author_meta_id)
@@ -71,9 +73,11 @@ pub async fn create_record(state: State<'_, Arc<Mutex<AppState>>>, new_record: C
 
         let composition_meta_id = services::composition_meta::create_composition_meta(
             transaction_connection,
-            &create_composition_meta
+            &composition_meta
         )
             .map_err(|e| LocalError::DatabaseError {message: e.to_string()})?;
+
+        // create composition meta if not exists
 
         let record = new_record
             .into_record(author_meta_id.clone(), composition_meta_id.clone())
@@ -81,5 +85,7 @@ pub async fn create_record(state: State<'_, Arc<Mutex<AppState>>>, new_record: C
 
         services::record::create_record(transaction_connection, &record)
             .map_err(|e| LocalError::DatabaseError {message: e.to_string()})
-    })
+    }).map_err(|e| LocalError::DatabaseError {message: e.to_string()})?;
+
+    return Ok(record_id)
 }

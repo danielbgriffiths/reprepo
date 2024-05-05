@@ -5,12 +5,23 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 // Local Imports
 import { Commands } from "@services/commands/index.types";
 import { ApiCommit, Commit } from "@/models";
+import { toCamel, toSnake } from "@/utils";
+
+interface CreateCommitPayload extends InvokeArgs {
+  newCommit: {
+    recordId: number;
+    notes: string;
+    title?: string;
+  };
+}
 
 export async function createCommit(
-  args: InvokeArgs,
+  args: CreateCommitPayload,
 ): Promise<number | undefined> {
   try {
-    const result = await invoke<number>(Commands.CreateCommit, args);
+    const result = await invoke<number>(Commands.CreateCommit, {
+      newCommit: toSnake(args.newCommit),
+    });
 
     console.info("record.commands: createCommit: ", result);
 
@@ -30,16 +41,7 @@ export async function getCommits(
 
     console.info("record.commands: getCommits: ", result);
 
-    return result.map(
-      (record): Commit => ({
-        id: record.id,
-        notes: record.notes,
-        recordId: record.record_id,
-        createdAt: record.created_at,
-        updatedAt: record.updated_at,
-        deletedAt: record.deleted_at,
-      }),
-    );
+    return toCamel<Commit[]>(result);
   } catch (e) {
     console.error("record.commands: getCommits: ", e);
 
@@ -55,14 +57,7 @@ export async function getCommitById(
 
     console.info("record.commands: getCommitById: ", result);
 
-    return {
-      id: result.id,
-      notes: result.notes,
-      recordId: result.record_id,
-      createdAt: result.created_at,
-      updatedAt: result.updated_at,
-      deletedAt: result.deleted_at,
-    };
+    return toCamel<Commit>(result);
   } catch (e) {
     console.error("record.commands: getCommitById: ", e);
 

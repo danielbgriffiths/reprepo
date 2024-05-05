@@ -34,18 +34,22 @@ pub struct CreateAuthorMeta {
     pub first_name: String,
     pub last_name: String,
     pub middle: Option<String>,
+
     pub born_at: Option<chrono::NaiveDate>,
     pub died_at: Option<chrono::NaiveDate>,
     pub birth_country: Option<String>,
     pub birth_region: Option<String>,
     pub birth_city: Option<String>,
+
     pub nationality: Option<String>,
     pub gender: Option<String>,
+
     pub author_summary: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GeneratedAuthorMeta {
+    pub id: Option<i32>,
     pub full_name: String,
     pub first_name: String,
     pub last_name: String,
@@ -58,6 +62,9 @@ pub struct GeneratedAuthorMeta {
     pub nationality: Option<String>,
     pub gender: Option<String>,
     pub author_summary: Option<String>,
+    pub created_at: Option<chrono::NaiveDateTime>,
+    pub updated_at: Option<chrono::NaiveDateTime>,
+    pub deleted_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
@@ -101,6 +108,33 @@ impl crate::models::author_meta::IntoAuthorMeta for GeneratedAuthorMeta {
             nationality: self.nationality,
             gender: self.gender,
             author_summary: self.author_summary,
+        })
+    }
+}
+
+pub trait IntoGeneratedAuthorMeta {
+    fn into_generated_author_meta(self) -> Result<GeneratedAuthorMeta, chrono::ParseError>;
+}
+
+impl crate::models::author_meta::IntoGeneratedAuthorMeta for AuthorMeta {
+    fn into_generated_author_meta(self) -> Result<GeneratedAuthorMeta, chrono::ParseError> {
+        Ok(GeneratedAuthorMeta {
+            id: Some(self.id),
+            full_name: self.full_name,
+            first_name: self.first_name,
+            last_name: self.last_name,
+            middle: self.middle,
+            born_at: self.born_at.map(|date| date.format("%Y-%m-%d").to_string()),
+            died_at: self.died_at.map(|date| date.format("%Y-%m-%d").to_string()),
+            birth_country: self.birth_country,
+            birth_region: self.birth_region,
+            birth_city: self.birth_city,
+            nationality: self.nationality,
+            gender: self.gender,
+            author_summary: self.author_summary,
+            created_at: Some(self.created_at),
+            updated_at: self.updated_at,
+            deleted_at: self.deleted_at,
         })
     }
 }

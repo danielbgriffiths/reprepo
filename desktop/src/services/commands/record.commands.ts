@@ -5,20 +5,21 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 // Local Imports
 import { Commands } from "@services/commands/index.types";
 import {
-  ApiGeneratedAuthorMeta,
-  ApiGeneratedCompositionMeta,
+  GeneratedAuthorMeta,
+  GeneratedCompositionMeta,
   ApiRecord,
   Record,
 } from "@/models";
+import { toCamel, toSnake } from "@/utils";
 
 interface CreateRecordPayload extends InvokeArgs {
   newRecord: {
-    repository_id: number;
-    user_id: number;
-    parent_id?: number;
-    author_meta: ApiGeneratedAuthorMeta;
-    composition_meta: ApiGeneratedCompositionMeta;
-    started_at: string;
+    repositoryId: number;
+    userId: number;
+    parentId?: number;
+    authorMeta: GeneratedAuthorMeta;
+    compositionMeta: GeneratedCompositionMeta;
+    startedAt: string;
   };
 }
 
@@ -34,7 +35,9 @@ export async function createRecord(
   args: CreateRecordPayload,
 ): Promise<number | undefined> {
   try {
-    const result = await invoke<number>(Commands.CreateRecord, args);
+    const result = await invoke<number>(Commands.CreateRecord, {
+      newRecord: toSnake(args.newRecord),
+    });
 
     console.info("record.commands: createRecord: ", result);
 
@@ -54,19 +57,7 @@ export async function getRecords(
 
     console.info("record.commands: getRecords: ", result);
 
-    return result.map(
-      (record): Record => ({
-        id: record.id,
-        repositoryId: record.repository_id,
-        parentId: record.parent_id,
-        userId: record.user_id,
-        compositionMetaId: record.composition_meta_id,
-        startedAt: record.started_at,
-        createdAt: record.created_at,
-        updatedAt: record.updated_at,
-        deletedAt: record.deleted_at,
-      }),
-    );
+    return toCamel<Record[]>(result);
   } catch (e) {
     console.error("record.commands: getRecords: ", e);
 
@@ -82,17 +73,7 @@ export async function getRecordById(
 
     console.info("record.commands: getRecordById: ", result);
 
-    return {
-      id: result.id,
-      repositoryId: result.repository_id,
-      parentId: result.parent_id,
-      userId: result.user_id,
-      compositionMetaId: result.composition_meta_id,
-      startedAt: result.started_at,
-      createdAt: result.created_at,
-      updatedAt: result.updated_at,
-      deletedAt: result.deleted_at,
-    };
+    return toCamel<Record>(result);
   } catch (e) {
     console.error("record.commands: getRecordById: ", e);
 

@@ -2,6 +2,7 @@
 import { ApiBaseDataModel, BaseDataModel } from "@models/api.model";
 
 export interface ApiGeneratedCompositionMeta {
+  id?: number;
   genre: string;
   written_at?: string;
   full_title: string;
@@ -18,6 +19,7 @@ export interface ApiGeneratedCompositionMeta {
 }
 
 export interface GeneratedCompositionMeta {
+  id?: number;
   genre: string;
   writtenAt?: string;
   fullTitle: string;
@@ -35,13 +37,13 @@ export interface GeneratedCompositionMeta {
 
 export interface ApiCompositionMeta
   extends ApiBaseDataModel,
-    ApiGeneratedCompositionMeta {
+    Omit<ApiGeneratedCompositionMeta, "id"> {
   author_meta_id: number;
 }
 
 export interface CompositionMeta
   extends BaseDataModel,
-    GeneratedCompositionMeta {
+    Omit<GeneratedCompositionMeta, "id"> {
   authorMetaId: number;
 }
 

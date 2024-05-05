@@ -6,14 +6,24 @@ use tokio::sync::Mutex;
 // local Usages
 use crate::libs::error::LocalError;
 use crate::models::composition_meta::CompositionFilterItem;
+use crate::services;
 use crate::state::AppState;
 
 #[tauri::command]
 pub async fn get_names(
-    _state: State<'_, Arc<Mutex<AppState>>>,
-    _field: String,
-    _specialization: String,
-    _author_meta_ids: Vec<i32>
+    state: State<'_, Arc<Mutex<AppState>>>,
+    field: String,
+    specialization: String,
+    author_meta_ids: Vec<i32>
 ) -> Result<Vec<CompositionFilterItem>, LocalError> {
-    return Ok(Vec::new());
+    let state_guard = state
+        .inner()
+        .lock()
+        .await;
+    let app_state = &*state_guard;
+
+    match services::composition_meta::select_names(&app_state, field, specialization, author_meta_ids) {
+        Ok(names) => Ok(names),
+        Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
+    }
 }

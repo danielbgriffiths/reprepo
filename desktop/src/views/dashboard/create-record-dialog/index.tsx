@@ -66,12 +66,15 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
     validate: valiForm(CreateRecordSchema),
   });
 
-  const [allAuthors] = createResource(async () => {
-    return await authorMetaCommands.getAuthors({
-      field: props.repository.field,
-      specialization: props.repository.specialization,
-    });
-  });
+  const [allAuthors] = createResource(
+    () => props.repository,
+    async () => {
+      return await authorMetaCommands.getAuthors({
+        field: props.repository.field,
+        specialization: props.repository.specialization,
+      });
+    },
+  );
   const [filteredAuthors, setFilteredAuthors] = createSignal<ComboboxOption[]>(
     allAuthors() ?? [],
   );
@@ -258,24 +261,36 @@ export function CreateRecordDialog(props: CreateRecordDialogProps) {
                 </Field>
                 <Show when={!!authorMeta() && !!compositionMeta()}>
                   <div>
-                    <ul>
-                      <li>
-                        <span>Date Authored:</span>
-                        <span>{compositionMeta()!.writtenAt}</span>
-                      </li>
-                      <li>
-                        <span>Genre:</span>
-                        <span>{compositionMeta()!.genre}</span>
-                      </li>
-                      <li>
-                        <span>Composer Summary:</span>
-                        <span>{authorMeta()!.authorSummary}</span>
-                      </li>
-                      <li>
-                        <span>Work Summary:</span>
-                        <span>{compositionMeta()!.workSummary}</span>
-                      </li>
-                    </ul>
+                    <div>
+                      <div>
+                        <div>{authorMeta()!.fullName}</div>
+                        <div>{authorMeta()!.firstName}</div>
+                        <div>{authorMeta()!.middle}</div>
+                        <div>{authorMeta()!.lastName}</div>
+                      </div>
+                      <div>
+                        <div>{authorMeta()!.bornAt}</div>
+                        <div>{authorMeta()!.diedAt}</div>
+                        <div>{authorMeta()!.birthCity}</div>
+                        <div>{authorMeta()!.birthRegion}</div>
+                        <div>{authorMeta()!.birthCountry}</div>
+                      </div>
+                      <div>
+                        <div>{authorMeta()!.nationality}</div>
+                        <div>{authorMeta()!.gender}</div>
+                      </div>
+                      <div>
+                        <div>{authorMeta()!.authorSummary}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div>
+                        <div>{compositionMeta()!.fullTitle}</div>
+                        <div>{compositionMeta()!.pieceTitle}</div>
+                        <div>{compositionMeta()!.setTitle}</div>
+                        <div>{compositionMeta()!.genre}</div>
+                      </div>
+                    </div>
                   </div>
                 </Show>
                 <Field name="startedAt" type="string">

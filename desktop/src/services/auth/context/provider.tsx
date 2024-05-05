@@ -108,6 +108,8 @@ export function AuthProvider(props: AuthProviderProps) {
   }
 
   async function hydrateActiveRepositoryId(): Promise<void> {
+    if (!authStore.user?.id) return;
+
     const activeRepositoryId = await stronghold.readWithParse(
       StrongholdKeys.ActiveRepository,
       authStore.user!.id,

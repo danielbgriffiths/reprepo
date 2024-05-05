@@ -4,12 +4,30 @@ import { InvokeArgs } from "@tauri-apps/api/tauri";
 
 // Local Imports
 import { Commands } from "@services/commands/index.types";
-import { ApiRepository, Repository } from "@/models";
+import { ApiRepository, CommitCalendarTable, Repository } from "@/models";
+import { toCamel, toSnake } from "@/utils";
+
+interface GetRepositoryPayload extends InvokeArgs {
+  targetRepositoryId: number;
+}
+
+interface GetYearsListPayload extends InvokeArgs {
+  targetRepositoryId: number;
+}
+
+interface GetCommitCalendarPayload extends InvokeArgs {
+  targetRepositoryId: number;
+  year: number;
+}
 
 export async function createRepository(
   args: InvokeArgs,
 ): Promise<number | undefined> {
   try {
+    args = toSnake(args);
+
+    console.log("repository.commands: createRepository: args: ", args);
+
     const result = await invoke<number>(Commands.CreateRepository, args);
 
     console.info("repository.commands: createRepository: ", result);
@@ -33,31 +51,12 @@ export async function getRepositories(
 
     console.info("repository.commands: getRepositories: ", result);
 
-    return result.map(
-      (repository): Repository => ({
-        id: repository.id,
-        name: repository.name,
-        userId: repository.user_id,
-        field: repository.field,
-        specialization: repository.specialization,
-        isPrivate: repository.is_private,
-        description: repository.description,
-        socialLinks: repository.social_links,
-        startDate: repository.start_date,
-        createdAt: repository.created_at,
-        updatedAt: repository.updated_at,
-        deletedAt: repository.deleted_at,
-      }),
-    );
+    return toCamel<Repository[]>(result);
   } catch (e) {
     console.error("repository.commands: getRepositories: ", e);
 
     return undefined;
   }
-}
-
-interface GetRepositoryPayload extends InvokeArgs {
-  targetRepositoryId: number;
 }
 
 export async function getRepository(
@@ -68,22 +67,44 @@ export async function getRepository(
 
     console.info("repository.commands: getRepositories: ", result);
 
-    return {
-      id: result.id,
-      name: result.name,
-      userId: result.user_id,
-      field: result.field,
-      specialization: result.specialization,
-      isPrivate: result.is_private,
-      description: result.description,
-      socialLinks: result.social_links,
-      startDate: result.start_date,
-      createdAt: result.created_at,
-      updatedAt: result.updated_at,
-      deletedAt: result.deleted_at,
-    };
+    return toCamel<Repository>(result);
   } catch (e) {
     console.error("repository.commands: getRepositories: ", e);
+
+    return undefined;
+  }
+}
+
+export async function getCommitCalendar(
+  args: GetCommitCalendarPayload,
+): Promise<CommitCalendarTable | undefined> {
+  try {
+    const result = await invoke<CommitCalendarTable>(
+      Commands.GetCommitCalendar,
+      args,
+    );
+
+    console.info("repository.commands: getCommitCalendar: ", result);
+
+    return result;
+  } catch (e) {
+    console.error("repository.commands: getCommitCalendar: ", e);
+
+    return undefined;
+  }
+}
+
+export async function getYearsList(
+  args: GetYearsListPayload,
+): Promise<number[] | undefined> {
+  try {
+    const result = await invoke<number[]>(Commands.GetYearsList, args);
+
+    console.info("repository.commands: getYearsList: ", result);
+
+    return result;
+  } catch (e) {
+    console.error("repository.commands: getYearsList: ", e);
 
     return undefined;
   }

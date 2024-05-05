@@ -41,9 +41,9 @@ export default function CreateRepository() {
         specialization: values.specialization,
         description: values.description,
         social_links: [],
-        start_date: values.startDate,
-        is_private: values.isPrivate === "private",
-        user_id: auth.store.user!.id,
+        startDate: values.startDate,
+        isPrivate: values.isPrivate === "private",
+        userId: auth.store.user!.id,
       },
     });
 
