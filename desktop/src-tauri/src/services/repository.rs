@@ -52,10 +52,23 @@ pub fn select_commits_by_year(app_state: &AppState, target_repository_id: &i32, 
 pub fn get_years(app_state: &AppState, target_repository_id: &i32) -> QueryResult<Vec<NaiveDateTime>> {
     let db_connection = &mut app_state.pool.get().unwrap();
 
-    repository::table
+    let commit_years = repository::table
         .inner_join(record::table.on(record::repository_id.eq(repository::id)))
         .inner_join(commit::table.on(commit::record_id.eq(record::id)))
         .filter(repository::id.eq(target_repository_id))
         .select(commit::created_at)
-        .load::<NaiveDateTime>(db_connection)
+        .load::<NaiveDateTime>(db_connection)?;
+
+    let record_years = repository::table
+        .inner_join(record::table.on(record::repository_id.eq(repository::id)))
+        .filter(repository::id.eq(target_repository_id))
+        .select(record::created_at)
+        .load::<NaiveDateTime>(db_connection)?;
+
+    let mut all_years = Vec::new();
+
+    all_years.extend(commit_years);
+    all_years.extend(record_years);
+
+    Ok(all_years)
 }

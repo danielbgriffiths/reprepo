@@ -58,6 +58,7 @@ pub async fn get_repository(state: State<'_, Arc<Mutex<AppState>>>, target_repos
     }
 }
 
+#[tauri::command]
 pub async fn get_commit_calendar(
     state: State<'_, Arc<Mutex<AppState>>>,
     target_repository_id: i32,
@@ -72,14 +73,16 @@ pub async fn get_commit_calendar(
     let commits = services::repository::select_commits_by_year(&app_state, &target_repository_id, &year)
         .map_err(|e| LocalError::DatabaseError { message: e.to_string() })?;
 
-    let commits_hash_map = hash_map_commits_by_date(commits);
-
-    let commit_calendar = generate_commit_calendar_table(year, commits_hash_map);
-
-    Ok(commit_calendar)
+    Ok(
+        generate_commit_calendar_table(
+            year,
+            hash_map_commits_by_date(commits)
+        )
+    )
 }
 
-pub async fn get_years(state: State<'_, Arc<Mutex<AppState>>>, target_repository_id: i32) -> Result<Vec<i32>, LocalError> {
+#[tauri::command]
+pub async fn get_years_list(state: State<'_, Arc<Mutex<AppState>>>, target_repository_id: i32) -> Result<Vec<i32>, LocalError> {
     let state_guard = state
         .inner()
         .lock()

@@ -69,6 +69,7 @@ pub struct GeneratedAuthorMeta {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::author_meta)]
+#[serde(rename_all = "camelCase")]
 pub struct AuthorFilterItem {
     pub id: i32,
     pub full_name: String,

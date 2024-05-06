@@ -69,6 +69,7 @@ pub struct GeneratedCompositionMeta {
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::composition_meta)]
+#[serde(rename_all = "camelCase")]
 pub struct CompositionFilterItem {
     pub id: i32,
     pub full_title: String,

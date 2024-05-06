@@ -23,7 +23,7 @@ use crate::commands::user::{get_users, get_authenticated_user, update_user_onboa
 use crate::commands::utilities::get_env;
 use crate::commands::auth::{create_google_oauth, logout};
 use crate::commands::file::{upload_file, delete_file, get_file};
-use crate::commands::repository::{get_repositories, create_repository, get_repository};
+use crate::commands::repository::{get_repositories, create_repository, get_repository, get_years_list, get_commit_calendar};
 use crate::commands::record::{get_records, create_record, get_record};
 use crate::commands::commit::{get_commits, create_commit};
 use crate::commands::author_meta::get_authors;
@@ -76,6 +76,8 @@ fn main() {
                 get_repositories,
                 create_repository,
                 get_repository,
+                get_years_list,
+                get_commit_calendar,
 
                 // Record
                 get_records,

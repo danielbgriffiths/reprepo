@@ -43,7 +43,7 @@ export function ContributionHistory(_props: ContributionHistoryProps) {
     createSignal<boolean>(false);
 
   const [commitCalendar] = createResource(
-    () => params.id + selectedYear() + `${isShowPrivateEnabled()}`,
+    () => params.id,
     async () => {
       return await repositoryCommands.getCommitCalendar({
         targetRepositoryId: Number(params.id),

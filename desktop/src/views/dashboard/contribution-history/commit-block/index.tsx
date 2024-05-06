@@ -13,7 +13,7 @@ export function CommitBlock(props: Props) {
 
 const CommitBlockElement = styled.div<{ density: number }>`
   background-color: ${({ theme, density }) => {
-    const { r, g, b } = hexToRGB(theme?.colors?.accent.success!);
+    const { r, g, b } = hexToRGB(theme?.colors?.state.success!);
     return `rgba(${r} ${g} ${b} / ${density / 5})`;
   }};
   border-radius: ${({ theme }) => theme?.radius.badge ?? 0};
