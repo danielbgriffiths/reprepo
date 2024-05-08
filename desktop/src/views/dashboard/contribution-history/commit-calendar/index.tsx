@@ -5,6 +5,7 @@ import { styled } from "solid-styled-components";
 // Local Imports
 import { CommitDay } from "../commit-day";
 import { CommitCalendarTable } from "@/models";
+import { BodyTextVariant, Text } from "@services/styles";
 
 interface Props {
   calendar?: CommitCalendarTable;
@@ -17,12 +18,25 @@ export function CommitCalendar(props: Props) {
   // Functions
   //
 
-  function getMonthLabelByIndex(_index: number) {
-    return "";
+  function getMonthLabelByIndex(index: number) {
+    return [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ][index];
   }
 
-  function getDayLabelByIndex(_index: number) {
-    return "";
+  function getDayLabelByIndex(index: number) {
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][index];
   }
 
   return (
@@ -33,7 +47,9 @@ export function CommitCalendar(props: Props) {
           <For each={props.calendar?.headers}>
             {(header, headerIdx) => (
               <HeaderCell colSpan={header.count}>
-                {getMonthLabelByIndex(headerIdx())}
+                <Text variant={BodyTextVariant.OverlineText}>
+                  {getMonthLabelByIndex(headerIdx())}
+                </Text>
               </HeaderCell>
             )}
           </For>
@@ -44,7 +60,11 @@ export function CommitCalendar(props: Props) {
           {(row, rowIdx) => (
             <Row>
               <Show when={rowIdx() % 2 !== 0} fallback={<GhostLabelCell />}>
-                <LabelCell>{getDayLabelByIndex(rowIdx())}</LabelCell>
+                <LabelCell>
+                  <Text variant={BodyTextVariant.OverlineText}>
+                    {getDayLabelByIndex(rowIdx())}
+                  </Text>
+                </LabelCell>
               </Show>
               <For each={row.days}>
                 {(day) => (
@@ -67,6 +87,7 @@ export function CommitCalendar(props: Props) {
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 `;
 
 const HeaderRow = styled.tr``;
@@ -75,10 +96,21 @@ const GhostHeaderCell = styled.th``;
 
 const HeaderCell = styled.th``;
 
-const Row = styled.tr``;
+const Row = styled.tr`
+  height: 12px;
+  padding: 0;
+`;
 
-const GhostLabelCell = styled.td``;
+const GhostLabelCell = styled.td`
+  height: 12px;
+`;
 
-const LabelCell = styled.td``;
+const LabelCell = styled.td`
+  height: 12px;
+`;
 
-const Cell = styled.td``;
+const Cell = styled.td`
+  width: 12px;
+  height: 12px;
+  padding: 0;
+`;

@@ -38,8 +38,12 @@ const TooltipTrigger = styled(Tooltip.Trigger)`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  height: 100%;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  margin: 0;
 `;
 
 const TooltipContent = styled(Tooltip.Content)``;
