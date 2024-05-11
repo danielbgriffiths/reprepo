@@ -1,0 +1,8 @@
+-- Your SQL goes here
+
+CREATE TABLE IF NOT EXISTS account (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT NULL,
+    deleted_at TIMESTAMP DEFAULT NULL
+);
