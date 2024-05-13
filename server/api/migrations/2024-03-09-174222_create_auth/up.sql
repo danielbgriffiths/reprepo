@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS "auth" (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) DEFAULT null,
     provider OAUTH_PROVIDER NOT NULL DEFAULT 'email',
+    access_token VARCHAR(2000) DEFAULT null,
+    refresh_token VARCHAR(2000) DEFAULT null,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP DEFAULT NULL,
     deleted_at TIMESTAMP DEFAULT NULL,

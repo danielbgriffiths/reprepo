@@ -11,3 +11,7 @@ pub async fn get_users() -> Result<web::Json<()>, ApiError> {
 pub async fn get_authenticated_user() -> Result<web::Json<()>, ApiError> {
     Ok(web::Json({}))
 }
+
+pub async fn update_user_onboarding() -> Result<web::Json<()>, ApiError> {
+    Ok(web::Json({}))
+}

@@ -7,15 +7,6 @@ pub mod sql_types {
 }
 
 diesel::table! {
-    account (id) {
-        id -> Int4,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
     use diesel::sql_types::*;
     use super::sql_types::OauthProvider;
 
@@ -26,18 +17,6 @@ diesel::table! {
         #[max_length = 255]
         password -> Nullable<Varchar>,
         provider -> OauthProvider,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
-}
-
-diesel::table! {
-    auth_account (id) {
-        id -> Int4,
-        auth_id -> Int4,
-        account_id -> Int4,
-        is_root -> Bool,
         #[max_length = 2000]
         access_token -> Nullable<Varchar>,
         #[max_length = 2000]
@@ -178,8 +157,6 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(auth_account -> account (account_id));
-diesel::joinable!(auth_account -> auth (auth_id));
 diesel::joinable!(commit -> record (record_id));
 diesel::joinable!(composition_meta -> author_meta (author_meta_id));
 diesel::joinable!(record -> author_meta (author_meta_id));
@@ -190,9 +167,7 @@ diesel::joinable!(repository -> user (user_id));
 diesel::joinable!(user -> auth (auth_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    account,
     auth,
-    auth_account,
     author_meta,
     commit,
     composition_meta,

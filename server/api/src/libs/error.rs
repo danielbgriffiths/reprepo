@@ -28,6 +28,7 @@ pub enum ApiErrorType {
     Lock,
     Library,
     Internal,
+    Unavailable,
 }
 
 #[derive(Error, Debug, Serialize)]
@@ -55,6 +56,8 @@ pub enum ApiError {
     Internal(String),
     #[error("api-error: Lock: {0}")]
     Lock(String),
+    #[error("api-error: Unavailable: {0}")]
+    Unavailable(String),
 }
 
 struct ApiErrorWrapper {
@@ -98,6 +101,7 @@ impl ResponseError for ApiError {
             ApiError::Library(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::Lock(_) => StatusCode::LOCKED,
+            ApiError::Unavailable(_) => StatusCode::BAD_REQUEST,
         }
     }
 
@@ -121,6 +125,7 @@ impl ApiError {
             ApiError::Library(_) => ApiErrorType::Library,
             ApiError::Internal(_) => ApiErrorType::Internal,
             ApiError::Lock(_) => ApiErrorType::Lock,
+            ApiError::Unavailable(_) => ApiErrorType::Unavailable
         }
     }
 }

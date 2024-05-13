@@ -1,17 +1,19 @@
-use std::sync::Arc;
 // External Usages
 use actix_web::{web, App, HttpServer, Responder};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use tokio::sync::Mutex;
+use std::sync::Arc;
 
 // Local Usages
 mod routes;
 mod middleware;
-mod services;
+mod data;
 mod state;
 mod models;
 mod libs;
 mod controllers;
+mod schema;
+mod services;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

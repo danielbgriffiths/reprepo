@@ -204,6 +204,12 @@ pub async fn create_google_oauth(state: State<'_, Arc<Mutex<AppState>>>, existin
         .await
         .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
 
+    let login_response = reprepo_server::login_google_oauth()
+        .await
+        .map_err(|e| LocalError::ExternalError { message: e.to_string() })?;
+
+    // Can we use app_state to store this information instead of the vault?
+
     let state_guard = state
         .inner()
         .lock()
@@ -275,54 +281,15 @@ pub async fn create_google_oauth(state: State<'_, Arc<Mutex<AppState>>>, existin
     }
 }
 
-fn select_all_auth_fields(app_state: &AppState, target_account_id: &i32, target_auth_id: &i32) -> Result<AllAuthFields, LocalError> {
-    Ok(AllAuthFields {
-        auth_fields_from_auth_account: select_auth_fields_from_account(app_state, target_account_id, target_auth_id)
-            .map_err(|e| LocalError::DatabaseError { message: e.to_string() })?,
-        auth_fields_from_auth: select_auth_fields_from_auth(app_state, target_auth_id)
-            .map_err(|e| LocalError::DatabaseError { message: e.to_string() })?,
-    })
-}
+fn logout_google_oauth(standard_revocable_token: StandardRevocableToken) -> Result::<bool, LocalError> {
+    let revoke_response_result = get_google_oauth_client()
+        .revoke_token(standard_revocable_token)
+        .unwrap()
+        .request(&oauth2::reqwest::http_client);
 
-fn has_access_tokens(auth_fields: &AllAuthFields) -> bool {
-    auth_fields.auth_fields_from_auth_account.access_token.is_some() ||
-        auth_fields.auth_fields_from_auth_account.refresh_token.is_some()
-}
-
-fn get_standard_revocable_token(auth_fields: &AllAuthFields) -> Option<StandardRevocableToken> {
-    auth_fields.auth_fields_from_auth_account.refresh_token.as_ref()
-        .or_else(|| auth_fields.auth_fields_from_auth_account.access_token.as_ref())
-        .map(|token| StandardRevocableToken::from(AccessToken::new(token.to_owned())))
-}
-
-fn logout_google_oauth(
-    app_state: &AppState,
-    account_id: &i32,
-    auth_id: &i32,
-    auth_fields: &AllAuthFields
-) -> Result::<bool, LocalError> {
-    if !has_access_tokens(&auth_fields) {
-        return Ok(true)
-    }
-
-    match get_standard_revocable_token(&auth_fields) {
-        Some(standard_revocable_token) => {
-            let revoke_response_result = get_google_oauth_client()
-                .revoke_token(standard_revocable_token)
-                .unwrap()
-                .request(&oauth2::reqwest::http_client);
-
-            match revoke_response_result {
-                Ok(_revoke_response) => {
-                    match remove_auth_account_tokens(app_state, &account_id, &auth_id) {
-                        Ok(_auth_account_id) => Ok(true),
-                        Err(e) => Err(LocalError::DatabaseError { message: e.to_string() })
-                    }
-                },
-                Err(e) => Err(LocalError::ExternalError { message: e.to_string() })
-            }
-        },
-        None => Err(LocalError::ProcessError { message: "Unable to get revocable token".to_string() }),
+    match revoke_response_result {
+        Ok(_revoke_response) => Ok(true),
+        Err(e) => Err(LocalError::ExternalError { message: e.to_string() })
     }
 }
 
@@ -334,11 +301,12 @@ pub async fn logout(state: State<'_, Arc<Mutex<AppState>>>, account_id: i32, aut
         .await;
     let app_state = &*state_guard;
 
-    let all_auth_fields = select_all_auth_fields(app_state, &account_id, &auth_id)?;
+    let standard_revocable_token = reprepo_api::logout(app_state.auth_claims)
+        ?.map_err(|e| LocalError::ExternalError { message: e.to_string() });
 
-    match all_auth_fields.auth_fields_from_auth.provider {
+    match app_state.auth_claims.provider {
         OauthProvider::Email => Err(LocalError::UnavailableError { message: "Email auth is not configured".to_string() }),
-        OauthProvider::Google => logout_google_oauth(app_state, &account_id, &auth_id, &all_auth_fields),
+        OauthProvider::Google => logout_google_oauth(standard_revocable_token),
         OauthProvider::Pinterest => Err(LocalError::UnavailableError { message: "Pinterest auth is not configured".to_string() }),
         OauthProvider::Instagram => Err(LocalError::UnavailableError { message: "Instagram auth is not configured".to_string() }),
     }

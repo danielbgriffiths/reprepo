@@ -12,8 +12,9 @@ pub fn public_routes(mut cfg: web::ServiceConfig) {
                 .route("/{user_ids}", web::get().to(user_controller::get_users))
         ).service(
             web::scope("auth")
-                .route("/login", web::get().to(auth_controller::login))
-        );
+                .route("/login-google-oauth/{user_id}", web::post().to(auth_controller::login_google_oauth))
+                .route("/login-google-oauth", web::post().to(auth_controller::login_google_oauth))
+    );
 }
 
 pub fn private_routes(mut cfg: web::ServiceConfig) {
@@ -21,5 +22,9 @@ pub fn private_routes(mut cfg: web::ServiceConfig) {
         .service(
             web::scope("auth")
                 .route("logout", web::get().to(auth_controller::logout))
+        )
+        .service(
+            web::scope("user")
+                .route("update-onboarding/{user_id}", web::put().to(user_controller::update_user_onboarding))
         );
 }
