@@ -1,12 +1,12 @@
-use std::sync::Arc;
 // External Usages
 use tokio::sync::Mutex;
 use diesel::{PgConnection, r2d2};
 use diesel::r2d2::ConnectionManager;
 use dotenvy;
+use std::sync::Arc;
 
 // Local Usages
-use crate::models::auth::AuthClaims;
+use crate::models::user::User;
 
 pub type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -24,6 +24,6 @@ pub fn establish_connection() -> DbPool {
 }
 
 pub struct AppData {
-    pub auth_claims: Arc<Mutex<Option<AuthClaims>>>,
+    pub user: Arc<Mutex<Option<User>>>,
     pub db: DbPool,
 }

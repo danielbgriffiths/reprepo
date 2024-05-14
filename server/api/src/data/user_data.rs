@@ -9,7 +9,7 @@ use crate::models::user::{CreateUser, User};
 use crate::schema::user;
 use crate::libs::error::ApiError;
 
-pub async fn get_users(db: &DbPool, user_ids: Vec<i32>) -> Result<Vec<User>, ApiError> {
+pub async fn select_users_by_id(db: &DbPool, user_ids: Vec<i32>) -> Result<Vec<User>, ApiError> {
     let res: Vec<User> = web::block(move || {
         let db_connection = &mut db.get().unwrap();
 

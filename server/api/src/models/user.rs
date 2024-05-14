@@ -2,78 +2,67 @@
 use serde::{Deserialize, Serialize};
 use diesel::{Insertable, Queryable, Selectable};
 
-// Local Usages
-use crate::models::auth::Auth;
-use crate::libs::error::ApiError;
-use crate::libs::locale::find_valid_locale;
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(diesel_derive_enum::DbEnum)]
+#[ExistingTypePath = "crate::schema::sql_types::OauthProvider"]
+pub enum OauthProvider {
+    Email,
+    Google,
+    Instagram,
+    Pinterest,
+}
 
 #[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::user)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
     pub id: i32,
-    pub auth_id: i32,
+
+    pub access_token: Option<String>,
+    pub refresh_token: Option<String>,
+    pub email: String,
+    pub password: Option<String>,
+    pub provider: OauthProvider,
     pub first_name: String,
     pub last_name: String,
     pub age: Option<i32>,
     pub avatar: Option<String>,
     pub locale: String,
     pub is_onboarded: bool,
+
     pub created_at: chrono::NaiveDateTime,
     pub updated_at: Option<chrono::NaiveDateTime>,
     pub deleted_at: Option<chrono::NaiveDateTime>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AuthUser {
-    pub user: User,
-    pub auth: Auth,
-}
-
-pub trait WithAuth {
-    fn with_auth(self, auth: Auth) -> Result<AuthUser, ApiError>;
-}
-
-impl crate::models::user::WithAuth for User {
-    fn with_auth(self, auth: Auth) -> Result<AuthUser, ApiError> {
-        Ok(AuthUser {
-            user: self,
-            auth,
-        })
-    }
-}
-
 #[derive(Debug, Insertable)]
 #[diesel(table_name = crate::schema::user)]
 pub struct CreateUser {
-    pub auth_id: i32,
+    pub email: String,
+    pub password: Option<String>,
+    pub provider: OauthProvider,
     pub first_name: String,
     pub last_name: String,
     pub avatar: String,
     pub locale: String,
 }
 
-#[derive(Debug)]
-#[diesel(table_name = crate::schema::user)]
-pub struct PartialCreateUser {
-    pub first_name: String,
-    pub last_name: String,
-    pub avatar: String,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ApiClaims {
+    pub sub: i32,
+    pub exp: i64,
+    pub provider: OauthProvider,
+    pub token_type: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GoogleOAuthTokenClaims {
+    pub email: String,
+    pub family_name: String,
+    pub given_name: String,
     pub locale: String,
-}
-
-pub trait AddAuthId {
-    fn add_auth_id(self, auth_id: i32) -> Result<CreateUser, ApiError>;
-}
-
-impl crate::models::user::AddAuthId for PartialCreateUser {
-    fn add_auth_id(self, auth_id: i32) -> Result<CreateUser, ApiError> {
-        Ok(CreateUser {
-            first_name: self.first_name,
-            last_name: self.last_name,
-            avatar: self.avatar,
-            locale: find_valid_locale(&self.locale),
-            auth_id,
-        })
-    }
+    pub name: String,
+    pub picture: String,
+    pub id: String,
+    pub verified_email: bool
 }

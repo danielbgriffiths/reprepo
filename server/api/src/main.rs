@@ -19,7 +19,7 @@ mod services;
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         let app_data = web::Data::new(state::AppData {
-            auth_claims: Arc::new(Mutex::new(None)),
+            user: Arc::new(Mutex::new(None)),
             db: state::establish_connection(),
         });
 

@@ -9,7 +9,7 @@ use jsonwebtoken::{encode, Header, EncodingKey};
 use chrono::prelude::*;
 
 // Local Usages
-use crate::models::auth::{Auth, CreateAuth, IntoAuthClaims, LoginGoogleOAuthBody, WithUser};
+use crate::models::auth::{Auth, CreateAuth, GoogleOAuthTokenClaims, IntoAuthClaims, WithUser};
 use crate::models::user::{AddAuthId, AuthUser, PartialCreateUser};
 use crate::schema::sql_types::OauthProvider;
 use crate::state::{AppData, DbPool};
@@ -40,9 +40,9 @@ fn create_auth_and_user_transaction(
 pub async fn create_or_confirm_auth_and_user(
     app_data: Data<AppData>,
     user_id: Option<i32>,
-    body: web::Json<LoginGoogleOAuthBody>
+    body: web::Json<GoogleOAuthTokenClaims>
 ) -> Result<AuthUser, ApiError> {
-    let token_claims = body.token_claims.clone();
+    let token_claims = body.clone();
 
     if user_id.is_some() {
         let user = user_data::select_by_id(&app_data.db, user_id.unwrap()).await?;

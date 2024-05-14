@@ -4,27 +4,10 @@ pub mod sql_types {
     #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "oauth_provider"))]
     pub struct OauthProvider;
-}
 
-diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::OauthProvider;
-
-    auth (id) {
-        id -> Int4,
-        #[max_length = 255]
-        email -> Varchar,
-        #[max_length = 255]
-        password -> Nullable<Varchar>,
-        provider -> OauthProvider,
-        #[max_length = 2000]
-        access_token -> Nullable<Varchar>,
-        #[max_length = 2000]
-        refresh_token -> Nullable<Varchar>,
-        created_at -> Timestamp,
-        updated_at -> Nullable<Timestamp>,
-        deleted_at -> Nullable<Timestamp>,
-    }
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "role_name"))]
+    pub struct RoleName;
 }
 
 diesel::table! {
@@ -138,9 +121,63 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::RoleName;
+
+    role (id) {
+        id -> Int4,
+        name -> RoleName,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::RoleName;
+
+    subscription (id) {
+        id -> Int4,
+        #[max_length = 100]
+        name -> Varchar,
+        available_role -> RoleName,
+        is_available -> Bool,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    teacher_student (id) {
+        id -> Int4,
+        teacher_id -> Int4,
+        student_id -> Int4,
+        is_active -> Bool,
+        started_at -> Timestamp,
+        ended_at -> Nullable<Timestamp>,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::OauthProvider;
+
     user (id) {
         id -> Int4,
-        auth_id -> Int4,
+        #[max_length = 255]
+        email -> Varchar,
+        #[max_length = 255]
+        password -> Nullable<Varchar>,
+        provider -> OauthProvider,
+        #[max_length = 2000]
+        access_token -> Nullable<Varchar>,
+        #[max_length = 2000]
+        refresh_token -> Nullable<Varchar>,
         #[max_length = 30]
         first_name -> Varchar,
         #[max_length = 50]
@@ -157,6 +194,33 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    user_role (id) {
+        id -> Int4,
+        user_id -> Nullable<Int4>,
+        role_id -> Nullable<Int4>,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    user_subscription (id) {
+        id -> Int4,
+        user_id -> Int4,
+        subscription_id -> Int4,
+        is_active -> Bool,
+        started_at -> Timestamp,
+        expires_at -> Nullable<Timestamp>,
+        cancelled_at -> Nullable<Timestamp>,
+        renew_count -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Nullable<Timestamp>,
+        deleted_at -> Nullable<Timestamp>,
+    }
+}
+
 diesel::joinable!(commit -> record (record_id));
 diesel::joinable!(composition_meta -> author_meta (author_meta_id));
 diesel::joinable!(record -> author_meta (author_meta_id));
@@ -164,14 +228,21 @@ diesel::joinable!(record -> composition_meta (composition_meta_id));
 diesel::joinable!(record -> repository (repository_id));
 diesel::joinable!(record -> user (user_id));
 diesel::joinable!(repository -> user (user_id));
-diesel::joinable!(user -> auth (auth_id));
+diesel::joinable!(user_role -> role (role_id));
+diesel::joinable!(user_role -> user (user_id));
+diesel::joinable!(user_subscription -> subscription (subscription_id));
+diesel::joinable!(user_subscription -> user (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    auth,
     author_meta,
     commit,
     composition_meta,
     record,
     repository,
+    role,
+    subscription,
+    teacher_student,
     user,
+    user_role,
+    user_subscription,
 );
