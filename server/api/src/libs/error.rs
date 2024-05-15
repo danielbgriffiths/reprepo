@@ -77,20 +77,6 @@ impl From<DieselError> for ApiError {
     }
 }
 
-impl Serialize for ApiError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: serde::ser::Serializer,
-    {
-        let error_message = format!("api-error: {:?}: {}", self.error_type(), self);
-
-        let wrapper = ApiErrorWrapper {
-            error: error_message,
-        };
-
-        wrapper.serialize(serializer)
-    }
-}
-
 impl ResponseError for ApiError {
     fn status_code(&self) -> StatusCode {
         match *self {

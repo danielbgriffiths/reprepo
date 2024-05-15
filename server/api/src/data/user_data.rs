@@ -39,9 +39,9 @@ pub async fn select_by_id(db: &DbPool, target_id: i32) -> Result<User, ApiError>
     Ok(res)
 }
 
-pub fn create_user(db_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, create_user: &CreateUser) -> Result<i32, ApiError> {
+pub fn create_user_transaction_sync(db_connection: &mut PooledConnection<ConnectionManager<PgConnection>>, create_user: &CreateUser) -> Result<i32, ApiError> {
     let user_id = user::table
-        .filter(user::auth_id.eq(create_user.auth_id))
+        .filter(user::email.eq(create_user.clone().email))
         .select(user::id)
         .first::<i32>(db_connection)
         .optional()?;

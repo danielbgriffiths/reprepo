@@ -1,6 +1,6 @@
 // External Usages
 use serde::{Deserialize, Serialize};
-use diesel::{Insertable, Queryable, Selectable};
+use diesel::{Queryable, Selectable};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 #[derive(diesel_derive_enum::DbEnum)]

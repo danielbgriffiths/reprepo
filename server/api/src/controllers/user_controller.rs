@@ -8,7 +8,7 @@ use crate::models::user::{User};
 use crate::state::AppData;
 use crate::data::user_data;
 
-pub async fn get_users(app_data: Data<AppData>, web::Path(user_ids): web::Path<Vec<i32>>) -> Result<web::Json<Vec<User>>, ApiError> {
-    let users = user_data::select_users_by_id(&app_data.db, user_ids).await?;
+pub async fn get_users(app_data: Data<AppData>, user_ids: web::Path<Vec<i32>>) -> Result<web::Json<Vec<User>>, ApiError> {
+    let users = user_data::select_users_by_id(&app_data.db, user_ids.into_inner()).await?;
     Ok(web::Json(users))
 }

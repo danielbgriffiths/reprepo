@@ -6,7 +6,6 @@ use actix_web::web::Data;
 use chrono::{Utc, Duration};
 use diesel::Connection;
 use jsonwebtoken::{encode, Header, EncodingKey};
-use chrono::prelude::*;
 
 // Local Usages
 use crate::models::user::{CreateUser, IntoApiClaims, LoginGoogleOAuthBody, User};
@@ -14,6 +13,9 @@ use crate::schema::sql_types::OauthProvider;
 use crate::state::{AppData, DbPool};
 use crate::data::user_data;
 use crate::libs::error::ApiError;
+use crate::models::role::Role;
+use crate::data::user_role_data;
+use crate::data::role_data;
 
 pub fn get_standard_revocable_token(user: &User) -> Option<StandardRevocableToken> {
     user.refresh_token.as_ref()
@@ -23,12 +25,22 @@ pub fn get_standard_revocable_token(user: &User) -> Option<StandardRevocableToke
 
 fn create_user_transaction(
     db: &DbPool,
-    create_user: CreateUser
+    create_user: CreateUser,
+    roles: Vec<Role>
 ) -> Result<i32, ApiError> {
     let db_connection = &mut db.get().unwrap();
 
     db_connection.transaction(|db_connection| {
-        let user_id = user_data::create_user(db_connection, &create_user)?;
+        let user_id = user_data::create_user_transaction_sync(db_connection, &create_user)?;
+
+        for role in roles {
+            user_role_data::create_user_role_transaction_sync(
+                db_connection,
+                user_id,
+                role.id,
+            )?;
+        }
+
         Ok(user_id)
     })
 }
@@ -39,7 +51,7 @@ pub async fn create_or_confirm_user(
     body: web::Json<LoginGoogleOAuthBody>
 ) -> Result<User, ApiError> {
     let token_claims = body.clone().claims;
-    let role = body.clone().role;
+    let role_list = body.clone().role_list;
 
     if user_id.is_some() {
         let user = user_data::select_by_id(&app_data.db, user_id.unwrap()).await?;
@@ -51,6 +63,8 @@ pub async fn create_or_confirm_user(
         return Ok(user);
     }
 
+    let roles = role_data::select_by_names(&app_data.db, &role_list).await?;
+
     let created_user_id = create_user_transaction(
         &app_data.db,
         CreateUser {
@@ -61,8 +75,8 @@ pub async fn create_or_confirm_user(
             last_name: token_claims.family_name,
             avatar: token_claims.picture,
             locale: token_claims.locale,
-            role
         },
+        roles
     )?;
 
     let user = user_data::select_by_id(&app_data.db, created_user_id).await?;

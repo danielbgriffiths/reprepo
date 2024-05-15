@@ -38,7 +38,7 @@ pub struct User {
     pub deleted_at: Option<chrono::NaiveDateTime>,
 }
 
-#[derive(Debug, Insertable)]
+#[derive(Debug, Insertable, Clone)]
 #[diesel(table_name = crate::schema::user)]
 pub struct CreateUser {
     pub email: String,
@@ -48,7 +48,6 @@ pub struct CreateUser {
     pub last_name: String,
     pub avatar: String,
     pub locale: String,
-    pub role: RoleName,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -89,5 +88,5 @@ pub struct GoogleOAuthTokenClaims {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LoginGoogleOAuthBody {
     pub claims: GoogleOAuthTokenClaims,
-    pub role: RoleName,
+    pub role_list: Vec<RoleName>,
 }

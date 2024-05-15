@@ -14,10 +14,10 @@ use crate::state::AppData;
 
 pub async fn login_google_oauth(
     app_data: Data<AppData>,
-    web::Path(user_id): web::Path<Option<i32>>,
+    user_id: web::Path<Option<i32>>,
     body: web::Json<LoginGoogleOAuthBody>
 ) -> Result<web::Json<User>, ApiError> {
-    let user = user_service::create_or_confirm_user(app_data, user_id, body).await?;
+    let user = user_service::create_or_confirm_user(app_data, user_id.into_inner(), body).await?;
     let (access_token, refresh_token) = user_service::create_claims(&user)?;
     user_data::update_tokens(&app_data.db, &user.id, access_token, refresh_token).await?;
 
