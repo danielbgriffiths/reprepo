@@ -2,6 +2,9 @@
 use serde::{Deserialize, Serialize};
 use diesel::{Insertable, Queryable, Selectable};
 
+// Local Usages
+use crate::models::role::RoleName;
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 #[derive(diesel_derive_enum::DbEnum)]
 #[ExistingTypePath = "crate::schema::sql_types::OauthProvider"]
@@ -12,7 +15,7 @@ pub enum OauthProvider {
     Pinterest,
 }
 
-#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize, Clone)]
 #[diesel(table_name = crate::schema::user)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
@@ -45,6 +48,7 @@ pub struct CreateUser {
     pub last_name: String,
     pub avatar: String,
     pub locale: String,
+    pub role: RoleName,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -53,6 +57,21 @@ pub struct ApiClaims {
     pub exp: i64,
     pub provider: OauthProvider,
     pub token_type: String,
+}
+
+pub trait IntoApiClaims {
+    fn into_api_claims(self, exp: i64, token_type: String) -> ApiClaims;
+}
+
+impl crate::models::user::IntoApiClaims for User {
+    fn into_api_claims(self, exp: chrono::DateTime<chrono::Utc>, token_type: String) -> ApiClaims {
+        ApiClaims {
+            sub: self.id,
+            exp: exp.timestamp(),
+            provider: self.provider,
+            token_type,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -64,5 +83,11 @@ pub struct GoogleOAuthTokenClaims {
     pub name: String,
     pub picture: String,
     pub id: String,
-    pub verified_email: bool
+    pub verified_email: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LoginGoogleOAuthBody {
+    pub claims: GoogleOAuthTokenClaims,
+    pub role: RoleName,
 }

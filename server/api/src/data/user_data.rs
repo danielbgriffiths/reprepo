@@ -57,3 +57,41 @@ pub fn create_user(db_connection: &mut PooledConnection<ConnectionManager<PgConn
 
     return Ok(user_id)
 }
+
+pub async fn update_tokens(db: &DbPool, target_id: &i32, access_token: String, refresh_token: String) -> Result<User, ApiError> {
+    let res: User = web::block(move || {
+        let db_connection = &mut db.get().unwrap();
+
+        user::table
+            .filter(user::id.eq(target_id))
+            .set((
+                user::access_token.eq(access_token),
+                user::refresh_token.eq(refresh_token)
+            ))
+            .returning(User::as_select())
+            .get_result::<User>(db_connection)
+    })
+        .await
+        .map_err(|e| ApiError::Database(e.to_string()))?;
+
+    Ok(res)
+}
+
+pub async fn remove_tokens(db: &DbPool, target_id: &i32) -> Result<i32, ApiError> {
+    let res: i32 = web::block(move || {
+        let db_connection = &mut db.get().unwrap();
+
+        user::table
+            .filter(user::id.eq(target_id))
+            .set((
+                user::access_token.eq(None::<String>),
+                user::refresh_token.eq(None::<String>)
+            ))
+            .returning(user::id)
+            .get_result::<i32>(db_connection)
+    })
+        .await
+        .map_err(|e| ApiError::Database(e.to_string()))?;
+
+    Ok(res)
+}

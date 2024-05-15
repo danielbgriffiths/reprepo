@@ -1,23 +1,67 @@
 // External Usages
-use actix_web::web;
+use actix_web::{HttpRequest, web};
 use actix_web::web::Data;
+use std::env;
+use chrono::Utc;
+use jsonwebtoken::{Algorithm, decode, DecodingKey, Validation};
 
 // Local Usages
 use crate::libs::error::ApiError;
-use crate::services::auth_service;
-use crate::models::user::{GoogleOAuthTokenClaims, User};
+use crate::services::user_service;
+use crate::data::user_data;
+use crate::models::user::{ApiClaims, User, LoginGoogleOAuthBody};
 use crate::state::AppData;
 
 pub async fn login_google_oauth(
     app_data: Data<AppData>,
     web::Path(user_id): web::Path<Option<i32>>,
-    body: web::Json<GoogleOAuthTokenClaims>
+    body: web::Json<LoginGoogleOAuthBody>
 ) -> Result<web::Json<User>, ApiError> {
-    let user = auth_service::create_or_confirm_user(app_data, user_id, body).await?;
-    let (access_token, refresh_token) = auth_service::create_claims(&user)?;
+    let user = user_service::create_or_confirm_user(app_data, user_id, body).await?;
+    let (access_token, refresh_token) = user_service::create_claims(&user)?;
     user_data::update_tokens(&app_data.db, &user.id, access_token, refresh_token).await?;
 
     Ok(web::Json(user))
+}
+
+pub async fn refresh_token(req: HttpRequest) -> Result<web::Json<User>, ApiError> {
+    let authed_signature_secret_env = env::var("AUTHED_SIGNATURE_SECRET")
+        .expect("Missing the AUTHED_SIGNATURE_SECRET environment variable.");
+
+    let bearer_token = req.headers().get("Authorization")
+        .and_then(|header| header.to_str().ok())
+        .and_then(|header| if header.starts_with("Bearer ") { Some(&header[7..]) } else { None })
+        .ok_or(ApiError::Authentication("No Bearer token found".to_string()))?;
+
+    let decoded_api_claims = decode::<ApiClaims>(
+        &bearer_token,
+        &DecodingKey::from_secret(authed_signature_secret_env.as_ref()),
+        &Validation::new(Algorithm::HS256)
+    )
+        .map_err(|e| ApiError::Authentication(e.to_string()))?;
+
+
+    if decoded_api_claims.claims.exp < Utc::now().timestamp() {
+        return Err(ApiError::ExpiredJWT("JWT is expired".to_string()))
+    }
+
+    let app_data = req.app_data::<Data<AppData>>();
+
+    if let Some(data) = app_data {
+        let user = user_data::select_by_id(
+            &data.db,
+            decoded_api_claims.claims.sub,
+        )
+            .await?;
+
+        let (access_token, refresh_token) = user_service::create_claims(&user).await?;
+
+        let updated_user = user_data::update_tokens(&data.db, &user.id, access_token, refresh_token).await?;
+
+        return Ok(web::Json(updated_user))
+    }
+
+    return Err(ApiError::Authentication("Unable to get app data!".to_string()))
 }
 
 pub async fn get_user(app_data: Data<AppData>) -> Result<web::Json<User>, ApiError> {

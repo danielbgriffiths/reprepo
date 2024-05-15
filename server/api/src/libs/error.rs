@@ -1,9 +1,9 @@
-use actix_web::{HttpResponse, ResponseError};
-use actix_web::http::StatusCode;
 // External Usages
 use serde::Serialize;
 use diesel::result::Error as DieselError;
 use thiserror::Error;
+use actix_web::{HttpResponse, ResponseError};
+use actix_web::http::StatusCode;
 
 pub struct ErrorResponse {
     pub message: String,
@@ -14,6 +14,7 @@ pub enum ApiErrorType {
     // Authentication
     Authentication,
     Unauthorized,
+    ExpiredJWT,
 
     // Data
     Database,
@@ -37,6 +38,8 @@ pub enum ApiError {
     Authentication(String),
     #[error("api-error: Unauthorized: {0}")]
     Unauthorized(String),
+    #[error("api-error: ExpiredJWT: {0}")]
+    ExpiredJWT(String),
 
     #[error("api-error: Database: {0}")]
     Database(String),
@@ -102,6 +105,7 @@ impl ResponseError for ApiError {
             ApiError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::Lock(_) => StatusCode::LOCKED,
             ApiError::Unavailable(_) => StatusCode::BAD_REQUEST,
+            ApiError::ExpiredJWT(_) => StatusCode::UNAUTHORIZED,
         }
     }
 
@@ -125,7 +129,8 @@ impl ApiError {
             ApiError::Library(_) => ApiErrorType::Library,
             ApiError::Internal(_) => ApiErrorType::Internal,
             ApiError::Lock(_) => ApiErrorType::Lock,
-            ApiError::Unavailable(_) => ApiErrorType::Unavailable
+            ApiError::Unavailable(_) => ApiErrorType::Unavailable,
+            ApiError::ExpiredJWT(_) => ApiErrorType::ExpiredJWT,
         }
     }
 }
