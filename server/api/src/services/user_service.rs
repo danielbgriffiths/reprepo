@@ -8,8 +8,7 @@ use diesel::Connection;
 use jsonwebtoken::{encode, Header, EncodingKey};
 
 // Local Usages
-use crate::models::user::{CreateUser, IntoApiClaims, LoginGoogleOAuthBody, User};
-use crate::schema::sql_types::OauthProvider;
+use crate::models::user::{CreateUser, IntoApiClaims, LoginGoogleOAuthBody, User, OauthProvider};
 use crate::state::{AppData, DbPool};
 use crate::data::user_data;
 use crate::libs::error::ApiError;
@@ -17,11 +16,11 @@ use crate::models::role::Role;
 use crate::data::user_role_data;
 use crate::data::role_data;
 
-pub fn get_standard_revocable_token(user: &User) -> Option<StandardRevocableToken> {
-    user.refresh_token.as_ref()
-        .or_else(|| user.access_token.as_ref())
-        .map(|token| StandardRevocableToken::from(AccessToken::new(token.to_owned())))
-}
+// pub fn get_standard_revocable_token(user: &User) -> Option<StandardRevocableToken> {
+//     user.refresh_token.as_ref()
+//         .or_else(|| user.access_token.as_ref())
+//         .map(|token| StandardRevocableToken::from(AccessToken::new(token.to_owned())))
+// }
 
 fn create_user_transaction(
     db: &DbPool,
@@ -63,7 +62,7 @@ pub async fn create_or_confirm_user(
         return Ok(user);
     }
 
-    let roles = role_data::select_by_names(&app_data.db, &role_list).await?;
+    let roles = role_data::select_by_names(&app_data.db, role_list).await?;
 
     let created_user_id = create_user_transaction(
         &app_data.db,

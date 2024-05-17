@@ -9,16 +9,17 @@ use crate::models::role::{Role, RoleName};
 use crate::schema::role;
 
 pub async fn select_by_names(db: &DbPool, names: Vec<RoleName>) -> Result<Vec<Role>, ApiError> {
-    let res: Vec<Role> = web::block(move || {
+    let db = db.clone();
+
+    web::block(move || {
         let db_connection = &mut db.get().unwrap();
 
         role::table
             .filter(role::name.eq_any(names))
-            .returning(Role::as_select())
+            .select(Role::as_select())
             .get_results::<Role>(db_connection)
+            .map_err(|e| ApiError::Database(e.to_string()))
     })
         .await
-        .map_err(|e| ApiError::Database(e.to_string()))?;
-
-    Ok(res)
+        .map_err(|e| ApiError::Database(e.to_string()))?
 }

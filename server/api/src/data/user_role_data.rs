@@ -12,7 +12,7 @@ pub fn create_user_role_transaction_sync(
     user_id: i32,
     role_id: i32
 ) -> Result<i32, ApiError> {
-    let user_role_id = diesel::insert_into(user_role::table)
+    diesel::insert_into(user_role::table)
         .values(
             CreateUserRole {
                 user_id,
@@ -20,7 +20,6 @@ pub fn create_user_role_transaction_sync(
             }
         )
         .returning(user_role::id)
-        .get_result::<i32>(db_connection)?;
-
-    return Ok(user_role_id)
+        .get_result::<i32>(db_connection)
+        .map_err(|e| ApiError::Database(e.to_string()))
 }

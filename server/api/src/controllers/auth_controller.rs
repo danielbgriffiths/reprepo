@@ -17,8 +17,8 @@ pub async fn login_google_oauth(
     user_id: web::Path<Option<i32>>,
     body: web::Json<LoginGoogleOAuthBody>
 ) -> Result<web::Json<User>, ApiError> {
-    let user = user_service::create_or_confirm_user(app_data, user_id.into_inner(), body).await?;
-    let (access_token, refresh_token) = user_service::create_claims(&user)?;
+    let user = user_service::create_or_confirm_user(app_data.clone(), user_id.into_inner(), body).await?;
+    let (access_token, refresh_token) = user_service::create_claims(&user).await?;
     user_data::update_tokens(&app_data.db, &user.id, access_token, refresh_token).await?;
 
     Ok(web::Json(user))
@@ -65,18 +65,27 @@ pub async fn refresh_token(req: HttpRequest) -> Result<web::Json<User>, ApiError
 }
 
 pub async fn get_user(app_data: Data<AppData>) -> Result<web::Json<User>, ApiError> {
-    let user = app_data.user.lock().unwrap();
-    Ok(web::Json(user))
+    let user_guard = app_data.user.lock().await;
+
+    if let Some(user) = user_guard.as_ref() {
+        Ok(web::Json(user.clone()))
+    } else {
+        Err(ApiError::Unauthorized("Could not find authenticated user".to_string()))
+    }
 }
 
 pub async fn logout(app_data: Data<AppData>) -> Result<String, ApiError> {
-    let user = app_data.user.lock().unwrap();
+    let user_guard = app_data.user.lock().await;
 
-    if !user.access_token.is_some() && !user.refresh_token.is_some() {
-        return Ok(None)
+    if let Some(user) = user_guard.as_ref() {
+        if !user.access_token.is_some() && !user.refresh_token.is_some() {
+           return Err(ApiError::Unauthorized("Could not log out".to_string()))
+        }
+
+        user_data::remove_tokens(&app_data.db, &user.id).await?;
+
+        return Ok("Logged out".to_string())
     }
 
-    user_data::remove_tokens(&app_data.db, &user).await?;
-
-    Ok("Logged out".to_string())
+    Err(ApiError::Unauthorized("Could not log out".to_string()))
 }

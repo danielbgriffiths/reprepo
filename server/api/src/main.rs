@@ -5,6 +5,7 @@ use tokio::sync::Mutex;
 use std::sync::Arc;
 use std::fs::File;
 use std::io::BufReader;
+use actix_web::web::ServiceConfig;
 
 // Local Usages
 mod routes;
@@ -45,10 +46,10 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(app_data.clone())
-            .service(web::scope("/v1").configure(routes::api_v1::public_routes))
-            .service(web::scope("/v1").wrap(auth).configure(routes::api_v1::private_routes))
+            .service(web::scope("/v1").configure(|cfg: &mut ServiceConfig| routes::api_v1::public_routes(cfg)))
+            .service(web::scope("/v1").wrap(auth).configure(|cfg: &mut ServiceConfig| routes::api_v1::private_routes(cfg)))
     })
-        .bind_rustls(("127.0.0.1", 8443), tls_config.into())?
+        .bind_rustls_0_22(("127.0.0.1", 8443), tls_config)?
         .run()
         .await
 }

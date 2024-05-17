@@ -59,7 +59,7 @@ pub struct ApiClaims {
 }
 
 pub trait IntoApiClaims {
-    fn into_api_claims(self, exp: i64, token_type: String) -> ApiClaims;
+    fn into_api_claims(self, exp: chrono::DateTime<chrono::Utc>, token_type: String) -> ApiClaims;
 }
 
 impl crate::models::user::IntoApiClaims for User {

@@ -197,8 +197,8 @@ diesel::table! {
 diesel::table! {
     user_role (id) {
         id -> Int4,
-        user_id -> Nullable<Int4>,
-        role_id -> Nullable<Int4>,
+        user_id -> Int4,
+        role_id -> Int4,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
         deleted_at -> Nullable<Timestamp>,

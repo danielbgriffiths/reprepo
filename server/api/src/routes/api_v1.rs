@@ -4,7 +4,7 @@ use actix_web::web;
 // Local Usages
 use crate::controllers::{user_controller, auth_controller};
 
-pub fn public_routes(mut cfg: web::ServiceConfig) {
+pub fn public_routes(cfg: &mut web::ServiceConfig) {
     cfg
         .service(
             web::scope("user")
@@ -17,7 +17,7 @@ pub fn public_routes(mut cfg: web::ServiceConfig) {
     );
 }
 
-pub fn private_routes(mut cfg: web::ServiceConfig) {
+pub fn private_routes(cfg: &mut web::ServiceConfig) {
     cfg
         .service(
             web::scope("auth")

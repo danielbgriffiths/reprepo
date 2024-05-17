@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS user_role (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
 
-    user_id INTEGER DEFAULT null,
-    role_id INTEGER DEFAULT null,
+    user_id INTEGER NOT NULL,
+    role_id INTEGER NOT NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP DEFAULT NULL,
